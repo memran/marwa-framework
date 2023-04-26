@@ -1,0 +1,81 @@
+{
+  "name": "marwa/framework",
+  "description": "PSR-7, PSR-15 Modular PHP Micro Framework.",
+  "keywords": [
+    "http",
+    "psr-3",
+    "psr-7",
+    "psr-11",
+    "psr-15",
+    "psr-16",
+    "framework",
+    "Swoole",
+    "MarwaPHP Framework",
+    "marwaphp",
+    "Marwa Framework",
+    "PHP 8",
+    "PHP 7"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mohammad Emran",
+      "email": "memran.dhk@gmail.com"
+    }
+  ],
+  "require": {
+    "php": " >= 7.1",
+    "ext-json": "*",
+    "symfony/console": "^4.1",
+    "symfony/dotenv": "^4.1",
+    "league/container": "^3.0",
+    "league/route": "^4.3",
+    "laminas/laminas-httphandlerrunner": "^1.1",
+    "markrogoyski/simplelog-php": "0.*",
+    "nette/utils": "^3.1",
+    "aura/session": "3.*@dev",
+    "league/event": "^2.1",
+    "swiftmailer/swiftmailer": "^6.2",
+    "memran/marwadb": "dev-master",
+    "firebase/php-jwt": "^5.0",
+    "guzzlehttp/guzzle": "^6.5",
+    "react/event-loop": "1.1.1",
+    "twig/twig": "^3.0",
+    "symfony/process": "^5.0",
+    "nesbot/carbon": "^2.33",
+    "rakit/validation": "^1.2",
+    "laminas/laminas-crypt": "^3.3",
+    "nette/finder": "^2.5",
+    "league/flysystem": "^2.0.0-alpha.3",
+    "league/flysystem-aws-s3-v3": "2.*@dev",
+    "matthiasmullie/scrapbook": "^1.4",
+    "hybridauth/hybridauth": "^3.3",
+    "doctrine/collections": "^1.6",
+    "symfony/translation": "^5.1",
+    "laminas/laminas-diactoros": "^2.9"
+  },
+  "autoload": {
+    "files": [
+      "src/Application/Helpers/Helper.php"
+    ],
+    "psr-4": {
+      "Marwa\\": "src/"    }
+  },
+  "require-dev": {
+    "filp/whoops": "^2.7",
+    "kint-php/kint": "^2.2",
+    "phpunit/phpunit": "^8",
+    "psy/psysh": "@stable",
+    "squizlabs/php_codesniffer": "3.*",
+    "phpstan/phpstan": "^0.12",
+    "phpstan/phpstan-phpunit": "^0.12",
+      "fakerphp/faker": "^1.19"
+  },
+  "scripts": {
+    "phpcs": "vendor/bin/phpcs src",
+    "phpcbf": "vendor/bin/phpcbf src",
+    "analyse": "vendor/bin/phpstan analyse -l 4 --no-progress src",
+    "check": "vendor/bin/phpunit && vendor/bin/phpstan analyse -l 4 --no-progress src",
+    "test": "vendor/bin/phpunit"
+  }
+}
