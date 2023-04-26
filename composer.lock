@@ -4,40 +4,52 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4e0d5b157abb1160060367c699a0118f",
+    "content-hash": "0c2ba8b76182b8d2cb79afa67be5c391",
     "packages": [
         {
             "name": "aura/session",
-            "version": "3.x-dev",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/auraphp/Aura.Session.git",
-                "reference": "f42e957965507bdd0c4194e2689bddb26865068f"
+                "reference": "7d2f7d41ad693970b5b6b83facca0961d3378883"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/auraphp/Aura.Session/zipball/f42e957965507bdd0c4194e2689bddb26865068f",
-                "reference": "f42e957965507bdd0c4194e2689bddb26865068f",
+                "url": "https://api.github.com/repos/auraphp/Aura.Session/zipball/7d2f7d41ad693970b5b6b83facca0961d3378883",
+                "reference": "7d2f7d41ad693970b5b6b83facca0961d3378883",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.0"
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "aura/di": "~2.0"
             },
             "suggest": {
                 "ext-mcrypt": "Mcrypt generates the next best secure CSRF tokens.",
                 "ext-openssl": "OpenSSL generates the best secure CSRF tokens.",
-                "ircmaxell/random-lib": "A Library For Generating Secure Random Numbers"
+                "ircmaxell/random-lib": "A Library For Generating Secure Random Numbers",
+                "paragonie/random_compat": "PHP 5.x polyfill for random_bytes() and random_int() from PHP 7"
             },
-            "default-branch": true,
             "type": "library",
+            "extra": {
+                "aura": {
+                    "type": "library",
+                    "config": {
+                        "common": "Aura\\Session\\_Config\\Common"
+                    }
+                }
+            },
             "autoload": {
                 "psr-4": {
-                    "Aura\\Session\\": "src/"
+                    "Aura\\Session\\": "src/",
+                    "Aura\\Session\\_Config\\": "config/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "BSD-2-Clause"
             ],
             "authors": [
                 {
@@ -56,9 +68,9 @@
             ],
             "support": {
                 "issues": "https://github.com/auraphp/Aura.Session/issues",
-                "source": "https://github.com/auraphp/Aura.Session/tree/3.x"
+                "source": "https://github.com/auraphp/Aura.Session/tree/2.x"
             },
-            "time": "2016-04-11T17:00:39+00:00"
+            "time": "2016-10-03T20:28:32+00:00"
         },
         {
             "name": "aws/aws-crt-php",
@@ -6327,7 +6339,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "aura/session": 20,
         "memran/marwadb": 20,
         "league/flysystem": 15,
         "league/flysystem-aws-s3-v3": 20,

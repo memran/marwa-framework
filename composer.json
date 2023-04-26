@@ -33,7 +33,7 @@
     "laminas/laminas-httphandlerrunner": "^1.1",
     "markrogoyski/simplelog-php": "0.*",
     "nette/utils": "^3.1",
-    "aura/session": "3.*@dev",
+    "aura/session": "^2.1",
     "league/event": "^2.1",
     "swiftmailer/swiftmailer": "^6.2",
     "memran/marwadb": "dev-master",
