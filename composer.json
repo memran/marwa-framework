@@ -52,7 +52,11 @@
     "hybridauth/hybridauth": "^3.3",
     "doctrine/collections": "^1.6",
     "symfony/translation": "^5.1",
-    "laminas/laminas-diactoros": "^2.9"
+    "laminas/laminas-diactoros": "^2.9",
+    "filp/whoops": "^2.15",
+    "psy/psysh": "@stable",
+    "kint-php/kint": "^2.2",
+    "fakerphp/faker": "^1.19"
   },
   "autoload": {
     "files": [
@@ -62,14 +66,10 @@
       "Marwa\\": "src/"    }
   },
   "require-dev": {
-    "filp/whoops": "^2.7",
-    "kint-php/kint": "^2.2",
     "phpunit/phpunit": "^8",
-    "psy/psysh": "@stable",
     "squizlabs/php_codesniffer": "3.*",
     "phpstan/phpstan": "^0.12",
-    "phpstan/phpstan-phpunit": "^0.12",
-      "fakerphp/faker": "^1.19"
+    "phpstan/phpstan-phpunit": "^0.12"
   },
   "scripts": {
     "phpcs": "vendor/bin/phpcs src",
