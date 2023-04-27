@@ -46,8 +46,4 @@ class KeyGenerate extends AbstractCommand
         $this->info("Application Key is " . $keyStr);
     }
 
-
-
-
-
 }
