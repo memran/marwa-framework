@@ -9,6 +9,7 @@
  */
 
 namespace Marwa\Application\Commands\BasicCommands;
+
 use Marwa\Application\Commands\AbstractCommand;
 use Marwa\Application\Migrations\MigrationInterface;
 use Marwa\Application\Facades\DB;
@@ -18,38 +19,37 @@ use Marwa\Application\Commands\MigrationCommandTrait;
 class MigrateInit extends AbstractCommand
 {
     use MigrationCommandTrait;
-    var $name="migrate:init";
-    var $description="This command will create migration table";
-    var $help ="This command will create migration table";
+    var $name = "migrate:init";
+    var $description = "This command will create migration table";
+    var $help = "This command will create migration table";
 
     /**
      * [handle description]
      *
      * @return [type] [description]
      */
-    public function handle() : void
+    public function handle(): void
     {
         $this->info("Migration initializing...");
-        $res = $this->ask("It will drop migration table if exists and create again.Do you like to continue ? (y/N)");
-        if(empty($res)) {
-            $res="n";
+        $res = $this->ask("It will drop migration table if exists and create again. Do you like to continue ? (y/N)");
+        if (empty($res)) {
+            $res = "n";
         }
 
-        if(strtolower($res)==="n") {
+        if (strtolower($res) === "n") {
             $this->info("Migration initializing stopped");
             die;
         }
         //drop table if exists
-        if(Forge::dropIfExists('migration')) {
+        if (Forge::dropIfExists('migration')) {
             $this->info('Successfully dropped existing table');
         }
-    
+
         //create new table
         $result = Forge::createTable($this->getMigrationTableSql());
-        if($result) {
+        if ($result) {
             $this->info("Successfully created migration table");
-        }
-        else{
+        } else {
             $this->info("Failed to initialize migration");
         }
         //synchronize with migration files if exists to the database
@@ -72,15 +72,15 @@ class MigrateInit extends AbstractCommand
      */
     protected function syncMigrationFiles()
     {
-        $readFiles = glob($this->getMigrationPath()."*.php");
-        if(empty($readFiles)) {
+        $readFiles = glob($this->getMigrationPath() . "*.php");
+        if (empty($readFiles)) {
             return false;
         }
         //$listFiles=[];
         foreach ($readFiles as $file) {
             $cmdName = basename($file, ".php"); //read base file name without extension
-            list($id,$version) = explode('_', $cmdName);
-            $this->migrationHistory($id, $cmdName, "Create ".$version);
+            list($id, $version) = explode('_', $cmdName);
+            $this->migrationHistory($id, $cmdName, "Create " . $version);
         }
 
     }
