@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * @author    Mohammad Emran <memran.dhk@gmail.com>
  * @copyright 2018
@@ -8,20 +10,21 @@
  */
 
 namespace Marwa\Application\Http;
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 
-Class HttpClient
+class HttpClient
 {
     /**
      * [$client description]
      *
      * @var null
      */
-    var $client=null;
+    var $client = null;
 
     /**
      * [$multipart description]
@@ -34,14 +37,14 @@ Class HttpClient
      *
      * @var array
      */
-    var $headers=[];
+    var $headers = [];
 
     /**
      * [$timeout description]
      *
      * @var integer
      */
-    var $timeout=3;
+    var $timeout = 3;
 
     /**
      * [__construct description]
@@ -58,22 +61,20 @@ Class HttpClient
      * @return ResponseInterface
      * @throws GuzzleException
      */
-    public function send(string $method,string $url,array $args=[])
+    public function send(string $method, string $url, array $args = [])
     {
         $args['timeout'] = $this->timeout;
 
-        if(!empty($this->multipart)) {
-            $args['multipart']=$this->multipart;
+        if (!empty($this->multipart)) {
+            $args['multipart'] = $this->multipart;
         }
-        if(!empty($this->headers)) {
-            $args['headers']=$this->headers;
+        if (!empty($this->headers)) {
+            $args['headers'] = $this->headers;
         }
 
-        try
-        {
+        try {
             return $this->client->request($method, $url, $args);
-        }
-        catch (RequestException $e) {
+        } catch (RequestException $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -84,7 +85,7 @@ Class HttpClient
      * @return ResponseInterface
      * @throws GuzzleException
      */
-    public function get(string $url,array $params=[])
+    public function get(string $url, array $params = [])
     {
         return $this->send('GET', $url, $params);
     }
@@ -95,7 +96,7 @@ Class HttpClient
      * @return ResponseInterface
      * @throws GuzzleException
      */
-    public function post(string $url,array $params=[])
+    public function post(string $url, array $params = [])
     {
         return $this->send('POST', $url, $params);
     }
@@ -114,12 +115,12 @@ Class HttpClient
      * @param string $filename
      * @return $this
      */
-    public function attach($field,$file,$filename='')
+    public function attach($field, $file, $filename = '')
     {
         $attachment = [
-        'name'=>$field,
-        'contents'=> $file,
-        'filename'=> $filename
+            'name' => $field,
+            'contents' => $file,
+            'filename' => $filename
         ];
         array_push($this->multipart, $attachment);
         return $this;
@@ -139,10 +140,9 @@ Class HttpClient
      * @param  int $sec
      * @return $this
      */
-    public function timeout(int $sec=3)
+    public function timeout(int $sec = 3)
     {
         $this->timeout = $sec;
         return $this;
     }
-
 }
