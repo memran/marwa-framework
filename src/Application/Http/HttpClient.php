@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 /**
  * @author    Mohammad Emran <memran.dhk@gmail.com>
  * @copyright 2018
@@ -61,7 +59,7 @@ class HttpClient
      * @return ResponseInterface
      * @throws GuzzleException
      */
-    public function send(string $method, string $url, array $args = [])
+    public function send(string $method, string $url, array $args = []): ResponseInterface
     {
         $args['timeout'] = $this->timeout;
 

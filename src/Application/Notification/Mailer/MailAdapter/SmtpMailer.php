@@ -1,7 +1,6 @@
 <?php
-
-
 namespace Marwa\Application\Notification\Mailer\MailAdapter;
+
 use Marwa\Application\Notification\Mailer\MailMessage;
 use Swift_Mailer;
 use Marwa\Application\Notification\Mailer\Interfaces\MailerInterface;
@@ -16,7 +15,7 @@ class SmtpMailer implements MailerInterface
     /**
      * @var array
      */
-    protected $config=[];
+    protected $config = [];
 
     /**
      * SmtpMailer constructor.
@@ -51,14 +50,14 @@ class SmtpMailer implements MailerInterface
      */
     protected function getTransportAdapter()
     {
-       return TransportFactory::create('smtp',$this->getConfig())->getTransport();
+        return TransportFactory::create('smtp', $this->getConfig())->getTransport();
     }
-	
-	/**
-	 * @param MailMessage $mail
-	 * @return int
-	 */
-    public function send($mail)
+
+    /**
+     * @param MailMessage $mail
+     * @return int
+     */
+    public function send(MailMessage $mail)
     {
         return $this->mailer->send($mail);
     }
