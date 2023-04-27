@@ -42,7 +42,7 @@ class KeyGenerate extends AbstractCommand
     public function handle(): void
     {
         $keyStr = Str::random(32);
-        $this->info("Application Key is " + $keyStr);
+        $this->info("Application Key is " . $keyStr);
     }
 
 
