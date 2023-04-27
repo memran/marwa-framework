@@ -1,31 +1,31 @@
 <?php
-	
-	namespace Marwa\Application\Middlewares;
-	
-	use Psr\Http\Message\ResponseInterface;
-	use Psr\Http\Message\ServerRequestInterface;
-	use Psr\Http\Server\MiddlewareInterface;
-	use Psr\Http\Server\RequestHandlerInterface;
-	
-	class ShutdownMiddleware implements MiddlewareInterface {
-		
-		/**
-		 * Process a server request and return a response.
-		 */
-		public function process( ServerRequestInterface $request, RequestHandlerInterface $handler ) : ResponseInterface
-		{
-			$maintainance = (bool) env('MAINTAINANCE');
-			if ( $maintainance )
-			{
-				return view('maintainance', ['title' => 'Site Maintenance']);
-			}
-			
-			return $handler->handle($request);
+
+namespace Marwa\Application\Middlewares;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+class ShutdownMiddleware implements MiddlewareInterface
+{
+
+	/**
+	 * Process a server request and return a response.
+	 */
+	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+	{
+		$maintainance = (boolean) env('MAINTAINANCE');
+		if ($maintainance) {
+			return view('maintainance', ['title' => 'Site Maintenance']);
 		}
-		
-		protected function getTemplate()
-		{
-			return '
+
+		return $handler->handle($request);
+	}
+
+	protected function getTemplate()
+	{
+		return '
         <!DOCTYPE html>
         <html>
         <head>
@@ -38,5 +38,5 @@
             <center><h1>Site under maintenance</h1></center>
         </body>
         </html>';
-		}
 	}
+}
