@@ -1,9 +1,10 @@
 <?php
-	
-	
-	namespace Marwa\Application\Routes;
-	
-	
-	class RouteFileException extends \Exception {
-	
-	}
+
+
+namespace Marwa\Application\Routes;
+
+
+class RouteFileException extends \Exception
+{
+
+}
