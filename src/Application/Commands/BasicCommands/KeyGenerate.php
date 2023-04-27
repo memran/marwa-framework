@@ -11,6 +11,7 @@
 namespace Marwa\Application\Commands\BasicCommands;
 
 use Marwa\Application\Commands\AbstractCommand;
+use Marwa\Application\Utils\Random;
 
 class KeyGenerate extends AbstractCommand
 {
@@ -41,7 +42,7 @@ class KeyGenerate extends AbstractCommand
      */
     public function handle(): void
     {
-        $keyStr = Str::random(32);
+        $keyStr = Random::generate(32);
         $this->info("Application Key is " . $keyStr);
     }
 
