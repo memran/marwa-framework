@@ -37,7 +37,7 @@
     "league/event": "^2.1",
     "swiftmailer/swiftmailer": "^6.2",
     "memran/marwadb": "dev-master",
-    "firebase/php-jwt": "^5.0",
+    "firebase/php-jwt": "^6.4",
     "guzzlehttp/guzzle": "^6.5",
     "react/event-loop": "1.1.1",
     "twig/twig": "^3.0",

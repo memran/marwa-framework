@@ -22,7 +22,7 @@ class HttpClient
      *
      * @var null
      */
-    var $client = null;
+    var $client;
 
     /**
      * [$multipart description]
