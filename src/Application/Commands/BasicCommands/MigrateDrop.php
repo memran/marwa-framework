@@ -163,7 +163,6 @@ class MigrateDrop extends AbstractCommand
 				$this->error($th->getMessage());
 			}
 		} else {
-			$this->deleteMigrationRowById($id);
 			$this->info("Skipping for not existance of file :" . $filepath);
 		}
 
