@@ -2,6 +2,8 @@
 
 namespace Marwa\Application\DBForge;
 
+use Marwa\Application\Utils\Arr;
+
 class Forge
 {
 
@@ -36,7 +38,7 @@ class Forge
 	{
 		$result = app('DB')->raw("SELECT * FROM information_schema.tables WHERE table_schema = '" . env('DB_NAME') . "'
     AND table_name = '$table' LIMIT 1");
-		if (is_array($result)) {
+		if (is_array($result) && !Arr::empty($result)) {
 			return true;
 		}
 		return false;
@@ -49,7 +51,7 @@ class Forge
 	 */
 	public static function dropTable(string $table)
 	{
-		return app('DB')->rawQuery("DROP TABLE {$table}");
+		return app('DB')->rawQuery("DROP TABLE $table");
 	}
 
 
@@ -59,7 +61,7 @@ class Forge
 	 */
 	public static function optimize(string $table)
 	{
-		return app('DB')->rawQuery("OPTIMIZE TABLE `{$table}`");
+		return app('DB')->rawQuery("OPTIMIZE TABLE $table");
 	}
 
 
@@ -70,7 +72,7 @@ class Forge
 	public static function repair(string $table)
 	{
 
-		return app('DB')->rawQuery("REPAIR TABLE `{$table}`");
+		return app('DB')->rawQuery("REPAIR TABLE $table");
 	}
 
 
@@ -81,7 +83,7 @@ class Forge
 	public static function empty(string $table)
 	{
 
-		return app('DB')->rawQuery("TRUNCATE `{$table}`");
+		return app('DB')->rawQuery("TRUNCATE $table");
 	}
 
 
@@ -91,7 +93,7 @@ class Forge
 	 */
 	public static function show(string $table)
 	{
-		return app('DB')->rawQuery("SHOW CREATE TABLE `{$table}`");
+		return app('DB')->rawQuery("SHOW CREATE TABLE $table");
 	}
 
 }

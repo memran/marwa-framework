@@ -7,6 +7,7 @@
  * @see http://www.memran.me
  */
 namespace Marwa\Application\Commands\BasicCommands;
+
 use Marwa\Application\Commands\AbstractCommand;
 use Marwa\Application\Commands\ConsoleCommandTrait;
 use Marwa\Application\Commands\MigrationCommandTrait;
@@ -16,36 +17,36 @@ class MakeJob extends AbstractCommand
     use ConsoleCommandTrait;
     use MigrationCommandTrait;
     //set command name
-    var $name="make:job {name}";
+    var $name = "make:job {name}";
     //set description of command
-    var $description="It will generate job class";
+    var $description = "It will generate job class";
     //set help of command
-    var $help ="This command allows you to generate new job class.";
+    var $help = "This command allows you to generate new job class.";
 
     /**
      * [$argTitle description]
      *
      * @var [type]
      */
-    var $argTitle=[
-            'name'=> "Provide Job Class Name"
-        ];
+    var $argTitle = [
+        'name' => "Provide Job Class Name"
+    ];
 
     /**
      * [handle description] generate new migration file
      *
      * @return [type] [description]
      */
-    public function handle() : void
+    public function handle(): void
     {
-        $jobName=$this->argument("name");
-        if(empty($jobName)) {
-            die("Job Class name not provided");
+        $jobName = $this->argument("name");
+        if (empty($jobName)) {
+            $this->error("Job Class name not provided");
         }
         //replace the string
         $data = [
-                'CLASSNAME' => $jobName
-                ];
+            'CLASSNAME' => $jobName
+        ];
 
         //set directory path for migraiton files
         $this->setWriteDirPath($this->getJobPath());
@@ -53,12 +54,10 @@ class MakeJob extends AbstractCommand
         //writing to file
         $result = $this->generateFileFromTemplate('NewJob', $jobName, $data);
         //checking result
-        if($result) {
-            $this->info("Successfully generated job file ".$jobName);
-        }
-        else
-        {
-            $this->error("Failed to generate job file ".$jobName);
+        if ($result) {
+            $this->info("Successfully generated job file " . $jobName);
+        } else {
+            $this->error("Failed to generate job file " . $jobName);
         }
     }
 
@@ -69,7 +68,7 @@ class MakeJob extends AbstractCommand
      */
     public function getJobPath()
     {
-        return WEBROOT.DS."app".DS."Jobs".DS;
+        return WEBROOT . DS . "app" . DS . "Jobs" . DS;
     }
 
 }

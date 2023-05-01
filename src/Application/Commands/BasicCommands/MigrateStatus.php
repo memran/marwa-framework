@@ -9,10 +9,10 @@
  */
 
 namespace Marwa\Application\Commands\BasicCommands;
+
 use Marwa\Application\Commands\AbstractCommand;
-use Marwa\Application\Migrations\MigrationInterface;
 use Marwa\Application\Commands\MigrationCommandTrait;
-use Marwa\Application\Facades\DB;
+
 
 class MigrateStatus extends AbstractCommand
 {
@@ -22,39 +22,35 @@ class MigrateStatus extends AbstractCommand
      *
      * @var string
      */
-    var $name="migrate:status";
+    var $name = "migrate:status";
     /**
      * [$description description]
      *
      * @var string
      */
-    var $description="This command will print migration status";
+    var $description = "This command will print migration status in a table";
     /**
      * [$help description]
      *
      * @var string
      */
-    var $help ="This command will print migration status";
+    var $help = "This command will print migration status";
 
-    public function handle() : void
+    public function handle(): void
     {
-         //check migration table exists
-        if(!$this->hasTable()) {
+        //check migration table exists
+        if (!$this->hasTable()) {
             $this->error("'migration' table does not exists on the database");
-            die();
         }
 
         //execute migration qiery
         $result = $this->getAllMigration();
         //it is array or not
-        if(is_array($result)) {
-            $this->info("Creating Table....");
-            $this->table(["id","version","applied_at","description"], $result);
-        }
-        else
-        {
-             $this->info("No result found");
-            die;
+        if (is_array($result)) {
+            $this->info("Migration Status Table....");
+            $this->table(["id", "version", "applied_at", "description"], $result);
+        } else {
+            $this->info("No migration found");
         }
 
     }
