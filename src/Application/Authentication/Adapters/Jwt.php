@@ -99,7 +99,7 @@ class Jwt implements AuthenticationInterface
 		return [];
 	}
 
-	public function checkRemember()
+	public function checkRemember(string $token)
 	{
 		return false;
 	}

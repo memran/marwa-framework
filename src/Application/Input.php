@@ -1,5 +1,4 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Marwa\Application;
 
@@ -16,7 +15,7 @@ class Input
 	 */
 	public static function get(string $name)
 	{
-		return (new self())->parseQuery('GET', $name);
+		return (new self())->parseQuery($name, 'GET');
 	}
 
 	/**
@@ -25,7 +24,7 @@ class Input
 	 * @return string|null
 	 * @throws Exceptions\FileNotFoundException
 	 */
-	protected function parseQuery(string $method = 'GET', $name)
+	protected function parseQuery(string $name, string $method = 'GET')
 	{
 		if (Validate::isNone($name)) {
 			return null;
@@ -56,7 +55,7 @@ class Input
 	 */
 	public static function post(string $name)
 	{
-		return (new self())->parseQuery('POST', $name);
+		return (new self())->parseQuery($name, 'POST');
 	}
 
 	/**
