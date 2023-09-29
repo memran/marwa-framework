@@ -52,7 +52,7 @@ class File
 	 * @return string
 	 * @throws \Marwa\Application\Exceptions\FileNotFoundException
 	 */
-	public static function readLines(string $file, bool $stripNewLines = true): string
+	public static function readLines(string $file, bool $stripNewLines = true)
 	{
 		return FS::readLines($file, $stripNewLines);
 	}
