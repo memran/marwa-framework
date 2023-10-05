@@ -22,6 +22,12 @@ abstract class Model implements ArrayAccess, Iterator
 	use SmartObject, Relation;
 
 	/**
+	 * Summary of position
+	 * @var int
+	 */
+	private $position = 0;
+
+	/**
 	 * [$_table description]
 	 *
 	 * @var null
@@ -1010,7 +1016,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function current(): mixed
 	{
-		return current($this->result);
+		return $this->result[$this->position];
 	}
 
 	/**
@@ -1018,7 +1024,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function key(): mixed
 	{
-		return key($this->result);
+		return $this->position;
 	}
 
 	/**
@@ -1026,7 +1032,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function next(): void
 	{
-		next($this->result);
+		++$this->position;
 	}
 
 	/**
@@ -1034,15 +1040,16 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function rewind(): void
 	{
-		reset($this->result);
+		$this->position = 0;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function valid(): void
+	public function valid(): bool
 	{
-		key($this->result) !== null;
+		//return key($this->result) !== null;
+		return isset($this->result[$this->position]);
 	}
 
 	/**
