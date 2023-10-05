@@ -963,6 +963,9 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 * ArrayAccess Implementation
+	 */
+	/**
 	 * @param mixed $offset
 	 * @return bool
 	 */
@@ -999,17 +1002,13 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
-	 * @return mixed|void
+	 * Iterator Implementation
 	 */
-	public function rewind()
-	{
-		return reset($this->result);
-	}
 
 	/**
 	 * @return mixed
 	 */
-	public function current()
+	public function current(): mixed
 	{
 		return current($this->result);
 	}
@@ -1017,7 +1016,7 @@ abstract class Model implements ArrayAccess, Iterator
 	/**
 	 * @return bool|float|int|string|null
 	 */
-	public function key()
+	public function key(): mixed
 	{
 		return key($this->result);
 	}
@@ -1025,15 +1024,23 @@ abstract class Model implements ArrayAccess, Iterator
 	/**
 	 * @return mixed|void
 	 */
-	public function next()
+	public function next(): void
 	{
 		return next($this->result);
 	}
 
 	/**
+	 * @return mixed|void
+	 */
+	public function rewind(): void
+	{
+		return reset($this->result);
+	}
+
+	/**
 	 * @return bool
 	 */
-	public function valid()
+	public function valid(): void
 	{
 		return key($this->result) !== null;
 	}
