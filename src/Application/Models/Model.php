@@ -1026,7 +1026,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function next(): void
 	{
-		return next($this->result);
+		next($this->result);
 	}
 
 	/**
@@ -1034,7 +1034,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function rewind(): void
 	{
-		return reset($this->result);
+		reset($this->result);
 	}
 
 	/**
@@ -1042,7 +1042,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function valid(): void
 	{
-		return key($this->result) !== null;
+		key($this->result) !== null;
 	}
 
 	/**
