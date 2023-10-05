@@ -975,7 +975,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 * @param mixed $offset
 	 * @return array|mixed
 	 */
-	public function offsetGet($offset)
+	public function offsetGet($offset): mixed
 	{
 		return $this->result[$offset];
 
@@ -985,7 +985,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 * @param mixed $offset
 	 * @param mixed $value
 	 */
-	public function offsetSet($offset, $value)
+	public function offsetSet($offset, $value): void
 	{
 		$this->result[$offset] = $value;
 	}
@@ -993,7 +993,7 @@ abstract class Model implements ArrayAccess, Iterator
 	/**
 	 * @param mixed $offset
 	 */
-	public function offsetUnset($offset)
+	public function offsetUnset($offset): void
 	{
 		unset($this->result[$offset]);
 	}
