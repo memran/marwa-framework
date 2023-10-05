@@ -101,7 +101,7 @@ abstract class AppController
 
 	public function getValidationErrors()
 	{
-		$this->_validation->errors();
+		return $this->_validation->errors();
 	}
 
 	/**
