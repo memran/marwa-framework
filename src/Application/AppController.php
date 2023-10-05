@@ -27,6 +27,8 @@ abstract class AppController
 	 */
 	protected $_validate_message = [];
 
+	protected $_validation;
+
 	/**
 	 * @param $id
 	 * @param $alias_name
@@ -67,10 +69,10 @@ abstract class AppController
 			$this->setValidationMessage($this->_validate_message);
 		}
 
-		$validation = $this->validator->make($_POST + $_FILES, $this->getFieldValidation());
-		$validation->validate();
-		if ($validation->fails()) {
-			setMessage('error', 'errors', $validation->errors()->firstOfAll());
+		$this->_validation = $this->validator->make($_POST + $_FILES, $this->getFieldValidation());
+		$this->_validation->validate();
+		if ($this->_validation->fails()) {
+			setMessage('error', 'errors', $this->_validation->errors()->firstOfAll());
 			return false;
 		}
 
@@ -97,6 +99,10 @@ abstract class AppController
 		$this->validator->setMessages($msg);
 	}
 
+	public function getValidationErrors()
+	{
+		$this->_validation->errors();
+	}
 
 	/**
 	 * @param string $tplFileName
