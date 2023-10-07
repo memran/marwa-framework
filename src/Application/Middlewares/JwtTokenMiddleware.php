@@ -23,7 +23,7 @@
 				$authToken = $this->getBearerToken($bearer);
 				if ( is_null($authToken) )
 				{
-					return $this->deny();
+					return $this->deny("Not Found Auth Token");
 				}
 				if ( Auth::isValid($authToken) )
 				{
@@ -31,8 +31,11 @@
 					
 					return $response->withHeader('Authorization', 'Bearer ' . $authToken);
 				}
+				else {
+					return $this->deny("Token is not valid");
+				}
 			}else {
-				return $this->deny();
+				return $this->deny("Authorization header not present");
 			}
 			return $handler->handle($request);
 		}
@@ -60,8 +63,8 @@
 		/**
 		 * @return ResponseInterface
 		 */
-		protected function deny()
+		protected function deny($msg='')
 		{
-			return Response::error("Access Forbidden", 401);
+			return Response::error($msg, 401);
 		}
 	}
