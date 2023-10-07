@@ -331,7 +331,7 @@ class Auth
 	public function token(array $data)
 	{
 		$date = new DateTimeImmutable();
-		$expire_at = $date->modify('+' . $this->_config['expire'] . ' seconds')->getTimestamp(); // Add 3660 seconds
+		$expire_at = $date->modify('+' . $this->_config['expire'] . ' seconds')->getTimestamp(); // Add 3600 seconds
 		$request_data = [
 			'iat' => $date->getTimestamp(),
 			// Issued at: time when the token was generated
@@ -347,7 +347,7 @@ class Auth
 		return JWT::encode(
 			$request_data,
 			$this->_config['key'],
-			'HS512'
+			'HS256'
 		);
 	}
 	/**
@@ -356,7 +356,7 @@ class Auth
 	public function isValid(string $token)
 	{
 		try {
-			    $decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS512'));
+			    $decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS256'));
 			    	$now = new DateTimeImmutable();
 					if (
 						$decoded_token->iss !== $this->_config['iss'] ||
