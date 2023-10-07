@@ -31,10 +31,10 @@
 					
 					return $response->withHeader('Authorization', 'Bearer ' . $authToken);
 				}
+			}else {
+				return $this->deny();
 			}
-			
-			return $this->deny();
-			//return $handler->handle($request);
+			return $handler->handle($request);
 		}
 		
 		/**
