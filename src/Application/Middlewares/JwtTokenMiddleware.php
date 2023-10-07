@@ -25,16 +25,11 @@
 				{
 					return $this->deny();
 				}
-				$result = Auth::isValid($authToken);
-				if ( $result )
+				if ( Auth::isValid($authToken) )
 				{
 					$response = $handler->handle($request);
 					
 					return $response->withHeader('Authorization', 'Bearer ' . $authToken);
-				}
-				else
-				{
-					return $this->deny();
 				}
 			}
 			

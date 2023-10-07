@@ -355,15 +355,40 @@ class Auth
 	 * */
 	public function isValid(string $token)
 	{
-		$decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS512'));
-		$now = new DateTimeImmutable();
-		if (
-			$decoded_token->iss !== $this->_config['iss'] ||
-			$decoded_token->nbf > $now->getTimestamp() ||
-			$decoded_token->exp < $now->getTimestamp()
-		) {
-			return false;
-		}
+		try {
+			    $decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS512'));
+			    	$now = new DateTimeImmutable();
+					if (
+						$decoded_token->iss !== $this->_config['iss'] ||
+						$decoded_token->nbf > $now->getTimestamp() ||
+						$decoded_token->exp < $now->getTimestamp()
+					) {
+						return false;
+					}
+			} catch (InvalidArgumentException $e) {
+			    // provided key/key-array is empty or malformed.
+			      return false;
+			} catch (DomainException $e) {
+			    // provided algorithm is unsupported OR
+			    // provided key is invalid OR
+			    // unknown error thrown in openSSL or libsodium OR
+			    // libsodium is required but not available.
+			      return false;
+			} catch (SignatureInvalidException $e) {
+			    // provided JWT signature verification failed.
+			      return false;
+			} catch (BeforeValidException $e) {
+			    // provided JWT is trying to be used before "nbf" claim OR
+			    // provided JWT is trying to be used before "iat" claim.
+			} catch (ExpiredException $e) {
+			    return false;
+			} catch (UnexpectedValueException $e) {
+			    // provided JWT is malformed OR
+			    // provided JWT is missing an algorithm / using an unsupported algorithm OR
+			    // provided JWT algorithm does not match provided key OR
+			    // provided key ID in key/key-array is empty or invalid.
+			      return false;
+			}
 		Event::fire('Validated', $this->_authenticated_user);
 		return true;
 	}
