@@ -25,7 +25,7 @@
 				{
 					return $this->deny();
 				}
-				$result = Auth::isValid();
+				$result = Auth::isValid($authToken);
 				if ( $result )
 				{
 					$response = $handler->handle($request);

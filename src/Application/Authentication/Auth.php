@@ -2,12 +2,10 @@
 namespace Marwa\Application\Authentication;
 
 use Marwa\Application\Authentication\Models\User;
-use Marwa\Application\Authentication\Adapters\AuthenticationInterface;
 use Marwa\Application\Authentication\Exceptions\InvalidArgumentException;
 use Marwa\Application\Authentication\Exceptions\InvalidAuthentication;
 use Marwa\Application\Exceptions\FileNotFoundException;
-use Marwa\Application\Input;
-use Psr\Http\Message\ResponseInterface;
+
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use DateTimeImmutable;
