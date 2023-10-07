@@ -6,7 +6,7 @@ namespace Marwa\Application\Routes;
 
 use Exception;
 use League\Route\Dispatcher;
-use League\Route\Router;
+use League\Route\Router as LRouter;
 use Marwa\Application\AppStrategy;
 use Marwa\Application\Exceptions\NotFoundException;
 use Marwa\Application\Response;
@@ -15,7 +15,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class RouteCollection extends Router
+class RouteCollection extends LRouter
 {
 
 	/**

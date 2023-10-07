@@ -14,7 +14,7 @@ class Router
 	/**
 	 * @var RouteCollection
 	 */
-	protected $route;
+	protected $routeCollection;
 
 	/**
 	 * @var Request
@@ -53,10 +53,10 @@ class Router
 	 */
 	public function getRouter()
 	{
-		if (is_null($this->route)) {
+		if (is_null($this->routeCollection)) {
 			$this->setRouter();
 		}
-		return $this->route;
+		return $this->routeCollection;
 	}
 
 	/**
@@ -70,7 +70,7 @@ class Router
 	}
 
 	/**
-	 * @return Request
+	 * @return Psr\Http\Message\ServerRequestInterface
 	 * @throws Exception
 	 */
 	public function getRequest()
@@ -106,14 +106,14 @@ class Router
 	 */
 	public function setRouter(): self
 	{
-		$this->route = new RouteCollection();
+		$this->routeCollection = new RouteCollection();
 
-		if (!$this->route instanceof RouteCollectionInterface) {
+		if (!$this->routeCollection instanceof RouteCollectionInterface) {
 			throw new Exception('RouteCollectionInterface not implemented');
 		}
-		$this->route->useContainer($this->getContainer());
-		$this->route->setRequest($this->getRequest());
-		$this->route->setPath($this->getPath());
+		$this->routeCollection->useContainer($this->getContainer());
+		$this->routeCollection->setRequest($this->getRequest());
+		$this->routeCollection->setPath($this->getPath());
 		return $this;
 	}
 
