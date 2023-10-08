@@ -9,7 +9,10 @@ use Marwa\Application\Exceptions\FileNotFoundException;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use UnexpectedValueException;
+use LogicException;
 use DateTimeImmutable;
+
 use Marwa\Application\Facades\Event;
 
 class Auth
@@ -376,15 +379,22 @@ class Auth
 					"code" => "404"
 				];
 			}
-		} catch (Exception $e) {
-			
-				return $result = [
-					"message" => "Access denied.",
-					"error" => $e->getMessage(),
-					"code" => "401"
-				];
-			
+		} catch (LogicException $e) {
+			// errors having to do with environmental setup or malformed JWT Keys
+			return $result = [
+				"message" => "Access denied.",
+				"error" => $e->getMessage(),
+				"code" => "401"
+			];
+		} catch (UnexpectedValueException $e) {
+			// errors having to do with JWT signature and claims
+			return $result = [
+				"message" => "Access denied.",
+				"error" => $e->getMessage(),
+				"code" => "402"
+			];
 		}
+
 		Event::fire('Validated', $this->_authenticated_user);
 		return $result = [
 			"message" => "Access Granted.",
