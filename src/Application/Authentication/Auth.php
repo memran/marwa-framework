@@ -356,44 +356,45 @@ class Auth
 	public function isValid(string $token)
 	{
 		$result = [
-			"message"=> "",
+			"message" => "",
 			"error" => "",
-			"code" =>"200"
+			"code" => "200"
 		];
 		try {
-			   		 $decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS256'));
-			   		 $refresh_token=$decoded_token->data->refresh_token;
-			    	$now = new DateTimeImmutable();
-					if (
-						$decoded_token->iss !== $this->_config['iss'] ||
-						$decoded_token->nbf > $now->getTimestamp() ||
-						$decoded_token->exp < $now->getTimestamp()
-					) {
-						return $result[
-				        "message" => "Access denied.",
-				        "code" => "404"
-				    	];
-					}
+			$decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS256'));
+			$refresh_token = $decoded_token->data->refresh_token;
+			$now = new DateTimeImmutable();
+			if (
+				$decoded_token->iss !== $this->_config['iss'] ||
+				$decoded_token->nbf > $now->getTimestamp() ||
+				$decoded_token->exp < $now->getTimestamp()
+			) {
+
+				return $result = [
+					"message" => "Access denied.",
+					"error" => "",
+					"code" => "404"
+				];
 			}
-			catch (Exception $e){
-				if($e->getMessage() == "Expired token"){
-				    list($header, $payload, $signature) = explode(".", $token);
-				    $payload = json_decode(base64_decode($payload));
-				    $refresh_token = $payload->data->refresh_token;
-				} else {
-				    // show error message
-				    return $result[
-				        "message" => "Access denied.",
-				        "error" => $e->getMessage(),
-				        "code" => "401"
-				    	];
-				    }
+		} catch (Exception $e) {
+			if ($e->getMessage() == "Expired token") {
+				list($header, $payload, $signature) = explode(".", $token);
+				$payload = json_decode(base64_decode($payload));
+				$refresh_token = $payload->data->refresh_token;
+			} else {
+				// show error message
+				return $result = [
+					"message" => "Access denied.",
+					"error" => $e->getMessage(),
+					"code" => "401"
+				];
 			}
+		}
 		Event::fire('Validated', $this->_authenticated_user);
-		return $result[
-				        "message" => "Access Granted.",
-				        "code" => "200"
-				    	];
+		return $result = [
+			"message" => "Access Granted.",
+			"code" => "200"
+		];
 	}
 
 }
