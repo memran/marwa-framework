@@ -19,23 +19,28 @@
 			if ( $request->hasHeader('Authorization') )
 			{
 				$bearer = $request->getHeaderLine("Authorization");
-				//$authToken = explode(" ", $bearer);
+
 				$authToken = $this->getBearerToken($bearer);
 				if ( is_null($authToken) )
 				{
-					return $this->deny("Not Found Auth Token");
+					return $this->deny(["message"=>"Token is null","code"=>"404"]);
 				}
-				if ( Auth::isValid($authToken) )
+				$res=Auth::isValid($authToken);
+				if ( $res['code']=="200")
 				{
 					$response = $handler->handle($request);
 					
 					return $response->withHeader('Authorization', 'Bearer ' . $authToken);
 				}
 				else {
-					return $this->deny("Token is not valid");
+					if(!$res['error'])
+					{
+						return $this->deny(["message"=>$res["error"],"code"=>$res['code']]);
+					}
+					return $this->deny(["message"=>$res["message"],"code"=>$res['code']]);
 				}
 			}else {
-				return $this->deny("Authorization header not present");
+				return $this->deny(["message"=>"Authorization header not present","code"=>"404"]);
 			}
 			return $handler->handle($request);
 		}
@@ -63,8 +68,8 @@
 		/**
 		 * @return ResponseInterface
 		 */
-		protected function deny($msg='')
+		protected function deny($msg)
 		{
-			return Response::error($msg, 401);
+			return Response::json($msg);
 		}
 	}
