@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace Marwa\Application\Authentication;
 
 use Marwa\Application\Authentication\Models\User;
@@ -362,7 +363,6 @@ class Auth
 		];
 		try {
 			$decoded_token = JWT::decode($token, new Key($this->_config['key'], 'HS256'));
-			$refresh_token = $decoded_token->data->refresh_token;
 			$now = new DateTimeImmutable();
 			if (
 				$decoded_token->iss !== $this->_config['iss'] ||
@@ -377,18 +377,13 @@ class Auth
 				];
 			}
 		} catch (Exception $e) {
-			if ($e->getMessage() == "Expired token") {
-				list($header, $payload, $signature) = explode(".", $token);
-				$payload = json_decode(base64_decode($payload));
-				$refresh_token = $payload->data->refresh_token;
-			} else {
-				// show error message
+			
 				return $result = [
 					"message" => "Access denied.",
 					"error" => $e->getMessage(),
 					"code" => "401"
 				];
-			}
+			
 		}
 		Event::fire('Validated', $this->_authenticated_user);
 		return $result = [
