@@ -30,22 +30,22 @@ class JwtTokenMiddleware implements MiddlewareInterface
 
 				return $response->withHeader('Authorization', 'Bearer ' . $authToken);
 			} else {
-				if (!$res['error']) {
+				if ($res['error'] != null) {
 					return $this->deny([
-										"message" => $res["error"],
-										"code" => $res['code']
-									]);
+						"message" => $res["error"],
+						"code" => $res['code']
+					]);
 				}
 				return $this->deny([
-									"message" => $res["message"],
-									"code" => $res['code']
-								]);
+					"message" => $res["message"],
+					"code" => $res['code']
+				]);
 			}
 		} else {
 			return $this->deny([
-					"message" => "Authorization header not present",
-					"code" => "404"
-				]);
+				"message" => "Authorization header not present",
+				"code" => "404"
+			]);
 		}
 		return $handler->handle($request);
 	}
