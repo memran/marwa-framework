@@ -3,7 +3,7 @@
 namespace Marwa\Application;
 
 use Exception;
-use League\Route\{ContainerAwareInterface,ContainerAwareTrait};
+use League\Route\{ContainerAwareInterface, ContainerAwareTrait};
 use League\Route\Http\Exception\{MethodNotAllowedException, NotFoundException};
 use League\Route\Route;
 use League\Route\Strategy\{StrategyInterface};
@@ -15,15 +15,20 @@ class AppStrategy implements ContainerAwareInterface, StrategyInterface
 {
     use ContainerAwareTrait;
 
+    public function addResponseDecorator(callable $decorator): StrategyInterface
+    {
+
+    }
+
     /**
      * {@inheritdoc}
      */
-    public function invokeRouteCallable(Route $route, ServerRequestInterface $request) : ResponseInterface
+    public function invokeRouteCallable(Route $route, ServerRequestInterface $request): ResponseInterface
     {
 
         return call_user_func_array(
             $route->getCallable($this->getContainer()),
-            [$request,$route->getVars()]
+            [$request, $route->getVars()]
         );
 
     }
@@ -31,7 +36,7 @@ class AppStrategy implements ContainerAwareInterface, StrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function getNotFoundDecorator(NotFoundException $exception) : MiddlewareInterface
+    public function getNotFoundDecorator(NotFoundException $exception): MiddlewareInterface
     {
         return $this->throwExceptionMiddleware($exception);
     }
@@ -39,7 +44,7 @@ class AppStrategy implements ContainerAwareInterface, StrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function getMethodNotAllowedDecorator(MethodNotAllowedException $exception) : MiddlewareInterface
+    public function getMethodNotAllowedDecorator(MethodNotAllowedException $exception): MiddlewareInterface
     {
         return $this->throwExceptionMiddleware($exception);
     }
@@ -51,15 +56,15 @@ class AppStrategy implements ContainerAwareInterface, StrategyInterface
      *
      * @return \Psr\Http\Server\MiddlewareInterface
      */
-    protected function throwExceptionMiddleware(Exception $exception) : MiddlewareInterface
+    protected function throwExceptionMiddleware(Exception $exception): MiddlewareInterface
     {
-          return new MethodNotFoundMiddleware($exception);
+        return new MethodNotFoundMiddleware($exception);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getExceptionHandler() : MiddlewareInterface
+    public function getExceptionHandler(): MiddlewareInterface
     {
         return $this->getThrowableHandler();
     }
@@ -67,17 +72,16 @@ class AppStrategy implements ContainerAwareInterface, StrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function getThrowableHandler() : MiddlewareInterface
+    public function getThrowableHandler(): MiddlewareInterface
     {
-        return new class implements MiddlewareInterface
-        {
+        return new class implements MiddlewareInterface {
             /**
              * {@inheritdoc}
              */
             public function process(
                 ServerRequestInterface $request,
                 RequestHandlerInterface $requestHandler
-            ) : ResponseInterface {
+            ): ResponseInterface {
                 try {
                     return $requestHandler->handle($request);
                 } catch (Throwable $e) {

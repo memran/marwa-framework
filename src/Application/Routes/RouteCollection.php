@@ -90,9 +90,9 @@ class RouteCollection extends LRouter
 	 */
 	public function buildRoute(): self
 	{
-		if (is_null($this->getStrategy())) {
-			$this->setStrategy(new AppStrategy());
-		}
+		// if (is_null($this->getStrategy())) {
+		// 	$this->setStrategy(new AppStrategy());
+		// }
 		$this->prepareRoutes();
 
 		return $this;
