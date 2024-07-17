@@ -99,9 +99,12 @@ abstract class AppController
 		$this->validator->setMessages($msg);
 	}
 
+	/**
+	 * return validation errors
+	 * */
 	public function getValidationErrors()
 	{
-		return $this->_validation->errors();
+		return $this->_validation->errors()->firstOfAll();
 	}
 
 	/**
@@ -113,6 +116,12 @@ abstract class AppController
 	public function render(string $tplFileName, array $data = [])
 	{
 		return view($tplFileName, $data);
+	}
+	/**
+	 * alias of valdiation error returns
+	 * */
+	public function errors(){
+		return $this->getValidationErrors();
 	}
 
 }
