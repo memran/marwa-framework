@@ -57,7 +57,7 @@ class RouteCollection extends LRouter
 
 
 		//building the route on the RouteCollection
-		$this->buildRoute();
+		//$this->buildRoute();
 	}
 
 	/**
@@ -93,7 +93,7 @@ class RouteCollection extends LRouter
 		// if (is_null($this->getStrategy())) {
 		// 	$this->setStrategy(new AppStrategy());
 		// }
-		$this->prepareRoutes();
+		//$this->prepareRoutes();
 
 		return $this;
 	}
@@ -104,22 +104,22 @@ class RouteCollection extends LRouter
 	 *
 	 * @return void
 	 */
-	// public function prepareRoutes(ServerRequestInterface $request): void
-	// {
-	// 	//build name INdex
-	// 	$this->buildNameIndex();
-	// 	//prepare groups
-	// 	$this->prepareGroups();
-	// 	//$routes = array_merge(array_values($this->routes), array_values($this->namedRoutes));
-	// 	$routes = $this->getAllRoutes();
+	public function loadRoute(): void
+	{
+		//build name INdex
+		$this->buildNameIndex();
+		//prepare groups
+		$this->prepareGroups();
+		//$routes = array_merge(array_values($this->routes), array_values($this->namedRoutes));
+		$routes = $this->getAllRoutes();
 
-	// 	foreach ($routes as $key => $route) {
-	// 		if (is_null($route->getStrategy())) {
-	// 			$route->setStrategy($this->getStrategy());
-	// 		}
-	// 		$this->addRoute($route->getMethod(), $this->parseRoutePath($route->getPath()), $route);
-	// 	}
-	// }
+		foreach ($routes as $key => $route) {
+			if (is_null($route->getStrategy())) {
+				$route->setStrategy($this->getStrategy());
+			}
+			$this->addRoute($route->getMethod(), $this->parseRoutePath($route->getPath()), $route);
+		}
+	}
 
 
 	/**
