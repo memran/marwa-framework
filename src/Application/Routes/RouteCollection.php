@@ -181,20 +181,20 @@ class RouteCollection extends LRouter
 	 * {@inheritdoc}
 	 * @throws NotFoundException
 	 */
-	public function dispatch(ServerRequestInterface $request): ResponseInterface
-	{
+	// public function dispatch(ServerRequestInterface $request): ResponseInterface
+	// {
 
-		//check routeSchema/Port
-		$this->routeCheckSchema($request);
+	// 	//check routeSchema/Port
+	// 	$this->routeCheckSchema($request);
 
-		//processing the route group
-		$this->processGroups($request);
+	// 	//processing the route group
+	// 	$this->processGroups($request);
 
-		return (new Dispatcher($this->getData()))
-			->middlewares((array) $this->getMiddlewareStack())
-			->setStrategy($this->getStrategy())
-			->dispatchRequest($request);
-	}
+	// 	return (new Dispatcher($this->getData()))
+	// 		->middlewares((array) $this->getMiddlewareStack())
+	// 		->setStrategy($this->getStrategy())
+	// 		->dispatchRequest($request);
+	// }
 
 	/**
 	 * @param ServerRequestInterface $request
