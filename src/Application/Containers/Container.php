@@ -4,7 +4,9 @@ namespace Marwa\Application\Containers;
 
 use League\Container\Container as LeagueContainer;
 use League\Container\ReflectionContainer;
+use League\Container\ServiceProvider\ServiceProviderInterface;
 use Psr\Container\ContainerInterface as PContainerInterface;
+use Exception;
 
 class Container implements ContainerInterface
 {
@@ -103,9 +105,15 @@ class Container implements ContainerInterface
 	 * @param  $provider
 	 * @throws \Exception
 	 */
-	public function addServiceProvider($provider): ContainerInterface
+	public function addServiceProvider(ServiceProviderInterface $provider): ContainerInterface
 	{
-		$this->_container->addServiceProvider($provider);
+		if ($provider instanceof ServiceProviderInterface) {
+			$this->_container->addServiceProvider(new $provider);
+
+		} else {
+			throw new Exception("Invalid Service Provider Class", 500);
+
+		}
 
 		return $this;
 	}
