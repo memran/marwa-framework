@@ -1,6 +1,7 @@
 <?php
 
 namespace Marwa\Application\Containers;
+
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;
 
@@ -29,7 +30,7 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
     /**
      *
      */
-    public function boot()
+    public function boot(): void
     {
 
     }
