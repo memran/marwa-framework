@@ -14,6 +14,6 @@ interface ContainerInterface
     public function singleton(string $id, $concrete = null);
     public function get($id, bool $new = false);
     public function enableAutoWire(bool $cache = false): ContainerInterface;
-    public function addServiceProvider(ServiceProviderInterface $provider): ContainerInterface;
+    public function addServiceProvider(string $provider): ContainerInterface;
 
 }

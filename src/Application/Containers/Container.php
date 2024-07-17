@@ -105,15 +105,10 @@ class Container implements ContainerInterface
 	 * @param  $provider
 	 * @throws \Exception
 	 */
-	public function addServiceProvider(ServiceProviderInterface $provider): ContainerInterface
+	public function addServiceProvider($provider): ContainerInterface
 	{
-		if ($provider instanceof ServiceProviderInterface) {
-			$this->_container->addServiceProvider(new $provider);
+		$this->_container->addServiceProvider(new $provider);
 
-		} else {
-			throw new Exception("Invalid Service Provider Class", 500);
-
-		}
 
 		return $this;
 	}
