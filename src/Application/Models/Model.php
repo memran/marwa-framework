@@ -124,8 +124,9 @@ abstract class Model implements ArrayAccess, Iterator
 	protected function bootModel()
 	{
 		$this->fireEvent("booting");
-		$this->createBuilder();
 		$this->boot();
+		$this->createBuilder();
+		$this->booted();
 		$this->fireEvent("booted");
 	}
 
@@ -146,6 +147,7 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 *  Function is to get table name from class automaticaly
 	 * @return string
 	 * @throws ReflectionException
 	 */
@@ -181,11 +183,22 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
-	 *
+	 * 
+	 * 
+	 * @return void
 	 */
 	public function boot()
 	{
 		//boot function
+	}
+
+	/**
+	 * Summary of booted
+	 * @return void
+	 */
+	public function booted()
+	{
+
 	}
 
 	/**
@@ -255,6 +268,7 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 * it will return all the columns 
 	 * @param array $columns
 	 * @return $this
 	 * @throws Exception
@@ -406,6 +420,7 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 * It will insert new data 
 	 * @param array $data
 	 * @return $this
 	 * @throws InvalidArgumentException
@@ -440,6 +455,7 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 * it wil return result
 	 * @return array
 	 */
 	public function getResult()
@@ -461,6 +477,7 @@ abstract class Model implements ArrayAccess, Iterator
 	}
 
 	/**
+	 * Find data by column condition
 	 * @param string $field
 	 * @param mixed $attributes
 	 * @param string $operator
@@ -474,8 +491,44 @@ abstract class Model implements ArrayAccess, Iterator
 
 		return $this;
 	}
+	/**
+	 * Summary of getLocalScopeMethod
+	 * @param mixed $key
+	 * @return string
+	 */
+	protected function getLocalScopeMethod($key): string
+	{
+		return 'scope' . ucfirst($key);
+	}
 
 	/**
+	 * 
+	 * 
+	 * @param mixed $key
+	 * @return bool
+	 */
+	public function getLocalScope($key): bool
+	{
+		return method_exists($this, $this->getLocalScopeMethod($key));
+	}
+
+	/**
+	 * @param $scopeFunction
+	 * @return $this
+	 */
+	protected function addGlobalScope($scopeFunction)
+	{
+		if ($scopeFunction instanceof ScopeInterface) {
+			$scopeFunction->apply($this->buildCondition(), $this);
+		} else if (is_callable($scopeFunction)) {
+			$scopeFunction($this->buildCondition(), $this);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * it will pass to querybuilder and call their method
 	 * @param string $method
 	 * @param mixed $args
 	 * @return mixed
@@ -484,6 +537,10 @@ abstract class Model implements ArrayAccess, Iterator
 	public function __call($method, $args)
 	{
 		try {
+			if ($this->getLocalScope($method)) { //check localScope exists
+
+				return call_user_func_array([$this, $this->getLocalScopeMethod($method)], [$this->buildCondition(), $$args]);
+			}
 			//return call_user_func_array([$this->buildCondition(), $method], $args);
 			return call_user_func_array([$this->getQueryBuilder(), $method], $args);
 		} catch (\Throwable $th) {
@@ -512,6 +569,7 @@ abstract class Model implements ArrayAccess, Iterator
 	 */
 	public function __get($key)
 	{
+
 		return $this->getAttribute($key);
 	}
 
@@ -531,32 +589,37 @@ abstract class Model implements ArrayAccess, Iterator
 		$this->setAttribute($key, $value);
 	}
 
+
 	/**
 	 * @param string $key
-	 * @return array
+	 * @return mixed
 	 */
-	public function getAttribute(string $key)
+	public function getAttribute(string $key): mixed
 	{
+		//check mutator exists 
 		if ($this->hasGetMutator($key)) {
 			if (array_key_exists($key, $this->attributes)) {
 				$value = $this->attributes[$key];
 			} else {
 				$value = null;
 			}
-
+			//execute and return mutate
 			return $this->executeGetMutate($key, $value);
 		}
-
+		//check attributes exists
 		if (array_key_exists($key, $this->attributes)) {
 			return $this->attributes[$key];
 		} else {
+			//check local method exists
 			if (method_exists($this, $key)) {
 				return $this->$key()->getRelation();
+
 			}
 
 			return null;
 		}
 	}
+
 
 	/**
 	 * @param string $key
@@ -1081,18 +1144,6 @@ abstract class Model implements ArrayAccess, Iterator
 		return count($this->result);
 	}
 
-	/**
-	 * @param $scopeFunction
-	 * @return $this
-	 */
-	protected function addGlobalScope($scopeFunction)
-	{
-		if (is_callable($scopeFunction)) {
-			$scopeFunction($this);
-		}
-
-		return $this;
-	}
 
 
 }
