@@ -52,7 +52,8 @@
     "league/route": "^5.1",
     "guzzlehttp/guzzle": "^7.8",
     "league/event": "^3.0",
-    "league/flysystem": "^3.28"
+    "league/flysystem": "^3.28",
+    "kint-php/kint": "^5.1"
   },
   "autoload": {
     "files": [
@@ -66,8 +67,7 @@
     "phpunit/phpunit": "^8",
     "squizlabs/php_codesniffer": "3.*",
     "phpstan/phpstan": "^0.12",
-    "phpstan/phpstan-phpunit": "^0.12",
-    "kint-php/kint": "^5.1"
+    "phpstan/phpstan-phpunit": "^0.12"
   },
   "scripts": {
     "phpcs": "vendor/bin/phpcs src",
