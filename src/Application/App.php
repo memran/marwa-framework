@@ -196,8 +196,6 @@ class App
 			$this->environmentFile = '.env.testing';
 		}
 		$file = $this->getBasePath() . DIRECTORY_SEPARATOR . $this->environmentFile;
-		dd($file);
-
 		/**
 		 * Check .env file exists if not throw error
 		 */
