@@ -27,7 +27,7 @@
     "php": " >= 8.2",
     "ext-json": "*",
     "symfony/console": "^6.4",
-    "symfony/dotenv": "^6.0",
+    "symfony/dotenv": "^7.1",
     "league/container": "^4.2",
     "laminas/laminas-httphandlerrunner": "^2.5",
     "markrogoyski/simplelog-php": "0.*",
