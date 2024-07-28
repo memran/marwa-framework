@@ -82,6 +82,7 @@ class TableSchema
 	}
 
 	/**
+	 * function to drop a table
 	 * @return int
 	 */
 	public function drop()
@@ -90,6 +91,7 @@ class TableSchema
 	}
 
 	/**
+	 * function to create table by name
 	 * @return mixed
 	 */
 	public function create()
@@ -98,6 +100,7 @@ class TableSchema
 	}
 
 	/**
+	 * function to build sql to create table
 	 * @return string
 	 */
 	public function build(): string

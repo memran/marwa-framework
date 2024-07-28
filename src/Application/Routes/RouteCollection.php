@@ -1,11 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Marwa\Application\Routes;
 
 use Exception;
-use League\Route\Dispatcher;
 use League\Route\Router as LRouter;
 use Marwa\Application\AppStrategy;
 use Marwa\Application\Exceptions\NotFoundException;
@@ -54,10 +51,6 @@ class RouteCollection extends LRouter
 		foreach (Finder::findFiles('*.php')->in($this->getPath()) as $file) {
 			include_once ($file);
 		}
-
-
-		//building the route on the RouteCollection
-		//$this->buildRoute();
 	}
 
 	/**
@@ -86,72 +79,6 @@ class RouteCollection extends LRouter
 	}
 
 	/**
-	 * @return $this
-	 */
-	public function buildRoute(): self
-	{
-		// if (is_null($this->getStrategy())) {
-		// 	$this->setStrategy(new AppStrategy());
-		// }
-		//$this->prepareRoutes();
-
-		return $this;
-	}
-
-	/**
-	 * Prepare all routes, build name index and filter out none matching
-	 * routes before being passed off to the parser.
-	 *
-	 * @return void
-	 */
-	// public function loadRoute(): void
-	// {
-	// 	//build name INdex
-	// 	$this->buildNameIndex();
-	// 	//prepare groups
-	// 	$this->prepareGroups();
-	// 	//$routes = array_merge(array_values($this->routes), array_values($this->namedRoutes));
-	// 	$routes = $this->getAllRoutes();
-
-	// 	foreach ($routes as $key => $route) {
-	// 		if (is_null($route->getStrategy())) {
-	// 			$route->setStrategy($this->getStrategy());
-	// 		}
-	// 		$this->addRoute($route->getMethod(), $this->parseRoutePath($route->getPath()), $route);
-	// 	}
-	// }
-
-
-	/**
-	 * Process all groups
-	 *
-	 * Adds all of the group routes to the collection and determines if the group
-	 * strategy should be be used.
-	 *
-	 * @param ServerRequestInterface $request
-	 *
-	 * @return void
-	 */
-	// protected function prepareGroups(): void
-	// {
-	// 	//$activePath = $request->getUri()->getPath();
-	// 	foreach ($this->groups as $key => $group) {
-	// 		$group();
-	// 	}
-	// }
-
-
-	/**
-	 * [getAllRoutes description] return all routes
-	 *
-	 * @return array [description]
-	 */
-	protected function getAllRoutes(): array
-	{
-		return array_merge(array_values($this->routes), array_values($this->namedRoutes));
-	}
-
-	/**
 	 * @param ServerRequestInterface $request
 	 * @return $this
 	 */
@@ -176,76 +103,6 @@ class RouteCollection extends LRouter
 			return Response::error('Route Not Found :' . $exception);
 		}
 	}
-
-	/**
-	 * {@inheritdoc}
-	 * @throws NotFoundException
-	 */
-	// public function dispatch(ServerRequestInterface $request): ResponseInterface
-	// {
-
-	// 	//check routeSchema/Port
-	// 	$this->routeCheckSchema($request);
-
-	// 	//processing the route group
-	// 	$this->processGroups($request);
-
-	// 	return (new Dispatcher($this->getData()))
-	// 		->middlewares((array) $this->getMiddlewareStack())
-	// 		->setStrategy($this->getStrategy())
-	// 		->dispatchRequest($request);
-	// }
-
-	/**
-	 * @param ServerRequestInterface $request
-	 * @throws NotFoundException
-	 */
-	// protected function routeCheckSchema(ServerRequestInterface $request): void
-	// {
-	// 	$routes = $this->getAllRoutes();
-
-	// 	foreach ($routes as $key => $route) {
-	// 		if (!is_null($route->getScheme()) && $route->getScheme() !== $request->getUri()->getScheme()) {
-	// 			throw new NotFoundException('Route schema did not match');
-	// 		}
-
-	// 		// check for domain condition
-	// 		if (!is_null($route->getHost()) && $route->getHost() !== $request->getUri()->getHost()) {
-	// 			throw new NotFoundException('Route host did not match');
-	// 		}
-	// 		//check for port condition
-	// 		if (!is_null($route->getPort()) && $route->getPort() !== $request->getUri()->getPort()) {
-	// 			throw new NotFoundException('Route port did not match');
-	// 		}
-	// 	}
-	// }
-
-	/**
-	 * Process all groups
-	 *
-	 * Adds all of the group routes to the collection and determines if the group
-	 * strategy should be be used.
-	 *
-	 * @param ServerRequestInterface $request
-	 *
-	 * @return void
-	 */
-	// protected function processGroups(ServerRequestInterface $request): void
-	// {
-	// 	$activePath = $request->getUri()->getPath();
-	// 	foreach ($this->groups as $key => $group) {
-	// 		// we want to determine if we are technically in a group even if the
-	// 		// route is not matched so exceptions are handled correctly
-	// 		if (
-	// 			strncmp($activePath, $group->getPrefix(), strlen($group->getPrefix())) === 0
-	// 			&& !is_null($group->getStrategy())
-	// 		) {
-	// 			$this->setStrategy($group->getStrategy());
-	// 		}
-	// 		unset($this->groups[$key]);
-	// 	}
-	// }
-
 	/**
 	 * @param ContainerInterface $container
 	 * @throws Exception
