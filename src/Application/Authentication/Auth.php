@@ -50,7 +50,7 @@ class Auth
 	 * @@var array description
 	 *
 	 * */
-	private $_ignore = ['password', 'remember_token', 'created_at', 'updated_at'];
+	private $_ignore = ['password', 'remember_token','invitation_token', 'created_at', 'updated_at'];
 
 	/**
 	 * Auth constructor.
@@ -79,11 +79,7 @@ class Auth
 	 */
 	protected function createUserModel(): void
 	{
-		// if (!array_key_exists('model', $this->_config)) {
-		// 	throw new InvalidArgumentException("Authentication Model is not found in configuration");
-		// }
 		if ($this->_user == null) {
-			//$this->_user = new $this->_config['model'];
 			$this->_user = new User();
 		}
 	}
@@ -137,8 +133,8 @@ class Auth
 			$this->setError('User is Inactive', 402);
 			return false;
 		}
+		Event::fire('Login', $this->_user);
 		$this->postAuth($result);
-		Event::fire('Login', $this->_authenticated_user);
 		return true;
 	}
 	/**
@@ -277,7 +273,7 @@ class Auth
 	 * */
 	public function login(User $user, bool $remember = false)
 	{
-		$crediantial = ['username' => $user->username, 'password' => $user->password];
+		$crediantial = ['email' => $user->email, 'password' => $user->password];
 		return $this->attempt($crediantial, $remember);
 	}
 	/**

@@ -18,7 +18,7 @@ class User extends Model
 		/**
 		 * @var string
 		 */
-		protected $fillable = ['name', 'username', 'email', 'active', 'password', 'remember_token'];
+		protected $fillable = ['name', 'email', 'active', 'password', 'remember_token','parent_id','invitation_token'];
 		/**
 		 * @var bool
 		 */
