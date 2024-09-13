@@ -32,21 +32,22 @@ class CorsMiddleware implements MiddlewareInterface
 				return $this->preFlightRequest($request);
 		}
 		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS" ) {
-			logger("I am API Calls from CORS");
+			//logger("I am API Calls from CORS");
 			//read the environment
 			$this->readEnvHeaders();
 			//set the origin host
 			$this->setOriginHost($request);
 			//check if it is from same origin
 			if ($this->checkIsSameHost($request)) {
-				 logger('It is same host');
-				return $this->handleAndResponse($request, $handler);
-			}else if ($this->checkIsCrossOrigin($request)) { //check if it is cross origin request and allowed
-				 logger("it is checkIsCrossOrigin request and matched");
+				 //logger('It is same host');
 				return $this->handleAndResponse($request, $handler);
 			}
-			logger("I am normal API calls");
-			return $this->handleAndResponse($request, $handler);
+			if ($this->checkIsCrossOrigin($request)) { //check if it is cross origin request and allowed
+				 //logger("it is checkIsCrossOrigin request and matched");
+				return $this->handleAndResponse($request, $handler);
+			}
+			//logger("I am normal API calls");
+			//return $this->handleAndResponse($request, $handler);
 
 		}
 
@@ -144,30 +145,30 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function responseHeaders($response)
 	{
-		$tempResponse=$response;
-		if (!empty($this->allowed_host))
-		{
-			$tempResponse = $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-						->withAddedHeader('Access-Control-Allow-Credentials',true)
-		 				->withAddedHeader('Access-Control-Max-Age',86400);
-		}
-		if(!empty($this->options['headers']))
-		{
-			$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers']);
-		}
-		if(!empty($this->options['methods']))
-		{
-			$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
-		}
+		// $tempResponse=$response;
+		// if (!empty($this->allowed_host))
+		// {
+		// 	$tempResponse = $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+		// 				->withAddedHeader('Access-Control-Allow-Credentials',true)
+		//  				->withAddedHeader('Access-Control-Max-Age',86400);
+		// }
+		// if(!empty($this->options['headers']))
+		// {
+		// 	$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers']);
+		// }
+		// if(!empty($this->options['methods']))
+		// {
+		// 	$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+		// }
 		// if (!empty($this->allowed_host) && !empty($this->options['headers']) && !empty($this->options['methods'])) {
-		// 	return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-		// 		->withAddedHeader('Access-Control-Allow-Credentials: true')
-		// 		->withAddedHeader('Access-Control-Max-Age: 86400')
-		// 		->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
-		// 		->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+			return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+				->withAddedHeader('Access-Control-Allow-Credentials: true')
+				->withAddedHeader('Access-Control-Max-Age: 86400')
+				->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
+				->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
 		// }
 
-			return $tempResponse;
+			//return $tempResponse;
 	}
 
 	/**
