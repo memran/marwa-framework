@@ -14,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 class CorsMiddleware implements MiddlewareInterface
 {
 
-	private $allowed_hosts = ['*']; //Access-Control-Allow-Origin
+	private $allowed_hosts = []; //Access-Control-Allow-Origin
 	private $allowed_host;
 	private $origin_host;
 	private $options = [
@@ -31,19 +31,16 @@ class CorsMiddleware implements MiddlewareInterface
 		if ($request->hasHeader('Origin') && $request->getMethod() == "OPTIONS") {
 				return $this->preFlightRequest($request);
 		}
-		if ($request->getMethod() != "OPTIONS") {
+		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS") {
 			//read the environment
 			$this->readEnvHeaders();
 			//set the origin host
 			$this->setOriginHost($request);
-
 			//check if it is from same origin
 			if ($this->checkIsSameHost($request)) {
 				// logger('It is same host');
 				return $this->handleAndResponse($request, $handler);
-			}
-			//check if it is cross origin request and allowed
-			if ($this->checkIsCrossOrigin($request)) {
+			}else if ($this->checkIsCrossOrigin($request)) { //check if it is cross origin request and allowed
 				// logger("it is checkIsCrossOrigin request and matched");
 				return $this->handleAndResponse($request, $handler);
 			}
@@ -87,7 +84,6 @@ class CorsMiddleware implements MiddlewareInterface
 
 		if ($host === $origin['host']) {
 			$this->setAllowedHost($this->origin_host);
-
 			return true;
 		}
 
@@ -145,16 +141,30 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function responseHeaders($response)
 	{
-
-		if (!empty($this->allowed_host) && !empty($this->options['headers']) && !empty($this->options['methods'])) {
-			return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-				->withAddedHeader('Access-Control-Allow-Credentials: true')
-				->withAddedHeader('Access-Control-Max-Age: 86400')
-				->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
-				->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+		$tempResponse=$response;
+		if (!empty($this->allowed_host))
+		{
+			$tempResponse = $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+						->withAddedHeader('Access-Control-Allow-Credentials',true)
+		 				->withAddedHeader('Access-Control-Max-Age',86400);
 		}
+		if(!empty($this->options['headers']))
+		{
+			$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers']);
+		}
+		if(!empty($this->options['methods']))
+		{
+			$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+		}
+		// if (!empty($this->allowed_host) && !empty($this->options['headers']) && !empty($this->options['methods'])) {
+		// 	return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+		// 		->withAddedHeader('Access-Control-Allow-Credentials: true')
+		// 		->withAddedHeader('Access-Control-Max-Age: 86400')
+		// 		->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
+		// 		->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+		// }
 
-			return $response;
+			return $tempResponse;
 	}
 
 	/**
@@ -163,7 +173,6 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function checkIsCrossOrigin($req)
 	{
-
 		$origin = $this->getOriginHost();
 		if (Arr::empty($this->allowed_hosts)) {
 			return true;
@@ -250,7 +259,9 @@ class CorsMiddleware implements MiddlewareInterface
 		$headers = [
 			'Access-Control-Allow-Origin' => $this->allowed_host,
 			'Access-Control-Allow-Headers' => $this->options['headers'],
-			'Access-Control-Allow-Methods' => $this->options['methods']
+			'Access-Control-Allow-Methods' => $this->options['methods'],
+			'Access-Control-Allow-Credentials'=> 'true',
+			'Access-Control-Max-Age'=> 86400
 		];
 
 		return Response::empty($headers);
