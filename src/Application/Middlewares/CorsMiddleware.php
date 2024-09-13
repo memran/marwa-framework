@@ -30,7 +30,7 @@ class CorsMiddleware implements MiddlewareInterface
 
 		//response pre-flight
 		if ($request->hasHeader('Origin') ) {
-				$this->preProcessConfiguration();
+				$this->preProcessConfiguration($request);
 				if($request->getMethod() == "OPTIONS"){
 					return $this->preFlightRequest($request);
 				}
@@ -44,7 +44,7 @@ class CorsMiddleware implements MiddlewareInterface
 
 	}
 
-	protected function preProcessConfiguration()
+	protected function preProcessConfiguration($request)
 	{
 		//read the environment
 		$this->readEnvHeaders();
