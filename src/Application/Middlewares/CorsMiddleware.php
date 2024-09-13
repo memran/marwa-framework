@@ -30,26 +30,19 @@ class CorsMiddleware implements MiddlewareInterface
 
 		//response pre-flight
 		if ($request->hasHeader('Origin') ) {
-				$this->preProcessConfiguration($request);
+				//read the environment
+				$this->readEnvHeaders();
+			    //set the origin host
+				$this->setOriginHost($request);
 				if($request->getMethod() == "OPTIONS"){
 					return $this->preFlightRequest($request);
+				}else {
+					return $this->handleAndResponse($request,$handler);
 				}
-				// }else {
-				// 	return $this->handleAndResponse($request,$handler);
-				// }
-			return $this->handleAndResponse($request,$handler);
 		}
 
 		return $handler->handle($request);
 
-	}
-
-	protected function preProcessConfiguration($request)
-	{
-		//read the environment
-		$this->readEnvHeaders();
-	    //set the origin host
-		$this->setOriginHost($request);
 	}
 
 	/**
@@ -138,9 +131,9 @@ class CorsMiddleware implements MiddlewareInterface
 		}
 		 $response = $handler->handle($request);
 
-		return $response->withHeader('Access-Control-Allow-Origin',$this->allowed_host);
-		//->withAddedHeader('Access-Control-Allow-Credentials','true')
-		//->withAddedHeader('Access-Control-Max-Age',86400);
+		return $response->withHeader('Access-Control-Allow-Origin',$this->allowed_host)
+		->withAddedHeader('Access-Control-Allow-Credentials','true')
+		->withAddedHeader('Access-Control-Max-Age',86400);
 	}
 
 	/**
@@ -150,6 +143,7 @@ class CorsMiddleware implements MiddlewareInterface
 	protected function checkIsCrossOrigin($req)
 	{
 		$origin = $this->getOriginHost();
+		//deny if empty host
 		if (Arr::empty($this->allowed_hosts)) {
 			return true;
 		}
@@ -157,7 +151,6 @@ class CorsMiddleware implements MiddlewareInterface
 			//if allowed host is all set
 			if ($key === "*") {
 				$this->setAllowedHost($key);
-
 				return true;
 				break;
 			}
