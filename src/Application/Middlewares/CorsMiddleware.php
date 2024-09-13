@@ -30,8 +30,7 @@ class CorsMiddleware implements MiddlewareInterface
 		//response pre-flight
 		if ($request->hasHeader('Origin') && $request->getMethod() == "OPTIONS") {
 				return $this->preFlightRequest($request);
-		}
-		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS") {
+		}else if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS") {
 			//read the environment
 			$this->readEnvHeaders();
 			//set the origin host
@@ -44,6 +43,7 @@ class CorsMiddleware implements MiddlewareInterface
 				// logger("it is checkIsCrossOrigin request and matched");
 				return $this->handleAndResponse($request, $handler);
 			}
+			return $this->handleAndResponse($request, $handler);
 
 		}
 
