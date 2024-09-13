@@ -36,7 +36,7 @@ class CorsMiddleware implements MiddlewareInterface
 					return $this->handleAndResponse($request,$handler);
 				}
 		}
-
+		return $this->handleAndResponse($request,$handler);
 		return $handler->handle($request);
 
 	}
