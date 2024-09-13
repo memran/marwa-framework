@@ -136,39 +136,27 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function handleAndResponse($request, $handler)
 	{
-		return $this->responseHeaders($handler->handle($request));
+		return $handler->handle($this->responseHeaders($request))
 	}
 
 	/**
 	 * @param $response
 	 * @return mixed
 	 */
-	protected function responseHeaders($response)
+	protected function responseHeaders($request)
 	{
-		// $tempResponse=$response;
-		// if (!empty($this->allowed_host))
-		// {
-		// 	$tempResponse = $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-		// 				->withAddedHeader('Access-Control-Allow-Credentials',true)
-		//  				->withAddedHeader('Access-Control-Max-Age',86400);
-		// }
-		// if(!empty($this->options['headers']))
-		// {
-		// 	$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers']);
-		// }
-		// if(!empty($this->options['methods']))
-		// {
-		// 	$tempResponse= $tempResponse->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
-		// }
-		// if (!empty($this->allowed_host) && !empty($this->options['headers']) && !empty($this->options['methods'])) {
-			return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-				->withAddedHeader('Access-Control-Allow-Credentials: true')
-				->withAddedHeader('Access-Control-Max-Age: 86400')
-				->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
-				->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
-		// }
-
-			//return $tempResponse;
+			return $request->getHeaders()->addHeaders([
+			    'Access-Control-Allow-Origin' => $this->allowed_host,
+			    'Access-Control-Allow-Credentials' => 'true',
+			    'Access-Control-Max-Age' => 86400,
+			    'Access-Control-Allow-Headers'=> $this->options['headers'],
+			    'Access-Control-Allow-Methods'=> $this->options['methods']
+			]);
+			// return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+			// 	->withAddedHeader('Access-Control-Allow-Credentials','true')
+			// 	->withAddedHeader('Access-Control-Max-Age', 86400)
+			// 	->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
+			// 	->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
 	}
 
 	/**
