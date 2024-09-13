@@ -31,19 +31,21 @@ class CorsMiddleware implements MiddlewareInterface
 		if ($request->hasHeader('Origin') && $request->getMethod() == "OPTIONS") {
 				return $this->preFlightRequest($request);
 		}
-		if ($request->hasHeader('Origin')) {
+		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS" ) {
+			logger("I am API Calls from CORS");
 			//read the environment
 			$this->readEnvHeaders();
 			//set the origin host
 			$this->setOriginHost($request);
 			//check if it is from same origin
 			if ($this->checkIsSameHost($request)) {
-				// logger('It is same host');
+				 logger('It is same host');
 				return $this->handleAndResponse($request, $handler);
 			}else if ($this->checkIsCrossOrigin($request)) { //check if it is cross origin request and allowed
-				// logger("it is checkIsCrossOrigin request and matched");
+				 logger("it is checkIsCrossOrigin request and matched");
 				return $this->handleAndResponse($request, $handler);
 			}
+			logger("I am normal API calls");
 			return $this->handleAndResponse($request, $handler);
 
 		}
