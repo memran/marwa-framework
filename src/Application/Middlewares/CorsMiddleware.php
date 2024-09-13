@@ -76,7 +76,7 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function setOriginHost($req)
 	{
-		if (isset($req->getHeader('Origin')[0])) {
+		 if ($req->hasHeader('Origin')) {
 			$this->origin_host = $req->getHeader('Origin')[0];
 		}
 	}
