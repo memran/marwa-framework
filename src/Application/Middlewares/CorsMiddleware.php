@@ -133,11 +133,10 @@ class CorsMiddleware implements MiddlewareInterface
 				return $handler->handle($request);
 			}
 		}
-		return $handler->handle($request->getHeaders()->addHeaders([
-			    'Access-Control-Allow-Origin' => $this->allowed_host,
-			    'Access-Control-Allow-Headers'=> $this->options['headers'],
-			    'Access-Control-Allow-Methods'=> $this->options['methods']
-			]));
+		return $handler->handle($request)
+			->withHeader('Access-Control-Allow-Origin',$this->allowed_host)
+			->withAddedHeader('Access-Control-Allow-Credentials','true')
+			->withAddedHeader('Access-Control-Max-Age',86400);
 	}
 
 	/**
