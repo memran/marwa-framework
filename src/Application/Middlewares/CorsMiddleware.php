@@ -134,9 +134,9 @@ class CorsMiddleware implements MiddlewareInterface
 		}
 		 $response = $handler->handle($request);
 
-		return $response->withHeader('Access-Control-Allow-Origin','*')
-		->withAddedHeader('Access-Control-Allow-Credentials','true')
-		->withAddedHeader('Access-Control-Max-Age',86400);
+		return $response->withHeader('Access-Control-Allow-Origin','*');
+		//->withAddedHeader('Access-Control-Allow-Credentials','true')
+		//->withAddedHeader('Access-Control-Max-Age',86400);
 	}
 
 	/**
