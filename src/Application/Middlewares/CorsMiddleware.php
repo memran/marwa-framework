@@ -28,11 +28,9 @@ class CorsMiddleware implements MiddlewareInterface
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		//response pre-flight
-		if ($request->hasHeader('Origin') && $request->getMethod() == "OPTIONS") {
+		if ($request->getMethod() == "OPTIONS") {
 				return $this->preFlightRequest($request);
-		}
-
-		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS") {
+		}else if ($request->getMethod() != "OPTIONS") {
 			//read the environment
 			$this->readEnvHeaders();
 			//set the origin host
@@ -50,7 +48,6 @@ class CorsMiddleware implements MiddlewareInterface
 			}
 
 		}
-
 
 		return $handler->handle($request);
 
@@ -147,11 +144,15 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function responseHeaders($response)
 	{
+
 		if (!empty($this->allowed_host) && !empty($this->options['headers']) && !empty($this->options['methods'])) {
 			return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
+				->withAddedHeader('Access-Control-Allow-Credentials: true'),
+				->withAddedHeader('Access-Control-Max-Age: 86400')
 				->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
 				->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
-		} else
+		}
+
 			return $response;
 	}
 
