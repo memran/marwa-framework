@@ -28,31 +28,25 @@ class CorsMiddleware implements MiddlewareInterface
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		//response pre-flight
-		if ($request->hasHeader('Origin') && $request->getMethod() == "OPTIONS") {
-				return $this->preFlightRequest($request);
-		}
-		if ($request->hasHeader('Origin') && $request->getMethod() != "OPTIONS" ) {
-			//logger("I am API Calls from CORS");
-			//read the environment
-			$this->readEnvHeaders();
-			//set the origin host
-			$this->setOriginHost($request);
-			//check if it is from same origin
-			if ($this->checkIsSameHost($request)) {
-				 //logger('It is same host');
-				return $this->handleAndResponse($request, $handler);
-			}
-			if ($this->checkIsCrossOrigin($request)) { //check if it is cross origin request and allowed
-				 //logger("it is checkIsCrossOrigin request and matched");
-				return $this->handleAndResponse($request, $handler);
-			}
-			//logger("I am normal API calls");
-			//return $this->handleAndResponse($request, $handler);
-
+		if ($request->hasHeader('Origin') ) {
+				$this->preProcessConfiguration();
+				if($request->getMethod() == "OPTIONS"){
+					return $this->preFlightRequest($request);
+				}else {
+					return $this->handleAndResponse($request,$handler);
+				}
 		}
 
 		return $handler->handle($request);
 
+	}
+
+	protected function preProcessConfiguration()
+	{
+		//read the environment
+		$this->readEnvHeaders();
+	    //set the origin host
+		$this->setOriginHost($request);
 	}
 
 	/**
@@ -76,6 +70,28 @@ class CorsMiddleware implements MiddlewareInterface
 
 	/**
 	 * @param $req
+	 */
+	protected function setOriginHost($req)
+	{
+		if (isset($req->getHeader('Origin')[0])) {
+			$this->origin_host = $req->getHeader('Origin')[0];
+		}
+	}
+	/**
+	 * @return mixed
+	 */
+	protected function getOriginHost()
+	{
+		$origin = parse_url($this->origin_host);
+		if (is_array($origin)) {
+			return $origin;
+		}
+
+		return false;
+
+	}
+	/**
+	 * @param $req
 	 * @return bool
 	 */
 	protected function checkIsSameHost($req)
@@ -96,32 +112,6 @@ class CorsMiddleware implements MiddlewareInterface
 	}
 
 	/**
-	 * @return mixed
-	 */
-	protected function getOriginHost()
-	{
-		$origin = parse_url($this->origin_host);
-		if (is_array($origin)) {
-			return $origin;
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * @param $req
-	 */
-	protected function setOriginHost($req)
-	{
-		if (isset($req->getHeader('Origin')[0])) {
-			$this->origin_host = $req->getHeader('Origin')[0];
-		}
-
-		//logger("Origin Host:".$this->origin_host);
-	}
-
-	/**
 	 * [setAllowedHost description]
 	 *
 	 * @param [type] $host [description]
@@ -131,32 +121,23 @@ class CorsMiddleware implements MiddlewareInterface
 		$this->allowed_host = $host;
 		// logger("Allowed Host:".$this->allowed_host);
 	}
-	/*
-	 *
-	 */
+
+/**
+ * handleAndResponse of CORS Request
+ * */
 	protected function handleAndResponse($request, $handler)
 	{
-		return $handler->handle($this->responseHeaders($request))
-	}
-
-	/**
-	 * @param $response
-	 * @return mixed
-	 */
-	protected function responseHeaders($request)
-	{
-			return $request->getHeaders()->addHeaders([
+		if (!$this->checkIsSameHost($request)) {
+			if (!$this->checkIsCrossOrigin($request)) //check if it is cross origin request and allowed
+			{
+				return $handler->handle($request);
+			}
+		}
+		return $handler->handle($request->getHeaders()->addHeaders([
 			    'Access-Control-Allow-Origin' => $this->allowed_host,
-			    'Access-Control-Allow-Credentials' => 'true',
-			    'Access-Control-Max-Age' => 86400,
 			    'Access-Control-Allow-Headers'=> $this->options['headers'],
 			    'Access-Control-Allow-Methods'=> $this->options['methods']
-			]);
-			// return $response->withHeader('Access-Control-Allow-Origin', $this->allowed_host)
-			// 	->withAddedHeader('Access-Control-Allow-Credentials','true')
-			// 	->withAddedHeader('Access-Control-Max-Age', 86400)
-			// 	->withAddedHeader('Access-Control-Allow-Headers', $this->options['headers'])
-			// 	->withAddedHeader('Access-Control-Allow-Methods', $this->options['methods']);
+			]));
 	}
 
 	/**
@@ -218,22 +199,14 @@ class CorsMiddleware implements MiddlewareInterface
 	 */
 	protected function preFlightRequest($request)
 	{
-		//get headers
-		$this->readEnvHeaders();
-
-		//set origin host
-		$this->setOriginHost($request);
-
-		if ($this->checkIsSameHost($request)) {
-			return $this->responsePreFlight();
+		if (!$this->checkIsSameHost($request)) {
+			//return $this->responsePreFlight();
+			if (!$this->checkIsCrossOrigin($request)) //check if it is cross origin request and allowed
+			{
+				return Response::empty();
+			}
 		}
-		if ($this->checkIsCrossOrigin($request)) //check if it is cross origin request and allowed
-		{
-			return $this->responsePreFlight();
-		}
-
-		return Response::empty();
-
+		return $this->responsePreFlight();
 
 	}
 
