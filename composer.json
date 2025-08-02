@@ -46,7 +46,7 @@
     "filp/whoops": "^2.15",
     "psy/psysh": "@stable",
     "fakerphp/faker": "^1.19",
-    "symfony/mailer": "^7.1",
+    "swiftmailer/swiftmailer":^6.0,
     "laminas/laminas-diactoros": "^3.3",
     "league/route": "^5.1",
     "guzzlehttp/guzzle": "^7.8",
