@@ -39,7 +39,6 @@
     "symfony/process": "^7.1",
     "nesbot/carbon": "^2.33",
     "rakit/validation": "^1.2",
-    "laminas/laminas-crypt": "^3.3",
     "matthiasmullie/scrapbook": "^1.4",
     "hybridauth/hybridauth": "^3.3",
     "doctrine/collections": "^2.2",
