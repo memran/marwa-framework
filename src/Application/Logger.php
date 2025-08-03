@@ -143,8 +143,17 @@
 			if(file_exists($logFile)){
 				return $logFile;
 			}else{
-				mkdir($logFile, 0777, true);
-				return $logFile;
+				try 
+				{
+				    mkdir($logFile, 775, true) ;
+				    return $logFile;
+			        } 
+				catch ( Exception $e )
+				{
+					throw new Exception($e);
+				}
+				
+				
 			}
 		}
 		
