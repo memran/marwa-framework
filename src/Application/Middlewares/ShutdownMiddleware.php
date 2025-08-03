@@ -15,7 +15,7 @@ class ShutdownMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		$maintainance = (boolean) env('MAINTAINANCE');
+		$maintainance = filter_var(env('MAINTAINANCE'), FILTER_VALIDATE_BOOLEAN);
 		if ($maintainance) {
 			return view('maintainance', ['title' => 'Site Maintenance']);
 		}
