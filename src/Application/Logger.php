@@ -143,7 +143,7 @@
 			if(file_exists($logFile)){
 				return $logFile;
 			}else{
-				mkdir($logFile, 0775, true);
+				mkdir($logFile, 0777, true);
 				return $logFile;
 			}
 		}
