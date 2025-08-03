@@ -554,7 +554,7 @@ abstract class AbstractCommand extends Command
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 */
-	protected function execute(InputInterface $input, OutputInterface $output): void
+	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$this->input = $input;
 		$this->output = $output;
@@ -566,6 +566,7 @@ abstract class AbstractCommand extends Command
 
 		//execute handle
 		$this->handle();
+		return 0; // Return 0 for success
 	}
 
 	/**
