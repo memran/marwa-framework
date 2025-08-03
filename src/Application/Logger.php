@@ -145,9 +145,8 @@
 			}else{
 				try 
 				{
-				    $old = umask(0); 
-				    mkdir($logFile, 0777, true) ;
-				    umask($old); 
+				    
+				    mkdir(app('private_storage') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR, 0777, true) ;
 				    return $logFile;
 			        } 
 				catch ( Exception $e )
