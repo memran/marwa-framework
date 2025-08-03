@@ -145,7 +145,9 @@
 			}else{
 				try 
 				{
-				    mkdir($logFile, 775, true) ;
+				    $old = umask(0); 
+				    mkdir($logFile, 0777, true) ;
+				    umask($old); 
 				    return $logFile;
 			        } 
 				catch ( Exception $e )
