@@ -30,7 +30,7 @@
     "symfony/dotenv": "^7.1",
     "league/container": "^4.2",
     "laminas/laminas-httphandlerrunner": "^2.10",
-    "markrogoyski/simplelog-php": "0.*",
+    "markrogoyski/simplelog-php": "2.*",
     "nette/utils": "^4.0",
     "aura/session": "^2.1",
     "memran/marwadb": "dev-master",
