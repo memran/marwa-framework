@@ -138,7 +138,14 @@
 		 */
 		protected function getLogStorage() : string
 		{
-			return app('private_storage') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . $this->getLogFileName();
+			$logFile=app('private_storage') . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . $this->getLogFileName();
+			//check if file exists
+			if(file_exists($logFile)){
+				return $logFile;
+			}else{
+				mkdir($logFile, 0775, true);
+				return $logFile;
+			}
 		}
 		
 		/**
