@@ -136,7 +136,8 @@
 				
 			} catch ( \Throwable $e )
 			{
-				logger("Failed to run console application");
+				//logger("Failed to run console application");
+				throw new Exception($e);
 			}
 			
 		}
