@@ -24,7 +24,7 @@ if (!function_exists('env')) {
 	 * @return string|mixed
 	 * @throws InvalidArgumentException
 	 */
-	function env($key, $default = null): string
+	function env($key, ?string $default = null): string
 	{
 		if (is_null($key)) {
 			throw new InvalidArgumentException("Invalid Key");
@@ -69,7 +69,7 @@ if (!function_exists('AppConfig')) {
 	 * @param null $key
 	 * @return array|int|mixed|object|string
 	 */
-	function AppConfig($key = null)
+	function AppConfig(?string $key = null)
 	{
 		return (is_null($key)) ? Hash::from(app('app_config')) : app('app_config')[$key];
 	}
@@ -82,7 +82,7 @@ if (!function_exists('logger')) {
 	 * @param string $level
 	 * @throws FileNotFoundException
 	 */
-	function logger($msg, $params = [], $level = 'debug')
+	function logger(string $msg, array $params = [], string $level = 'debug')
 	{
 		app('logger')->log($msg, $params, $level);
 	}
@@ -173,7 +173,7 @@ if (!function_exists('base_path')) {
 	 * @return mixed|string
 	 * @throws FileNotFoundException
 	 */
-	function base_path($path = null)
+	function base_path(?string $path = null)
 	{
 		return (!is_null($path)) ? app('base_path') . DIRECTORY_SEPARATOR . $path : app('base_path');
 	}
@@ -196,7 +196,7 @@ if (!function_exists('storage_path')) {
 	 * @return mixed|string
 	 * @throws FileNotFoundException
 	 */
-	function storage_path($path = null)
+	function storage_path(?string $path = null)
 	{
 		return (!is_null($path)) ? app('public_storage') . DIRECTORY_SEPARATOR . $path : app('public_storage');
 	}
@@ -208,7 +208,7 @@ if (!function_exists('private_storage')) {
 	 * @return mixed|string
 	 * @throws FileNotFoundException
 	 */
-	function private_storage($path = null)
+	function private_storage(?string $path = null)
 	{
 		return (!is_null($path)) ? app('private_storage') . DIRECTORY_SEPARATOR . $path : app('private_storage');
 	}
@@ -222,7 +222,7 @@ if (!function_exists('upload')) {
 	 * @return string
 	 * @throws FileNotFoundException
 	 */
-	function upload($file, $uploadFilename = null, $extension = null)
+	function upload(string $file, ?string $uploadFilename = null, ?string $extension = null)
 	{
 		//$filename = null;
 		if (is_null($extension)) {
@@ -313,7 +313,7 @@ if (!function_exists('session')) {
 	 * @return mixed
 	 * @throws FileNotFoundException
 	 */
-	function session($key, $value = null, $lifetime = null)
+	function session($key, ?string $value = null, ?int $lifetime = null)
 	{
 		$session = app('session'); //get session object
 
@@ -369,7 +369,7 @@ if (!function_exists('setMessage')) {
 	 * @param $msg
 	 * @throws Exception
 	 */
-	function setMessage(string $level, string $key, $msg): void
+	function setMessage(string $level, string $key, mixed $msg): void
 	{
 		if (is_null($level) || is_null($level) || is_null($msg)) {
 			throw new Exception('All value is required');
@@ -605,7 +605,7 @@ if (!function_exists('bcrypt')) {
 	 * @param string|null $secret
 	 * @return Bcrypt|string
 	 */
-	function bcrypt(string $secret = null)
+	function bcrypt(?string $secret = null)
 	{
 		$crypto = new Bcrypt();
 		if (isset($secret)) {
