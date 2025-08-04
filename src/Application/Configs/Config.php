@@ -113,7 +113,7 @@
 		 * @return ConfigInterface
 		 * @throws FileNotFoundException
 		 */
-		public static function getInstance( string $filename = null ) : ConfigInterface
+		public static function getInstance( ?string $filename = null ) : ConfigInterface
 		{
 			if ( self::$__instance == null )
 			{
@@ -129,7 +129,7 @@
 		 * @throws FileNotFoundException
 		 * @throws InvalidExtensionException
 		 */
-		public function load( string $filename = null ) : array
+		public function load( ?string $filename = null ) : array
 		{
 			if ( !is_null($filename) )
 			{

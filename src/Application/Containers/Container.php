@@ -54,7 +54,7 @@ class Container implements ContainerInterface
 	 * @param null $concrete
 	 * @param bool|null $shared
 	 */
-	public function bind(string $id, mixed $concrete = null, bool $shared = null)
+	public function bind(string $id, mixed $concrete = null, bool $shared = false)
 	{
 		$this->_container->add($id, $concrete);
 	}
