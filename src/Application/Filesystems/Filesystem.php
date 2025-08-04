@@ -1,5 +1,5 @@
 <?php declare(strict_types=1);
-namespace Application\Filesystems;
+namespace Marwa\Application\Filesystems;
 
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
