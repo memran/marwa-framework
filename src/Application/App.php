@@ -94,7 +94,7 @@ class App
 	 * @param bool $console
 	 * @throws FileNotFoundException
 	 */
-	public function __construct(string $path = null, bool $console = false)
+	public function __construct(?string $path = null, bool $console = false)
 	{
 		//set base path
 		$this->setBasePath($path);
