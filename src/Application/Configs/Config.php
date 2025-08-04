@@ -32,7 +32,7 @@
 		 * @param string|null $filename
 		 * @throws FileNotFoundException
 		 */
-		private function __construct( string $filename = null )
+		private function __construct( ?string $filename = null )
 		{
 			if ( !is_null($filename) )
 			{
