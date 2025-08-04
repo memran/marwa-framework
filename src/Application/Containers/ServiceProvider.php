@@ -12,7 +12,7 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
      * @param string $id
      * @param null   $concrete
      */
-    public function singleton(string $id, $concrete = null)
+    public function singleton(string $id, mixed $concrete = null)
     {
         app()->getContainer()->singleton($id, $concrete);
     }
@@ -22,7 +22,7 @@ abstract class ServiceProvider extends AbstractServiceProvider implements Bootab
      * @param null      $concrete
      * @param bool|null $shared
      */
-    public function bind(string $id, $concrete = null, bool $shared = null)
+    public function bind(string $id, mixed $concrete = null, bool $shared = false)
     {
         app()->getContainer()->bind($id, $concrete, $shared);
     }
