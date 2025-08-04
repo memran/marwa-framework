@@ -110,7 +110,7 @@ if (!function_exists('cache')) {
 	 * @return mixed
 	 * @throws FileNotFoundException
 	 */
-	function cache(string $key = null, string $value = null, string $driver = 'file', int $expire = 0)
+	function cache(?string $key = null, ?string $value = null, string $driver = 'file', int $expire = 0)
 	{
 		if (is_null($key)) {
 			return app('cache');
@@ -131,7 +131,7 @@ if (!function_exists('app')) {
 	 * @return mixed
 	 * @throws FileNotFoundException
 	 */
-	function app($abstract = null)
+	function app(?string $abstract = null)
 	{
 		if (is_null($abstract)) {
 			return App::getInstance()->get('app');

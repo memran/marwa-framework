@@ -39,7 +39,7 @@
 		 * @return array
 		 * @throws InvalidArgumentException
 		 */
-		protected function getCacheConfig( array $config ) : array
+		protected function getCacheConfig(?array $config=[] ) : array
 		{
 			if ( empty($config) || is_null($config) )
 			{
@@ -53,7 +53,7 @@
 		 * @param string $disk
 		 * @throws InvalidArgumentException
 		 */
-		public function disk( string $disk )
+		public function disk(?string $disk=null)
 		{
 			if ( is_null($disk) || empty($disk) )
 			{
