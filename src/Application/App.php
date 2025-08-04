@@ -97,6 +97,9 @@ class App
 	public function __construct(?string $path = null, bool $console = false)
 	{
 		//set base path
+		if ($path === null) {
+			$path = dirname(__FILE__, 4);
+		}
 		$this->setBasePath($path);
 
 		// app run from console application
