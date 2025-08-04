@@ -40,7 +40,7 @@
 		 * @return mixed
 		 * @throws InvalidArgumentException
 		 */
-		protected function getStorageConfig( $config ) : array
+		protected function getStorageConfig( array $config=[] ) : array
 		{
 			if ( empty($config) )
 			{
