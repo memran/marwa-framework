@@ -3,7 +3,7 @@
 	
 	namespace Marwa\Application\Views;
 	
-	use Marwa\Application\Utils\Str;
+	use Marwa\Application\Utils\Strings;
 	use Twig\Extension\AbstractExtension;
 	use Twig\TwigFilter;
 	use Twig\TwigFunction;
@@ -67,9 +67,9 @@
 				 *  Method name will be get{$ClassName)
 				 *  Same rules apply for functions
 				 */
-				if ( Str::endsWith($extension, 'Filter') )
+				if ( Strings::endsWith($extension, 'Filter') )
 				{
-					$filterName = strtolower(Str::substring($extension, 0, strlen($extension) - 6));
+					$filterName = strtolower(Strings::substring($extension, 0, strlen($extension) - 6));
 					if ( strtolower($type) == 'user' )
 					{
 						$filterClass = 'App\\Extensions\\' . $extension;
@@ -84,9 +84,9 @@
 				}
 				else
 				{
-					if ( Str::endsWith($extension, 'Function') )
+					if ( Strings::endsWith($extension, 'Function') )
 					{
-						$filterName = strtolower(Str::substring($extension, 0, strlen($extension) - 8));
+						$filterName = strtolower(Strings::substring($extension, 0, strlen($extension) - 8));
 						if ( strtolower($type) == 'user' )
 						{
 							$filterClass = 'App\\Extensions\\' . $extension;
