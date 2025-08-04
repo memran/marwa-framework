@@ -54,7 +54,7 @@ class Container implements ContainerInterface
 	 * @param null $concrete
 	 * @param bool|null $shared
 	 */
-	public function bind(string $id, ?string $concrete = null, ?bool $shared = null)
+	public function bind(string $id, ?mixed $concrete = null, ?bool $shared = null)
 	{
 		$this->_container->add($id, $concrete);
 	}
@@ -63,7 +63,7 @@ class Container implements ContainerInterface
 	 * @param string $id
 	 * @param null $concrete
 	 */
-	public function singleton(string $id, ?string $concrete = null)
+	public function singleton(string $id, ?mixed $concrete = null)
 	{
 		$this->_container->addShared($id, $concrete);
 	}
