@@ -39,7 +39,7 @@
 		 * @return array
 		 * @throws InvalidArgumentException
 		 */
-		protected function getCacheConfig(?array $config=[] ) : array
+		protected function getCacheConfig(array $config=[] ) : array
 		{
 			if ( empty($config) || is_null($config) )
 			{

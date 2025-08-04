@@ -42,7 +42,7 @@ class Router
 	 * @return mixed
 	 * @throws Exception
 	 */
-	public static function create($request, $path, $container = null)
+	public static function create($request, $path, mixed $container = null)
 	{
 		return (new Router())->setRequest($request)->path($path)->setContainer($container)->getRouter();
 	}

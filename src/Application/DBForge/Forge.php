@@ -8,7 +8,7 @@ class Forge
 {
 
 	/**
-	 * @param $tableSql
+	 * @param string $tableSql
 	 * @return mixed
 	 */
 	public static function createTable($tableSql)
@@ -32,7 +32,7 @@ class Forge
 
 	/**
 	 * @param string $table
-	 * @return mixed
+	 * @return bool
 	 */
 	public static function tableExists(string $table)
 	{
