@@ -30,7 +30,7 @@ class RouteServiceProvider extends ServiceProvider
 			return Router::create(
 				app('request'),
 				app('route_path'),
-				container()->getPsrContainer()
+				container()->raw()
 			);
 		});
 

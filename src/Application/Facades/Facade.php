@@ -12,6 +12,20 @@ namespace Marwa\Application\Facades;
 abstract class Facade
 {
     /**
+     * The resolved object instances.
+     *
+     * @var array
+     */
+    protected static $resolvedInstance = [];
+
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    abstract protected static function getClassAlias(): string;
+
+    /**
      * [protected description] app instance
      *
      * @var [type]
@@ -48,19 +62,25 @@ abstract class Facade
 
         //if alias is not null
         if($alias !=null ) {
-            return static::getApplication()->get($alias);
-        }
-        throw new Exception('Class not found on container');
-    }
+            if(isset(static::$resolvedInstance[$alias])) {
+                return static::$resolvedInstance[$alias];
 
-    /**
-     * [getClassAlias description] it will overrides and return class aliase as string
-     *
-     * @return [type] [description]
-     */
-    protected static function getClassAlias()
-    {
-          throw new Exception('Class Alias did not setup');
+            } else if (static::getApplication()->getContainer()->has($alias)) {
+                //if application has alias then return it
+                static::$resolvedInstance[$alias] = static::getApplication()->get($alias);
+                return static::$resolvedInstance[$alias];
+            }else{
+                if(class_exists($alias)) {
+                    //if class exists then
+                    static::$resolvedInstance[$alias] = new $alias();
+                    return static::$resolvedInstance[$alias];
+                } else {
+                    //if class does not exists then throw exception
+                    throw new \Exception("Class {$alias} does not exists");
+                }
+            }
+        }
+        throw new Exception('Facade alias not set');
     }
 
     /**

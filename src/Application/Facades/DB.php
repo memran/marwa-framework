@@ -17,7 +17,7 @@ class DB extends Facade
        *
        * @return string
        */
-    public static function getClassAlias()
+    public static function getClassAlias() : string
     {
         return 'DB';
     }

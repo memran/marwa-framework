@@ -17,7 +17,7 @@ class Session extends Facade
      *
      * @return [type] [description]
      */
-    public static function getClassAlias()
+    public static function getClassAlias(): string
     {
           return 'session';
     }

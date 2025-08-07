@@ -4,123 +4,150 @@ namespace Marwa\Application\Containers;
 
 use League\Container\Container as LeagueContainer;
 use League\Container\ReflectionContainer;
-use League\Container\ServiceProvider\ServiceProviderInterface;
-use Psr\Container\ContainerInterface as PContainerInterface;
-use Exception;
+use Marwa\Application\Contracts\ContainerInterface;
+use Marwa\Application\Containers\NotFoundException;
 
 class Container implements ContainerInterface
 {
+    /**
+     * Singleton container instance.
+     *
+     * @var static|null
+     */
+    protected static ?self $instance = null;
 
-	/**
-	 * @var null
-	 */
-	private static $__instance;
+    /**
+     * The underlying League container.
+     *
+     * @var LeagueContainer
+     */
+    protected LeagueContainer $container;
 
-	/**
-	 * @var LeagueContainer
-	 */
-	private $_container;
+    /**
+     * Mapping of tags to service IDs.
+     *
+     * @var array<string, array>
+     */
+    protected array $tags = [];
 
-	/**
-	 * Container constructor.
-	 */
-	private function __construct()
-	{
-		$this->_container = new LeagueContainer();
-	}
+    /**
+     * Constructor.
+     */
+    protected function __construct()
+    {
+        $this->container = new LeagueContainer();
+        $this->container->delegate(new ReflectionContainer());
+    }
 
-	/**
-	 * @return ContainerInterface
-	 */
-	public static function getInstance(): ContainerInterface
-	{
-		if (static::$__instance == null) {
-			static::$__instance = new Container();
-		}
+    /**
+     * Get singleton instance.
+     */
+    public static function getInstance(): static
+    {
+        if (is_null(static::$instance)) {
+            static::$instance = new static();
+        }
 
-		return static::$__instance;
-	}
+        return static::$instance;
+    }
 
-	/**
-	 *
-	 */
-	public function getPsrContainer(): PContainerInterface
-	{
-		return $this->_container;
-	}
+    /**
+     * PSR-compliant container access.
+     */
+    public function raw(): LeagueContainer
+    {
+        return $this->container;
+    }
 
-	/**
-	 * @param string $id
-	 * @param null $concrete
-	 * @param bool|null $shared
-	 */
-	public function bind(string $id, mixed $concrete = null, bool $shared = false)
-	{
-		$this->_container->add($id, $concrete);
-	}
+    /**
+     * Bind a service.
+     */
+    public function bind(string $abstract, mixed $concrete = null): static
+    {
+        $this->container->add($abstract, $concrete);
+        return $this;
+    }
 
-	/**
-	 * @param string $id
-	 * @param null $concrete
-	 */
-	public function singleton(string $id, mixed $concrete = null)
-	{
-		$this->_container->addShared($id, $concrete);
-	}
+    /**
+     * Bind a singleton.
+     */
+    public function singleton(string $abstract, mixed $concrete = null): static
+    {
+        $this->container->addShared($abstract, $concrete);
+        return $this;
+    }
 
-	/**
-	 * @param  $id
-	 * @param bool $new
-	 * @return array|mixed|object
-	 * @throws \Marwa\Application\Containers\NotFoundException
-	 */
-	public function get($id, ?bool $new = false)
-	{
-		try {
-			if ($new) {
-				$this->_container->getNew($id);
-			}
-			return $this->_container->get($id);
+    /**
+     * Resolve a service.
+     */
+    public function make(string $abstract, ?bool $new = false): mixed
+    {
+        try {
+            return $new
+                ? $this->container->getNew($abstract)
+                : $this->container->get($abstract);
+        } catch (\Throwable $e) {
+            throw new NotFoundException("Unable to resolve [$abstract]: {$e->getMessage()}");
+        }
+    }
 
-		} catch (\Throwable $th) {
-			throw new NotFoundException($th->getMessage() . " >>> " . $id);
-		}
-	}
+    /**
+     * Determine if container has binding.
+     */
+    public function has(string $abstract): bool
+    {
+        return $this->container->has($abstract);
+    }
 
-	/**
-	 * @param bool $cache
-	 */
-	public function enableAutoWire(bool $cache = false): ContainerInterface
-	{
-		// if ($cache) {
-		// 	$this->_container->delegate((new ReflectionContainer)->cacheResolutions());
-		// } else {
-		$this->_container->delegate(new ReflectionContainer);
-		//}
+    /**
+     * Register a service provider.
+     */
+    public function register(string $providerClass): static
+    {
+        $this->container->addServiceProvider(new $providerClass());
+        return $this;
+    }
 
-		return $this;
-	}
+	public function addServiceProvider(string $providerClass): static
+    {
+        $this->container->addServiceProvider(new $providerClass);
+        return $this;
+    }
+    /**
+     * Tag one or more service IDs.
+     */
+    public function tag(array|string $ids, string|array $tags): static
+    {
+        $ids = (array)$ids;
+        $tags = (array)$tags;
 
-	/**
-	 * @param  $provider
-	 * @throws \Exception
-	 */
-	public function addServiceProvider($provider): ContainerInterface
-	{
-		$this->_container->addServiceProvider(new $provider);
+        foreach ($tags as $tag) {
+            foreach ($ids as $id) {
+                $this->tags[$tag][] = $id;
+                $this->tags[$tag] = array_unique($this->tags[$tag]); // avoid duplicate
+            }
+        }
 
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Resolve all services for a tag.
+     */
+    public function tagged(string $tag): array
+    {
+        if (!isset($this->tags[$tag])) {
+            return [];
+        }
 
-	/**
-	 * @param $name
-	 * @param $arguments
-	 * @return mixed
-	 */
-	public function __call($name, $arguments)
-	{
-		return call_user_func_array([$this->_container, $name], $arguments);
-	}
+        return array_map(fn($id) => $this->make($id), $this->tags[$tag]);
+    }
 
+    /**
+     * Proxy method calls to League container.
+     */
+    public function __call(string $method, array $parameters): mixed
+    {
+        return call_user_func_array([$this->container, $method], $parameters);
+    }
 }
