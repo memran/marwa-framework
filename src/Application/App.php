@@ -370,10 +370,7 @@ class App
 		 */
 		if (!isset($this->container))
 			$this->container = Container::getInstance();
-		/**
-		 * Enabling auto wire in the container for auto Dependency Injection
-		 */
-		$this->container->enableAutoWire();
+	
 	}
 
 	/**
