@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Marwa\Application;
 
 use Marwa\Application\Containers\Container;
-use Marwa\Application\Containers\ContainerInterface;
+use Marwa\Application\Contracts\ContainerInterface;
 use Marwa\Application\Debug\Debug;
 use Marwa\Application\Exceptions\FileNotFoundException;
 use Marwa\Application\Exceptions\InvalidArgumentException;
