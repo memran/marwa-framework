@@ -32,7 +32,7 @@ class ViewServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->singleton('view', function () {
-			$engine = View::getInstance(app('config')->file('view.php')->load());
+			$engine = View::getInstance(app('config')->get('view'));
 			$engine->setThemeFolder(base_path('resources/views'));
 			return $engine;
 		});

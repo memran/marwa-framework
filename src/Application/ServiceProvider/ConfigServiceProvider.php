@@ -35,8 +35,8 @@ class ConfigServiceProvider extends ServiceProvider
 	{
 
 		$this->singleton('config', function () {
-			$instance = Config::getInstance();
-			$instance->setConfigDir(config_path());
+			$instance = new Config(config_path(), env('CONFIG_CACHE'), private_storage().DS . 'cache/config.cache.php');
+			$instance->load();
 			return $instance;
 		});
 	}

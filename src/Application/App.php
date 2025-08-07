@@ -20,7 +20,7 @@ class App
 	/**
 	 * @var string version
 	 */
-	const VERSION = "0.1";
+	const VERSION = "1.0.0";
 	/**
 	 * [public description] get globally instance of self object
 	 *
@@ -450,8 +450,8 @@ class App
 	 */
 	protected function setAppConfig(): void
 	{
-		$this->config = $this->get('config')->file('app.php')->load();
-		$this->getContainer()->bind('app_config', $this->config);
+		//$this->config = $this->get('config')->file('app.php')->load();
+		$this->getContainer()->bind('app_config', $this->get('config')->all());
 	}
 
 	/**
@@ -468,7 +468,7 @@ class App
 	 */
 	public function registerAllServiceProviders(): void
 	{
-		$providers = $this->config()['providers'];
+		$providers = $this->get('config')->get('app.providers');
 		if (!empty($providers) && is_iterable($providers)) {
 			// loop through service providers list
 			foreach ($providers as $provider) {
@@ -483,6 +483,7 @@ class App
 	 */
 	public function config(): array
 	{
+		
 		return $this->get('app_config');
 	}
 
@@ -491,7 +492,7 @@ class App
 	 */
 	public function setTimeZone(): void
 	{
-		$timezone = (string) $this->config()['app']['timezone'];
+		$timezone = (string) $this->get('config')->get('app.timezone');
 
 		if (!is_null($timezone)) {
 			if (Filter::isValidTimezone($timezone) == true) {
@@ -526,24 +527,19 @@ class App
 	 */
 	private function registerAllMiddleware(): void
 	{
-		/**
-		 * if middleware key exits on the config array
-		 */
-		if (array_key_exists('middlewares', $this->config())) {
-
 			/**
 			 * if middlewares key in the configuration is not empty and array then
 			 *  Loop through it  and register to the router middleware
 			 */
-			if (!empty($this->config()['middlewares']) && is_array($this->config()['middlewares'])) {
+			if (!empty($this->get('config')->get('app.middlewares')) && is_array($this->get('config')->get('app.middlewares'))) {
 				/**
 				 * loop throw the middlewares array
 				 */
-				foreach ($this->config()['middlewares'] as $k => $value) {
+				foreach ($this->get('config')->get('app.middlewares') as $k => $value) {
 					$this->getRouter()->middleware($value);
 				}
 			}
-		}
+		
 	}
 
 	/**
