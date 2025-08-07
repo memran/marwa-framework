@@ -33,7 +33,7 @@ class RequestServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->singleton('request', function () {
-			return Request::create();
+			return new Request();
 		});
 
 	}

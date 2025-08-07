@@ -1,8 +1,6 @@
 <?php
 	
-	
 	namespace Marwa\Application\Views\Interfaces;
-	
 	
 	interface FactoryInterface {
 		

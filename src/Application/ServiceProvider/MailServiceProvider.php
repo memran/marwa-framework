@@ -27,7 +27,7 @@ class MailServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->singleton('mail', function () {
-			return new Mail(app('config')->file('mail.php')->load());
+			return Mail::init();
 		});
 	}
 }
