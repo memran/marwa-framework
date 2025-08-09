@@ -34,7 +34,7 @@ final class Application
       
 		$this->setBasePath($this->path);
         $this->bootConfig();
-        $this->bootstrapErrorHandler();
+        //$this->bootstrapErrorHandler();
     }
 
     private function setBasePath(string $path): void
@@ -110,13 +110,18 @@ final class Application
         $config = new Config(BASE_PATH,CONFIG_PATH);
         //$config->configureEnv(BASE_PATH, overload: false);
         $config->load();
-        app()->singleton('config', $config);
-        // You can now access configuration items via $config->get('item_name');
-        // For example: $config->get('database.host');
-    }
+        $config->setAutoCache(env('CONFIG_CACHE',false));
+        if(!is_null($config->get('providers')))
+             ConfigLoader::loadProviders(app(),$config->get('app.providers'));
 
+        app()->singleton('config', $config);
+    }
+    /**
+     * 
+     */
     public function run(): void
     {
+        app('logger')->info("Logger Interface");
         dd(app('config')->all());
         exit(0);
     }
@@ -127,20 +132,19 @@ final class Application
     }
     public function bootstrapErrorHandler(): void
     {
-       
-            $handler = ErrorHandler::bootstrap([
-                'app_name'       => config('app.app_name'),
-                'env'            => config('app.env'),   // or 'production'
-                'log_path'       => config('app.log_path'),
-                'max_log_bytes'  => config('app.max_log_bytes'),
-                'debug'          => config('app.debug', false),
-                'log_level'      => config('app.log_level', 'error'),
-                'sensitive_keys' => config('app.sensitive_keys', []),
-            ]);
-             // Enable Laravel-style reporter
-            $handler->enableExceptionReporter();
-            app()->singleton('error_handler', $handler);
-            app()->singleton('logger', $handler->getLogger());
+            // $handler = ErrorHandler::bootstrap([
+            //     'app_name'       => config('app.app_name'),
+            //     'env'            => config('app.env'),   // or 'production'
+            //     'log_path'       => config('app.log_path'),
+            //     'max_log_bytes'  => config('app.max_log_bytes'),
+            //     'debug'          => config('app.debug', false),
+            //     'log_level'      => config('app.log_level', 'error'),
+            //     'sensitive_keys' => config('app.sensitive_keys', []),
+            // ]);
+            //  // Enable Laravel-style reporter
+            // $handler->enableExceptionReporter();
+            // app()->singleton('error_handler', $handler);
+            // app()->singleton('logger', $handler->getLogger());
     }
 
 

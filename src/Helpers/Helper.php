@@ -129,6 +129,7 @@ if(!function_exists('app')) {
             return \Marwa\App\Core\Container::getInstance()->get($id);
         }
         return Container::getInstance();
+        
     }
 }
 
