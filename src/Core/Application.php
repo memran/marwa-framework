@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
-use Marwa\Logging\ErrorHandler;
 use Marwa\App\Configs\Config;
-use Marwa\App\Facades\{Facade, App};
+use Marwa\App\Facades\Facade;
+use Marwa\App\Http\Response\ResponseFactory;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use Psr\Http\Message\ResponseInterface;
+
 
 final class Application
 {
@@ -149,8 +152,21 @@ final class Application
     public function run(): void
     {
 
+        $resp = new ResponseFactory();
+
+        // 1) Text response
+        //$response = $resp->make('OK', 200);
+
+        // 2) JSON response with headers
+        //$response = $resp->json(['status' => 'ok'], 201, ['X-Request-Id' => 'abc123']);
+
         $this->calcRenderTime();
-        dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
+        //dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
+
+        $response = $response = $resp->json(['status' => 'ok'], 201, ['X-Response-Time' => $this->renderTime]);
+
+        $emitter = new SapiEmitter();
+        $emitter->emit($response);
 
         exit(0);
     }

@@ -1,6 +1,14 @@
-<?php    declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Marwa\App\Contracts;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+
+use Marwa\App\Http\Response\Cookie;
+
 /**
  * Interface ResponseFactoryInterface
  *

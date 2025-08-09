@@ -1,6 +1,8 @@
 <?php
+
 namespace Marwa\App\Http\Response;
-use Marwa\App\Http\Response\Interfaces\ResponseFactoryInterface;
+
+use Marwa\App\Contracts\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Laminas\Diactoros\Response;
@@ -8,6 +10,8 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\RedirectResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\Stream;
+use Marwa\App\Exceptions\InvalidArgumentException;
+
 /**
  * Class ResponseFactory
  *
@@ -121,8 +125,8 @@ final class ResponseFactory implements ResponseFactoryInterface
 
         $mime = $this->detectMime($path) ?? 'application/octet-stream';
         $resp = $resp->withHeader('Content-Type', $mime)
-                     ->withHeader('Content-Length', (string) filesize($path))
-                     ->withHeader('Accept-Ranges', 'bytes');
+            ->withHeader('Content-Length', (string) filesize($path))
+            ->withHeader('Accept-Ranges', 'bytes');
 
         if ($name) {
             $resp = $resp->withHeader(

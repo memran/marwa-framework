@@ -104,6 +104,17 @@ if (!function_exists('isStaticMethod')) {
     }
 }
 
+if (!function_exists('base_url')) {
+    /**
+     * Get the base path of the application.
+     *
+     * @return string
+     */
+    function base_url(): string
+    {
+        return env('APP_URL');
+    }
+}
 
 if (!function_exists('base_path')) {
     /**
@@ -348,7 +359,7 @@ if (!function_exists('response')) {
      *
      * @return \Marwa\App\Core\Response
      */
-    function response(): \Marwa\App\Core\Response
+    function response(): mixed
     {
         return app()->get('response');
     }
@@ -358,7 +369,7 @@ if (!function_exists('request')) {
      * Get the request instance.
      * @return \Marwa\App\Core\Request
      */
-    function request(): \Marwa\App\Core\Request
+    function request(): mixed
     {
         return app()->get('request');
     }
@@ -368,7 +379,7 @@ if (!function_exists('route')) {
      * Get the router instance.
      * @return \Marwa\App\Core\Router
      */
-    function route(): \Marwa\App\Core\Router
+    function route(): mixed
     {
         return app()->get('router');
     }
@@ -378,9 +389,9 @@ if (!function_exists('logger')) {
      * Get the logger instance.
      * @return \Marwa\App\Logging\Logger
      */
-    function logger(): \Marwa\App\Logging\Logger
+    function logger(): mixed
     {
-        return app()->get('logger');
+        return app('logger');
     }
 }
 if (!function_exists('error_handler')) {

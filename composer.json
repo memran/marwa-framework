@@ -34,7 +34,8 @@
     "laminas/laminas-diactoros": "^3.6",
     "laminas/laminas-httphandlerrunner": "^2.12",
     "symfony/dotenv": "^7.3",
-    "filp/whoops": "^2.18"
+    "filp/whoops": "^2.18",
+    "rakit/validation": "^1.4"
     
   },
   "autoload": {
