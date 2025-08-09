@@ -125,16 +125,23 @@ final class Application
         Facade::setContainer(app());
 
         $config = new Config(BASE_PATH, CONFIG_PATH);
-        //$config->setAutoCache(env('CONFIG_CACHE'));
+
+        if (env('APP_ENV') === "production")
+            $config->setAutoCache(true);
+
         $config->load();
 
         app()->singleton('config', $config);
+        //enable debugging.....
+        $this->enableDebug();
 
         //loading and adding providers to service containers
         if (!is_null($config->get('app.providers')))
             app()->loadProviders($config->get('app.providers'));
 
-        dd("Printing Configuration", $config->all(), $config->get('app.env'), $config->get('app.debug'));
+        //dd("Printing Configuration", $config->all(), $config->get('env'), $config->get('app.debug'));
+
+
     }
     /**
      * 
@@ -143,11 +150,21 @@ final class Application
     {
 
         $this->calcRenderTime();
-
         dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
+
         exit(0);
     }
 
+    private function enableDebug()
+    {
+        //Enable Debug Bar
+        if (config("app.debug") && config('app.env') === 'development') {
+
+            $whoops = new \Whoops\Run;
+            $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+            $whoops->register();
+        }
+    }
 
     /**
      * [renderTime description] it will return application render time

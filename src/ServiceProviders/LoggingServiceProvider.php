@@ -32,13 +32,9 @@ class LoggingServiceProvider extends AbstractServiceProvider implements Bootable
     public function boot(): void
     {
 
-        if (config("app.debug") == true && config('app.env') === 'development') {
-            $whoops = new \Whoops\Run;
-            $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
-            $whoops->register();
-        }
         // post-registration actions here
         $this->getContainer()->add('error_handler', function () {
+
             $handler = ErrorHandler::bootstrap([
                 'app_name'       => config('app.app_name'),
                 'env'            => config('app.env'),   // development or 'production'

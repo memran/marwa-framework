@@ -217,21 +217,25 @@ if (!function_exists('generate_key')) {
         return $asHex ? bin2hex($randomBytes) : $randomBytes;
     }
 }
+
 if (!function_exists('env')) {
-    /**
-     * Get an environment variable with optional default.
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
-     */
     function env(string $key, mixed $default = null): mixed
     {
-        //dd(getenv(), $_ENV);
-        return getenv($key) === null ? $_ENV[$key] : getenv($key);
+        $raw = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+        if ($raw === false || $raw === null) return $default;
+
+        $lower = strtolower(trim((string)$raw));
+        return match ($lower) {
+            'true'  => true,
+            'false' => false,
+            'null'  => null,
+            'empty' => '',
+            default => (is_numeric($raw)
+                ? (str_contains((string)$raw, '.') ? (float)$raw : (int)$raw)
+                : $raw),
+        };
     }
 }
-
 
 if (!function_exists('abort')) {
     /**

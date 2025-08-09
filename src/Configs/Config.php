@@ -56,6 +56,8 @@ final class Config
     public function setAutoCache(bool $enabled): void
     {
         $this->autoCache = $enabled;
+        $this->loaded = false;
+        $this->clearCache();
     }
 
     /**
@@ -127,21 +129,24 @@ final class Config
         }
     }
 
-    public function get(?string $key = null, mixed $default = null): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
         $this->load();
-        if ($key === null) {
+        if (is_null($key)) {
             return $this->items;
         }
+
         $segments = explode('.', $key);
-        $val = $this->items;
-        foreach ($segments as $seg) {
-            if (!is_array($val) || !array_key_exists($seg, $val)) {
-                return $default;
+        $value = $this->items;
+
+        foreach ($segments as $segment) {
+            if (!is_array($value) || !array_key_exists($segment, $value)) {
+                return $this->env($key, $default);
             }
-            $val = $val[$seg];
+            $value = $value[$segment];
         }
-        return $val;
+
+        return $value;
     }
 
     public function set(string $key, mixed $value): void
@@ -167,6 +172,13 @@ final class Config
     {
         $this->load();
         return $this->items;
+    }
+    /**
+     * Get environment variable with default fallback.
+     */
+    public function env(string $key, mixed $default = null): mixed
+    {
+        return $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key) ?: $default;
     }
 
     // ---------------------------
@@ -208,9 +220,9 @@ final class Config
             $key = basename($file, '.' . $ext);
             $data = $this->parseConfigFile($file, $ext);
             $this->assertConfigArray($data, $file);
+
             $result[$key] = $data;
         }
-
         return $result;
     }
 
