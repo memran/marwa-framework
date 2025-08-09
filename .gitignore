@@ -2,4 +2,10 @@
 .env
 .env.testing
 composer.lock
+.DS_Store
+storage/*
+app
+config
+public
+resource
 vendor/
