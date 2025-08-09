@@ -154,12 +154,6 @@ final class Application
 
         $resp = new ResponseFactory();
 
-        // 1) Text response
-        //$response = $resp->make('OK', 200);
-
-        // 2) JSON response with headers
-        //$response = $resp->json(['status' => 'ok'], 201, ['X-Request-Id' => 'abc123']);
-
         $this->calcRenderTime();
         //dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
 
