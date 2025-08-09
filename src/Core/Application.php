@@ -1,9 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
 use Marwa\Logging\ErrorHandler;
 use Marwa\App\Configs\Config;
+use Marwa\App\Facades\{Facade, App};
 
 final class Application
 {
@@ -18,6 +21,17 @@ final class Application
      * Base path for the application, defaults to the directory of this file.
      */
     private ?string $path = null;
+
+    /**
+     * 
+     */
+    protected ?string $renderTime = null;
+
+    /**
+     * [public description] get globally instance of self object
+     * @var self object
+     */
+    public static $instance;
     /**
      * Application constructor.
      *
@@ -26,13 +40,13 @@ final class Application
     public function __construct(string $path)
     {
         //set base path
-		if ($path === null) {
-			$this->path = dirname(__FILE__, 4);
-		} else {
+        if ($path === null) {
+            $this->path = dirname(__FILE__, 4);
+        } else {
             $this->path = rtrim($path, '/\\');
         }
-      
-		$this->setBasePath($this->path);
+
+        $this->setBasePath($this->path);
         $this->bootConfig();
         //$this->bootstrapErrorHandler();
     }
@@ -63,9 +77,9 @@ final class Application
         if (!defined('CACHE_PATH')) {
             define('CACHE_PATH', STORAGE_PATH . '/cache');
         }
-        
+
         if (!defined('CONFIG_CACHE_PATH')) {
-            define('CONFIG_CACHE_PATH', STORAGE_PATH . '/cache/config.cache.php');  
+            define('CONFIG_CACHE_PATH', STORAGE_PATH . '/cache/config.cache.php');
         }
         if (!defined('BASE_URL')) {
             define('BASE_URL', '/');
@@ -93,7 +107,7 @@ final class Application
         }
         if (!defined('MODELS_PATH')) {
             define('MODELS_PATH', APP_PATH . '/Models');
-        }   
+        }
         if (!defined('VENDOR_PATH')) {
             define('VENDOR_PATH', BASE_PATH . '/vendor');
         }
@@ -103,49 +117,47 @@ final class Application
 
         if (!defined('VENDOR_PATH')) {
             define('VENDOR_PATH', BASE_PATH . '/vendor');
-        }    
+        }
     }
     private function bootConfig(): void
     {
-        $config = new Config(BASE_PATH,CONFIG_PATH);
-        //$config->configureEnv(BASE_PATH, overload: false);
+        // ... register services
+        Facade::setContainer(app());
+
+        $config = new Config(BASE_PATH, CONFIG_PATH);
+        //$config->setAutoCache(env('CONFIG_CACHE'));
         $config->load();
-        $config->setAutoCache(env('CONFIG_CACHE',false));
-        if(!is_null($config->get('providers')))
-             ConfigLoader::loadProviders(app(),$config->get('app.providers'));
 
         app()->singleton('config', $config);
+
+        //loading and adding providers to service containers
+        if (!is_null($config->get('app.providers')))
+            app()->loadProviders($config->get('app.providers'));
+
+        dd("Printing Configuration", $config->all(), $config->get('app.env'), $config->get('app.debug'));
     }
     /**
      * 
      */
     public function run(): void
     {
-        app('logger')->info("Logger Interface");
-        dd(app('config')->all());
+
+        $this->calcRenderTime();
+
+        dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
         exit(0);
     }
 
-    public function getConfigPath(): string
-    {
-        return $this->configPath;
-    }
-    public function bootstrapErrorHandler(): void
-    {
-            // $handler = ErrorHandler::bootstrap([
-            //     'app_name'       => config('app.app_name'),
-            //     'env'            => config('app.env'),   // or 'production'
-            //     'log_path'       => config('app.log_path'),
-            //     'max_log_bytes'  => config('app.max_log_bytes'),
-            //     'debug'          => config('app.debug', false),
-            //     'log_level'      => config('app.log_level', 'error'),
-            //     'sensitive_keys' => config('app.sensitive_keys', []),
-            // ]);
-            //  // Enable Laravel-style reporter
-            // $handler->enableExceptionReporter();
-            // app()->singleton('error_handler', $handler);
-            // app()->singleton('logger', $handler->getLogger());
-    }
 
-
+    /**
+     * [renderTime description] it will return application render time
+     * @return [type] [description]
+     */
+    public function calcRenderTime()
+    {
+        $start = START_APP;
+        $end = microtime(true);
+        //$renderTime = ($end - $start);
+        $this->renderTime = number_format(($end - $start), 4) . " seconds";
+    }
 }

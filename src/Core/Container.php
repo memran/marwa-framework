@@ -43,7 +43,7 @@ final class Container implements ContainerInterface, BindingInterface
     /**
      * Get singleton instance.
      */
-    public static function getInstance(): static
+    public static function getInstance(): static|null
     {
         if (is_null(static::$instance)) {
             static::$instance = new static();
@@ -101,7 +101,7 @@ final class Container implements ContainerInterface, BindingInterface
         }
 
         return $this->container->get($abstract);
-    }   
+    }
 
     /**
      * Determine if container has binding.
@@ -153,8 +153,23 @@ final class Container implements ContainerInterface, BindingInterface
     /**
      * Proxy method calls to League container.
      */
-    public function __call(string $method, array $parameters): mixed
+    public function __call(string $method, array $parameters = []): mixed
     {
+
         return call_user_func_array([$this->container, $method], $parameters);
+    }
+
+    /**
+     * Load League service providers from config['app']['providers'].
+     */
+    public function loadProviders(array $providers): void
+    {
+
+        $list = $providers ?? [];
+        foreach ($list as $entry) {
+            //$provider = self::resolveProvider($container, $entry);
+            // Register with underlying League container
+            $this->register($entry);
+        }
     }
 }

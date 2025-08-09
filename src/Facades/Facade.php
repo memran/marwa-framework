@@ -1,100 +1,136 @@
 <?php
-/**
- * @author    Mohammad Emran <memran.dhk@gmail.com>
- * @copyright 2018
- *
- * @see https://www.github.com/memran
- * @see http://www.memran.me
- */
+
+declare(strict_types=1);
 
 namespace Marwa\App\Facades;
 
+use Marwa\App\Exceptions\FacadeException;
+use Psr\Container\ContainerInterface;
+
+/**
+ * Base Facade to provide static proxy access to services.
+ *
+ * - Resolves instances from a PSR-11 container (preferred).
+ * - Caches resolved instances per alias for performance.
+ * - Allows swapping instances (useful for testing).
+ */
 abstract class Facade
 {
     /**
-     * The resolved object instances.
+     * Cached resolved instances keyed by alias.
      *
-     * @var array
+     * @var array<string,object>
      */
-    protected static $resolvedInstance = [];
+    protected static array $resolvedInstance = [];
 
     /**
-     * Get the registered name of the component.
-     *
-     * @return string
+     * Global container for facades (set by bootstrap).
+     */
+    protected static ?ContainerInterface $container = null;
+
+    /**
+     * Return the alias (container id or class FQCN) for the underlying component.
      */
     abstract protected static function getClassAlias(): string;
 
     /**
-     * [protected description] app instance
-     *
-     * @var [type]
+     * Set the container used by all facades.
      */
-    protected static $app;
-
-    /**
-     * [setApplication description] it will setup application instance
-     *
-     * @param [type] $app [description]
-     */
-    public static function setApplication($app)
+    public static function setContainer(ContainerInterface $container): void
     {
-          static::$app = $app;
+        static::$container = $container;
     }
-    /**
-     * [getApplication description] it will return app instance
-     *
-     * @return [type] [description]
-     */
-    protected static function getApplication()
-    {
-          return static::$app;
-    }
-    /**
-     * [getInstance description] it will return class object from container
-     *
-     * @return [type] [description]
-     */
-    protected static function getInstance()
-    {
-        //get class alias
-        $alias = static::getClassAlias();
 
-        //if alias is not null
-        if($alias !=null ) {
-            if(isset(static::$resolvedInstance[$alias])) {
-                return static::$resolvedInstance[$alias];
-
-            } else if (static::getApplication()->getContainer()->has($alias)) {
-                //if application has alias then return it
-                static::$resolvedInstance[$alias] = static::getApplication()->get($alias);
-                return static::$resolvedInstance[$alias];
-            }else{
-                if(class_exists($alias)) {
-                    //if class exists then
-                    static::$resolvedInstance[$alias] = new $alias();
-                    return static::$resolvedInstance[$alias];
-                } else {
-                    //if class does not exists then throw exception
-                    throw new \Exception("Class {$alias} does not exists");
-                }
-            }
+    /**
+     * Clear the cached instance for a specific alias (or all if null).
+     */
+    public static function clearResolvedInstance(?string $alias = null): void
+    {
+        if ($alias === null) {
+            static::$resolvedInstance = [];
+            return;
         }
-        throw new Exception('Facade alias not set');
+        unset(static::$resolvedInstance[$alias]);
     }
 
     /**
-     * [__callStatic description] statically class method calls
-     *
-     * @param  [type] $method [description]
-     * @param  [type] $params [description]
-     * @return [type]         [description]
+     * Swap the resolved instance for a given alias (useful in tests).
      */
-    public static function __callStatic($method,$params)
+    public static function swap(object $instance): void
+    {
+        $alias = static::getAliasOrFail();
+        static::$resolvedInstance[$alias] = $instance;
+    }
+
+    /**
+     * Resolve the underlying instance from cache, container, or FQCN.
+     */
+    protected static function getInstance(): object
+    {
+        $alias = static::getAliasOrFail();
+
+        // 1) Cache
+        if (isset(static::$resolvedInstance[$alias])) {
+            return static::$resolvedInstance[$alias];
+        }
+
+        // 2) Container (preferred)
+        if (static::$container instanceof ContainerInterface && static::$container->has($alias)) {
+            $resolved = static::$container->get($alias);
+            if (!\is_object($resolved)) {
+                throw new FacadeException("Container returned non-object for alias '{$alias}'.");
+            }
+            return static::$resolvedInstance[$alias] = $resolved;
+        }
+
+        // 3) FQCN fallback (last resort; bypasses DI)
+        if (\class_exists($alias)) {
+            if (isStaticMethod($alias, 'getInstance')) {
+                return static::$resolvedInstance[$alias] = $alias::getInstance();
+            }
+
+            /** @psalm-suppress MixedMethodCall */
+            return static::$resolvedInstance[$alias] = new $alias();
+        }
+
+        throw new FacadeException("Facade alias '{$alias}' not found in container and class does not exist.");
+    }
+
+    /**
+     * Magic static caller that forwards calls to the underlying instance.
+     *
+     * @param string $method
+     * @param array<int,mixed> $params
+     * @return mixed
+     */
+    public static function __callStatic(string $method, array $params): mixed
     {
         $instance = static::getInstance();
-        if(!is_null($instance)) {
-            return $instance->$method(...$params);
+
+        if (!\method_exists($instance, $method)) {
+            $alias = static::getClassAlias();
+            $type  = \get_debug_type($instance);
+            throw new FacadeException("Method '{$method}' does not exist on facade target [{$alias}] of type [{$type}].");
         }
+
+        try {
+            /** @psalm-suppress MixedMethodCall */
+            return $instance->$method(...$params);
+        } catch (\Throwable $e) {
+            $alias = static::getClassAlias();
+            throw new FacadeException("Error calling '{$method}' on facade target [{$alias}]: " . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Fetches the alias and validates it.
+     */
+    private static function getAliasOrFail(): string
+    {
+        $alias = static::getClassAlias();
+        if ($alias === '') {
+            throw new FacadeException('Facade alias not set (empty string).');
+        }
+        return $alias;
     }
 }

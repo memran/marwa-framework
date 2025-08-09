@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\App\Configs;
@@ -21,11 +22,12 @@ final class Config
 
     private string $cacheFile;
     private string $cacheMode = 'file'; // 'file', 'memory', 'none'
-    private bool $autoCache = true;     // Automatically cache after load
+    private bool $autoCache = false;     // Automatically cache after load
 
     public function __construct(
         ?string $projectRoot = null,
         ?string $configPath = null,
+        bool $cache = false,
         string $envFile = '.env',
         ?string $cacheFile = null
     ) {
@@ -33,6 +35,7 @@ final class Config
         $this->configPath  = rtrim($configPath  ?? ($this->projectRoot . '/config'), '/\\');
         $this->envFile     = $envFile;
         $this->cacheFile   = $cacheFile ?? ($this->projectRoot . '/storage/cache/config.cache.php');
+        $this->autoCache = $cache;
     }
 
     /**
@@ -145,12 +148,12 @@ final class Config
     {
         $this->load();
         $segments = explode('.', $key);
-        $ref =& $this->items;
+        $ref = &$this->items;
         foreach ($segments as $seg) {
             if (!isset($ref[$seg]) || !is_array($ref[$seg])) {
                 $ref[$seg] = [];
             }
-            $ref =& $ref[$seg];
+            $ref = &$ref[$seg];
         }
         $ref = $value;
     }
@@ -173,6 +176,7 @@ final class Config
     private function loadEnv(): void
     {
         $envPath = $this->projectRoot . DIRECTORY_SEPARATOR . $this->envFile;
+
         if (!is_file($envPath)) {
             return;
         }
@@ -215,7 +219,7 @@ final class Config
         try {
             switch ($ext) {
                 case 'php':
-                    $data = require $file;
+                    $data = require_once $file;
                     break;
                 case 'json':
                     $json = file_get_contents($file);

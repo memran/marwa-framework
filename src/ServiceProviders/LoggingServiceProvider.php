@@ -3,42 +3,54 @@
 namespace Marwa\App\ServiceProviders;
 
 use League\Container\ServiceProvider\AbstractServiceProvider;
-use Psr\Log\LoggerInterface;
+use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use Marwa\Logging\ErrorHandler;
 
-
-final class LoggingServiceProvider extends AbstractServiceProvider
+class LoggingServiceProvider extends AbstractServiceProvider implements BootableServiceProviderInterface
 {
     /**
-     * List of services this provider registers.
-     * League uses this to know when the provider is relevant.
-     *
-     * @var array<class-string|string>
+     * 
      */
-    protected $provides = [
-        'error_handler',
-    ];
+    public function provides(string $id): bool
+    {
+        $services = [
+            'logger',
+            'error_handler'
+
+        ];
+
+        return in_array($id, $services);
+    }
 
     public function register(): void
     {
-        $container = $this->getContainer();
 
-        $container->singleton('error_handler', function () {
-             $handler = ErrorHandler::bootstrap([
+        $logger = app()->get('error_handler')->getLogger();
+        $this->getContainer()->add('logger', $logger);
+    }
+
+    public function boot(): void
+    {
+
+        if (config("app.debug") == true && config('app.env') === 'development') {
+            $whoops = new \Whoops\Run;
+            $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+            $whoops->register();
+        }
+        // post-registration actions here
+        $this->getContainer()->add('error_handler', function () {
+            $handler = ErrorHandler::bootstrap([
                 'app_name'       => config('app.app_name'),
-                'env'            => config('app.env'),   // or 'production'
-                'log_path'       => config('app.log_path'),
+                'env'            => config('app.env'),   // development or 'production'
+                'log_path'       => private_storage(),
                 'max_log_bytes'  => config('app.max_log_bytes'),
                 'debug'          => config('app.debug', false),
                 'log_level'      => config('app.log_level', 'error'),
                 'sensitive_keys' => config('app.sensitive_keys', []),
             ]);
-             // Enable Laravel-style reporter
+            // Enable Laravel-style reporter
             $handler->enableExceptionReporter();
             return $handler;
         });
-
-        $container->singleton('logger',app()->get('error_handler')->getLogger());
-        d("i am in logger service provider");
     }
 }

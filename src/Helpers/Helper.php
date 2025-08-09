@@ -1,9 +1,12 @@
-<?php   declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Marwa\App\Core\Container;
+use Marwa\App\Facades\App;
 
 /**
  * Dump one or more variables without stopping execution.
@@ -66,53 +69,86 @@ if (!function_exists('dd')) {
     }
 }
 
-if(!function_exists('dump')) {
+if (!function_exists('dump')) {
     // Alias for d() if dump() already exists
-    function dump(...$vars): void {
+    function dump(...$vars): void
+    {
         d(...$vars);
     }
 }
 
-if(!function_exists('base_path')){
+if (!function_exists('isStaticMethod')) {
+    /**
+     * Check if a given class has a specific static method.
+     *
+     * @param string $className Fully qualified class name
+     * @param string $methodName Method name to check
+     * @return bool True if method exists and is static, false otherwise
+     */
+    function isStaticMethod(string $className, string $methodName): bool
+    {
+        if (!class_exists($className)) {
+            return false;
+        }
+
+        if (!method_exists($className, $methodName)) {
+            return false;
+        }
+
+        try {
+            $reflection = new ReflectionMethod($className, $methodName);
+            return $reflection->isStatic();
+        } catch (ReflectionException $e) {
+            return false;
+        }
+    }
+}
+
+
+if (!function_exists('base_path')) {
     /**
      * Get the base path of the application.
      *
      * @return string
      */
-    function base_path(): string {
+    function base_path(): string
+    {
         return defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 2);
     }
-} 
+}
 
-if(!function_exists('private_storage')){
+if (!function_exists('private_storage')) {
     /**
      * Get the base path of the application.
      *
      * @return string
      */
-    function private_storage(): string {
+    function private_storage(): string
+    {
         return defined('STORAGE_PATH') ? STORAGE_PATH : dirname(__DIR__, 2);
     }
-} 
+}
 
-if(!function_exists('public_storage')){
+if (!function_exists('public_storage')) {
     /**
      * Get the base path of the application.
      *
      * @return string
      */
-    function public_storage(): string {
+    function public_storage(): string
+    {
         return defined('PUBLIC_STORAGE') ? BASE_PATH : dirname(__DIR__, 2);
     }
 }
 
-if(!function_exists('log_path')){
+if (!function_exists('log_path')) {
     /**
      * Get the log path of the application.
      *
      * @return string
      */
-    function log_path(): string {
+    function log_path(): string
+    {
         return defined('LOG_PATH') ? LOG_PATH : base_path() . '/storage/logs';
     }
 }
@@ -122,14 +158,16 @@ if(!function_exists('log_path')){
  * @param string|null $id Optional service ID to retrieve from the container.
  * @return \Marwa\App\Core\Container
  */
-if(!function_exists('app')) {
-    function app($id=null): mixed {
+if (!function_exists('app')) {
+    function app($id = null): mixed
+    {
 
-        if($id !== null) {
-            return \Marwa\App\Core\Container::getInstance()->get($id);
+        if ($id !== null) {
+            //return \Marwa\App\Core\Container::getInstance()->get($id);
+            return  App::get($id);
         }
+        return App::getInstance();
         return Container::getInstance();
-        
     }
 }
 
@@ -142,9 +180,10 @@ if (!function_exists('config')) {
      *   config('database.connections.mysql.host', '127.0.0.1');
      *   config()->set('custom.key', 'value'); // returns Config instance if no key
      */
-    function config(?string $key = null, mixed $default = null): mixed
+    function config(string $key, mixed $default = null): mixed
     {
-        $config = app()->get('config');
+        $config = app('config');
+
         if ($config === null) {
             throw new RuntimeException('Config not initialized. Ensure you have booted the application.');
         }
@@ -178,7 +217,7 @@ if (!function_exists('generate_key')) {
         return $asHex ? bin2hex($randomBytes) : $randomBytes;
     }
 }
-if(!function_exists('env')) {
+if (!function_exists('env')) {
     /**
      * Get an environment variable with optional default.
      *
@@ -188,10 +227,12 @@ if(!function_exists('env')) {
      */
     function env(string $key, mixed $default = null): mixed
     {
-       return getenv($key) !== false ? getenv($key) : $default;
-
+        //dd(getenv(), $_ENV);
+        return getenv($key) === null ? $_ENV[$key] : getenv($key);
     }
-}   
+}
+
+
 if (!function_exists('abort')) {
     /**
      * Throw an HTTP exception with a given status code.
@@ -204,7 +245,7 @@ if (!function_exists('abort')) {
     {
         throw new \Marwa\App\Exceptions\HttpException($code, $message);
     }
-}   
+}
 if (!function_exists('abort_if')) {
     /**
      * Throw an HTTP exception if the condition is true.
@@ -261,7 +302,7 @@ if (!function_exists('container')) {
         return app();
     }
 }
-if(!function_exists('singleton')) {
+if (!function_exists('singleton')) {
     /**
      * Bind a service as a singleton in the container.
      *
@@ -313,7 +354,7 @@ if (!function_exists('request')) {
      * Get the request instance.
      * @return \Marwa\App\Core\Request
      */
-    function request(): \Marwa\App\Core\Request 
+    function request(): \Marwa\App\Core\Request
     {
         return app()->get('request');
     }

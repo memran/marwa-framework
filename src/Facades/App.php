@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author    Mohammad Emran <memran.dhk@gmail.com>
  * @copyright 2018
@@ -8,18 +9,18 @@
  */
 
 namespace Marwa\App\Facades;
+
 use Marwa\App\Facades\Facade;
 
 final class App extends Facade
 {
-      /**
-       * [getClassAlias description]
-       *
-       * @return string
-       */
-    public static function getClassAlias() : string
+    /**
+     * [getClassAlias description]
+     *
+     * @return string
+     */
+    public static function getClassAlias(): string
     {
-        return 'app';
+        return 'Marwa\App\Core\Container';
     }
-
 }
