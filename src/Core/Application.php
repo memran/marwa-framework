@@ -138,7 +138,10 @@ final class Application
 
         // dd($this->container);
         App::register('Marwa\App\ServiceProvider\AppBootableServiceProvider');
+        //Loading All service providers and register
+        App::loadProviders(config('app.providers'));
     }
+
 
     /**
      * 
@@ -146,14 +149,10 @@ final class Application
     public function run(): void
     {
 
-        $this->calcRenderTime();
-        //$response = $response = Response::json(['status' => 'ok', 'body' => Request::all()], 201, ['X-Response-Time' => $this->renderTime]);
-        //$emitter = new SapiEmitter();
-
-        // $emitter->emit($response);
-        //if ($x)
-        d("Welcome");
-        //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
+        if (env('APP_ENV') === 'development') {
+            $this->calcRenderTime();
+        }
+        dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
         exit(0);
     }
 
@@ -162,7 +161,7 @@ final class Application
      * [renderTime description] it will return application render time
      * @return [type] [description]
      */
-    public function calcRenderTime()
+    private function calcRenderTime()
     {
         $start = START_APP;
         $end = microtime(true);

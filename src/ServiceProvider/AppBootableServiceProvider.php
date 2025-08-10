@@ -38,6 +38,21 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
     {
 
         d("Loading from register method");
+        if (Runtime::isWeb()) {
+            $this->getContainer()->add('request', function () {
+                return new Request();
+            });
+            $this->getContainer()->add('response', function () {
+                return new ResponseFactory();
+            });
+
+            $this->getContainer()->add('router', function () {
+                return new Router();
+            });
+            $this->getContainer()->add('emitter', function () {
+                return new SapiEmitter();
+            });
+        }
     }
 
     public function boot(): void
@@ -76,21 +91,5 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
         $this->getContainer()->add('logger', function () {
             return app('error_handler')->getLogger();
         });
-
-        if (Runtime::isWeb()) {
-            $this->getContainer()->add('request', function () {
-                return new Request();
-            });
-            $this->getContainer()->add('response', function () {
-                return new ResponseFactory();
-            });
-
-            $this->getContainer()->add('router', function () {
-                return new Router();
-            });
-            $this->getContainer()->add('emitter', function () {
-                return new SapiEmitter();
-            });
-        }
     }
 }
