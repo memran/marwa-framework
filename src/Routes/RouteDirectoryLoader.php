@@ -53,7 +53,7 @@ final class RouteDirectoryLoader
             if (!$this->hasAllowedExtension($file)) {
                 continue;
             }
-            require $path;
+            require_once $path;
             $count++;
         }
         return $count;

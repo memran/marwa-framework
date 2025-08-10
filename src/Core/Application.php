@@ -148,10 +148,11 @@ final class Application
         if (env('APP_ENV') === 'development') {
             $this->calcRenderTime();
         }
+        dd(app('router'));
         //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
-        dd('Routing Dispatch', Router::dispatch());
+        //dd('Routing Dispatch', app('router')->dispatch());
 
-        app('emitter')->emit();
+        //app('emitter')->emit();
 
         exit(0);
     }

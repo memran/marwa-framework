@@ -13,6 +13,7 @@ use Marwa\App\Http\Response\ResponseFactory;
 use Marwa\App\Routes\Router;
 use Marwa\App\Support\Runtime;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use Marwa\App\Routes\RouteDirectoryLoader;
 
 class AppBootableServiceProvider extends AbstractServiceProvider implements BootableServiceProviderInterface
 {
@@ -51,8 +52,8 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
     public function register(): void
     {
 
-        //d("Loading from register method");
         if (Runtime::isWeb()) {
+            //d("Loading from register method on AppBootServer");
             $this->getContainer()->add('request', function () {
                 return new Request();
             });
@@ -68,7 +69,7 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
 
     public function boot(): void
     {
-
+        //dd("Loading from boot method on AppBootServer");
         $this->getContainer()->add('env', function () {
             return new Env(BASE_PATH);
         });

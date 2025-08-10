@@ -2,9 +2,11 @@
 
 namespace Marwa\App\Routes;
 
+use Laminas\Diactoros\Response\Serializer;
 use League\Route\Router as LeagueRouter;
 use Marwa\App\Exceptions\NotFoundException;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class Router
 {
@@ -75,7 +77,7 @@ class Router
         });
     }
 
-    public function dispatch()
+    public function dispatch(): ResponseInterface
     {
         return $this->router->dispatch($this->request);
     }
