@@ -6,11 +6,10 @@ namespace Marwa\App\ServiceProvider;
 
 use Marwa\App\Routes\RouteDirectoryLoader;
 use League\Container\ServiceProvider\AbstractServiceProvider;
-use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use Marwa\App\Routes\Router;
 
 
-final class RouteServiceProvider extends AbstractServiceProvider implements BootableServiceProviderInterface
+final class RouteServiceProvider extends AbstractServiceProvider
 {
 
     public function provides(string $id): bool
@@ -21,14 +20,12 @@ final class RouteServiceProvider extends AbstractServiceProvider implements Boot
     }
     public function register(): void
     {
-        $this->getContainer()->add('router', function () {
-            return new Router(app('request'));
-        });
-    }
 
-    public function boot(): void
-    {
-        $loader = new RouteDirectoryLoader(ROUTES_PATH);
-        $loader->load();
+        $this->getContainer()->addShared('router', function () {
+            return new Router(app(), app('request'), config('app.middlewares'));
+        });
+
+        //$loader = new RouteDirectoryLoader(ROUTES_PATH);
+        //$loader->load();
     }
 }

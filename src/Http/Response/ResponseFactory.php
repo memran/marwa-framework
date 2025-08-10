@@ -6,9 +6,8 @@ use Marwa\App\Contracts\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Laminas\Diactoros\Response;
-use Laminas\Diactoros\Response\JsonResponse;
-use Laminas\Diactoros\Response\RedirectResponse;
-use Laminas\Diactoros\Response\TextResponse;
+use Laminas\Diactoros\Response\{JsonResponse, RedirectResponse, TextResponse, HtmlResponse, XmlResponse};
+
 use Laminas\Diactoros\Stream;
 use Marwa\App\Exceptions\InvalidArgumentException;
 
@@ -47,6 +46,44 @@ final class ResponseFactory implements ResponseFactoryInterface
         $default = ['Content-Type' => 'application/json; charset=UTF-8'];
         $resp = new JsonResponse($data, $status, $default, $options);
         return $this->withHeaders($resp, $headers);
+    }
+    /**
+     * [html description] html reponse
+     * @param  string            $content [description]
+     * @param  integer           $status  [description]
+     * @param  array             $headers [description]
+     * @return ResponseInterface          [description]
+     */
+    public static function html(string $content, int $status = 200, array $headers = []): HtmlResponse
+    {
+        $response = new HtmlResponse($content, $status, $headers);
+        return $response;
+    }
+
+    /**
+     * [text description] text response
+     * @param  string            $content [description]
+     * @param  integer           $status  [description]
+     * @param  array             $headers [description]
+     * @return ResponseInterface          [description]
+     */
+    public static function text(string $content, int $status = 200, array $headers = []): ResponseInterface
+    {
+        $response = new TextResponse($content, $status, $headers);
+        return $response;
+    }
+
+    /**
+     * [xml description] xml response
+     * @param  string            $content [description]
+     * @param  integer           $status  [description]
+     * @param  array             $headers [description]
+     * @return ResponseInterface          [description]
+     */
+    public static function xml(string $content, int $status = 200, array $headers = []): ResponseInterface
+    {
+        $response = new XmlResponse($content, $status, $headers);
+        return $response;
     }
 
     /**
@@ -221,6 +258,21 @@ final class ResponseFactory implements ResponseFactoryInterface
     public function status(ResponseInterface $response, int $status): ResponseInterface
     {
         return $response->withStatus($status);
+    }
+
+
+
+    /**
+     * [error description] error response
+     * @param  string            $content [description]
+     * @param  integer           $status  [description]
+     * @param  array             $headers [description]
+     * @return ResponseInterface          [description]
+     */
+    public static function error(string $content, int $status = 503, array $headers = []): ResponseInterface
+    {
+        $response = new HtmlResponse($content, $status, $headers);
+        return $response;
     }
 
     /**

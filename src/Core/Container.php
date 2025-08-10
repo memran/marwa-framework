@@ -157,9 +157,6 @@ final class Container implements ContainerInterface, BindingInterface
     public function __call(string $method, array $parameters = []): mixed
     {
 
-        if (!method_exists($this->container, $method)) {
-            return  call_user_func($this->get($method), $parameters);
-        }
         return call_user_func_array([$this->container, $method], $parameters);
     }
 
@@ -171,7 +168,6 @@ final class Container implements ContainerInterface, BindingInterface
 
         $list = $providers ?? [];
         foreach ($list as $entry) {
-            //$provider = self::resolveProvider($container, $entry);
             // Register with underlying League container
             $this->register($entry);
         }

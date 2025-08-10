@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
-use Marwa\App\Facades\{Facade, App, Router};
-
+use Marwa\App\Facades\{Facade, App, Response, Router};
 use Marwa\App\Core\Container;
+use Marwa\App\Routes\RouteDirectoryLoader;
 
 final class Application
 {
@@ -47,29 +47,34 @@ final class Application
 
     private function setBasePath(string $path): void
     {
+        //////////APPLICATION PATH SET/////////////////////////////////////
         if (!defined('BASE_PATH')) {
             define('BASE_PATH', rtrim($path, '/\\'));
         }
         if (!defined('APP_PATH')) {
-            define('APP_PATH', BASE_PATH . '/app');
+            define('APP_PATH', BASE_PATH . DS . 'app');
         }
         if (!defined('CONFIG_PATH')) {
-            define('CONFIG_PATH', BASE_PATH . '/config');
+            define('CONFIG_PATH', BASE_PATH . DS . 'config');
+        }
+        if (!defined('ROUTES_PATH')) {
+            define('ROUTES_PATH', BASE_PATH . DS . 'routes');
         }
         if (!defined('STORAGE_PATH')) {
-            define('STORAGE_PATH', BASE_PATH . '/storage');
+            define('STORAGE_PATH', BASE_PATH . DS . 'storage');
         }
         if (!defined('PUBLIC_PATH')) {
-            define('PUBLIC_PATH', BASE_PATH . '/public');
+            define('PUBLIC_PATH', BASE_PATH . DS . 'public');
         }
         if (!defined('RESOURCE_PATH')) {
-            define('RESOURCE_PATH', BASE_PATH . '/resources');
+            define('RESOURCE_PATH', BASE_PATH . DS . 'resources');
         }
+        //////////////////////  INTERNAL USAGE PATH //////////////////////////////
         if (!defined('LOG_PATH')) {
-            define('LOG_PATH', STORAGE_PATH . '/logs');
+            define('LOG_PATH', STORAGE_PATH . DS . 'logs');
         }
         if (!defined('CACHE_PATH')) {
-            define('CACHE_PATH', STORAGE_PATH . '/cache');
+            define('CACHE_PATH', STORAGE_PATH . DS . 'cache');
         }
 
         if (!defined('CONFIG_CACHE_PATH')) {
@@ -79,20 +84,18 @@ final class Application
             define('BASE_URL', '/');
         }
         if (!defined('PUBLIC_STORAGE')) {
-            define('PUBLIC_STORAGE', PUBLIC_PATH . '/storage');
+            define('PUBLIC_STORAGE', PUBLIC_PATH . DS . 'storage');
         }
         if (!defined('VIEWS_PATH')) {
-            define('VIEWS_PATH', RESOURCE_PATH . '/views');
+            define('VIEWS_PATH', RESOURCE_PATH . DS . 'views');
         }
         if (!defined('ASSETS_PATH')) {
-            define('ASSETS_PATH', RESOURCE_PATH . '/assets');
+            define('ASSETS_PATH', RESOURCE_PATH . DS . 'assets');
         }
         if (!defined('LANG_PATH')) {
-            define('LANG_PATH', RESOURCE_PATH . '/lang');
+            define('LANG_PATH', RESOURCE_PATH . DS . 'lang');
         }
-        if (!defined('ROUTES_PATH')) {
-            define('ROUTES_PATH', APP_PATH . '/Routes');
-        }
+
         if (!defined('MIDDLEWARE_PATH')) {
             define('MIDDLEWARE_PATH', APP_PATH . '/Middleware');
         }
@@ -148,11 +151,15 @@ final class Application
         if (env('APP_ENV') === 'development') {
             $this->calcRenderTime();
         }
-        dd(app('router'));
+        // if (app('router') === Router::getRouter()) {
+        //     dd("Equals");
+        // }
+        $loader = new RouteDirectoryLoader(ROUTES_PATH);
+        $loader->load();
         //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
-        //dd('Routing Dispatch', app('router')->dispatch());
+        //dd('Routing Dispatch', app('router'));
 
-        //app('emitter')->emit();
+        app('emitter')->emit(app('router')->dispatch());
 
         exit(0);
     }

@@ -40,11 +40,11 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
      */
     private function timezone(): void
     {
-        $tz = $_ENV['APP_TZ'] ?? 'UTC';
+        $tz = env('APP_TIMEZONE', 'UTC');
         @date_default_timezone_set($tz);
 
         if (\class_exists(\Locale::class)) {
-            $locale = $_ENV['APP_LOCALE'] ?? 'en_US';
+            $locale = env('APP_LOCALE', 'en_US');
             @\Locale::setDefault($locale);
         }
     }
@@ -54,14 +54,14 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
 
         if (Runtime::isWeb()) {
             //d("Loading from register method on AppBootServer");
-            $this->getContainer()->add('request', function () {
+            $this->getContainer()->addShared('request', function () {
                 return new Request();
             });
-            $this->getContainer()->add('response', function () {
+            $this->getContainer()->addShared('response', function () {
                 return new ResponseFactory();
             });
 
-            $this->getContainer()->add('emitter', function () {
+            $this->getContainer()->addShared('emitter', function () {
                 return new SapiEmitter();
             });
         }
@@ -70,7 +70,7 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
     public function boot(): void
     {
         //dd("Loading from boot method on AppBootServer");
-        $this->getContainer()->add('env', function () {
+        $this->getContainer()->addShared('env', function () {
             return new Env(BASE_PATH);
         });
 
@@ -78,7 +78,8 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
             Debug::enable();
 
             if (env('APP_DEBUG')) {
-                $this->getContainer()->add('error_handler', function () {
+
+                $this->getContainer()->addShared('error_handler', function () {
 
                     $handler = ErrorHandler::bootstrap([
                         'app_name'       => config('app.app_name'),
@@ -93,14 +94,15 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
                     $handler->enableExceptionReporter();
                     return $handler;
                 });
+
                 //loading Logger
-                $this->getContainer()->add('logger', function () {
+                $this->getContainer()->addShared('logger', function () {
                     return app('error_handler')->getLogger();
                 });
             }
         }
 
-        $this->getContainer()->add('config', function () {
+        $this->getContainer()->addShared('config', function () {
             $config = new Config(BASE_PATH);
             $config->load();
             return $config;

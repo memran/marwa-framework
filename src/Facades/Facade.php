@@ -41,7 +41,27 @@ abstract class Facade
         static::$container = $container;
     }
 
+    public static function getContainer(): ContainerInterface
+    {
+        return static::$container;
+    }
 
+    /**
+     * [setApplication description] it will setup application instance 
+     * @param [type] $app [description]
+     */
+    public static function setApplication($app)
+    {
+        static::$resolvedInstance[] = $app;
+    }
+    /**
+     * [getApplication description] it will return app instance
+     * @return [type] [description]
+     */
+    protected static function getApplication($app)
+    {
+        return static::$resolvedInstance[$app];
+    }
 
     /**
      * Clear the cached instance for a specific alias (or all if null).

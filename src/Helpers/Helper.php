@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
-use Marwa\App\Core\Container;
-use Marwa\App\Facades\App;
+use Marwa\App\Facades\{Facade, App};
 
 /**
  * Dump one or more variables without stopping execution.
@@ -177,7 +176,7 @@ if (!function_exists('app')) {
             //return \Marwa\App\Core\Container::getInstance()->get($id);
             return  App::get($id);
         }
-        return Container::getInstance();
+        return Facade::getContainer();
     }
 }
 
@@ -378,9 +377,9 @@ if (!function_exists('logger')) {
 if (!function_exists('error_handler')) {
     /**
      * Get the error handler instance.
-     * @return \Marwa\Logging\ErrorHandler  
+     * @return mixed  
      */
-    function error_handler(): \Marwa\Logging\ErrorHandler
+    function error_handler(): mixed
     {
         return app()->get('error_handler');
     }
