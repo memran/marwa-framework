@@ -32,6 +32,34 @@ class Translate
     }
 
     /**
+     * Add an array of translations for a given locale and domain.
+     */
+    public function add(array $messages, string $locale, string $domain = 'messages'): void
+    {
+        static::$translator->addResource('array', $messages, $locale, $domain);
+    }
+
+    /**
+     * Translate a key.
+     */
+    public function trans(string $key, array $replace = [], ?string $locale = null, string $domain = 'messages'): string
+    {
+        return static::$translator->trans($key, $replace, $domain, $locale);
+    }
+
+    /**
+     * Change the current locale.
+     */
+    public function setLocale(string $locale): void
+    {
+        static::$translator->setLocale($locale);
+    }
+
+    public function getLocale(): string
+    {
+        return static::$translator->getLocale();
+    }
+    /**
      * @return bool
      */
     protected function loadResource()
@@ -40,7 +68,7 @@ class Translate
         if (!$langFiles) return false;
 
         if (is_array($langFiles)) {
-            foreach ($langFiles as $index => $file) {
+            foreach ($langFiles as  $file) {
                 $message = include_once($file['name']);
 
                 if (is_array($message)) {
@@ -77,7 +105,7 @@ class Translate
      */
     private function getLangDirectory(): string
     {
-        return app('lang_path') . DIRECTORY_SEPARATOR;
+        return LANG_PATH . DIRECTORY_SEPARATOR;
     }
 
     /**

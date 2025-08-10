@@ -4,8 +4,9 @@
 composer.lock
 .DS_Store
 storage/*
-app
-config
-public
-resource
+app/
+config/
+public/
+resource/
+routes/
 vendor/

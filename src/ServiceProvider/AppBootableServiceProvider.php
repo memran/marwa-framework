@@ -12,6 +12,7 @@ use Marwa\Logging\ErrorHandler;
 use Marwa\App\Http\Response\ResponseFactory;
 use Marwa\App\Support\Runtime;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use Marwa\App\Core\Translate;
 use Marwa\App\Views\{ViewFactory, TwigCompiler};
 
 class AppBootableServiceProvider extends AbstractServiceProvider implements BootableServiceProviderInterface
@@ -30,7 +31,8 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
             'request',
             'response',
             'emitter',
-            'view'
+            'view',
+            'lang'
         ];
 
         return in_array($id, $services);
@@ -69,6 +71,10 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
                 $factory = new ViewFactory(VIEWS_PATH);
                 TwigCompiler::compile($factory);
                 return $factory;
+            });
+
+            $this->getContainer()->addShared('lang', function () {
+                return Translate::getInstance();
             });
         }
     }

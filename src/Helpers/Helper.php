@@ -392,3 +392,16 @@ if (! function_exists('view')) {
         return Response::html(app('view')->make($template, $data));
     }
 }
+
+if (! function_exists('trans')) {
+    function trans(string $key, array $replace = [], ?string $locale = null, string $domain = 'messages')
+    {
+        return app('lang')->trans($key, $replace, $locale, $domain);
+    }
+}
+if (! function_exists('__')) {
+    function __(string $key, array $replace = [], ?string $locale = null, string $domain = 'messages')
+    {
+        return app('lang')->trans($key, $replace, $locale, $domain);
+    }
+}
