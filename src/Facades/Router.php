@@ -12,7 +12,7 @@ namespace Marwa\App\Facades;
 
 use Marwa\App\Facades\Facade;
 
-final class Response extends Facade
+final class Router extends Facade
 {
     /**
      * [getClassAlias description]
@@ -21,6 +21,6 @@ final class Response extends Facade
      */
     public static function getClassAlias(): string
     {
-        return 'response';
+        return 'router';
     }
 }

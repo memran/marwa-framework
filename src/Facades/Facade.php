@@ -41,6 +41,8 @@ abstract class Facade
         static::$container = $container;
     }
 
+
+
     /**
      * Clear the cached instance for a specific alias (or all if null).
      */
@@ -68,7 +70,6 @@ abstract class Facade
     protected static function getInstance(): object
     {
         $alias = static::getAliasOrFail();
-
         // 1) Cache
         if (isset(static::$resolvedInstance[$alias])) {
             return static::$resolvedInstance[$alias];
@@ -82,7 +83,10 @@ abstract class Facade
             }
             return static::$resolvedInstance[$alias] = $resolved;
         }
-
+        //if container 
+        if ($alias === "app") {
+            return static::$resolvedInstance[$alias] = static::$container;
+        }
         // 3) FQCN fallback (last resort; bypasses DI)
         if (\class_exists($alias)) {
             if (isStaticMethod($alias, 'getInstance')) {
@@ -92,7 +96,6 @@ abstract class Facade
             /** @psalm-suppress MixedMethodCall */
             return static::$resolvedInstance[$alias] = new $alias();
         }
-
         throw new FacadeException("Facade alias '{$alias}' not found in container and class does not exist.");
     }
 

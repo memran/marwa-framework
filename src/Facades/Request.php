@@ -21,6 +21,6 @@ final class Request extends Facade
      */
     public static function getClassAlias(): string
     {
-        return 'Marwa\App\Requests\Request';
+        return 'request';
     }
 }

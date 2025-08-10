@@ -7,6 +7,7 @@ use League\Container\ReflectionContainer;
 use Psr\Container\ContainerInterface;
 use Marwa\App\Contracts\BindingInterface;
 use Marwa\App\Exceptions\NotFoundException;
+use PHPUnit\Framework\MockObject\Rule\Parameters;
 
 final class Container implements ContainerInterface, BindingInterface
 {
@@ -34,7 +35,7 @@ final class Container implements ContainerInterface, BindingInterface
     /**
      * Constructor.
      */
-    protected function __construct()
+    public function __construct()
     {
         $this->container = new LeagueContainer();
         $this->container->delegate(new ReflectionContainer());
@@ -156,6 +157,9 @@ final class Container implements ContainerInterface, BindingInterface
     public function __call(string $method, array $parameters = []): mixed
     {
 
+        if (!method_exists($this->container, $method)) {
+            return  call_user_func($this->get($method), $parameters);
+        }
         return call_user_func_array([$this->container, $method], $parameters);
     }
 

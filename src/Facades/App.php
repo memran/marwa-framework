@@ -21,6 +21,6 @@ final class App extends Facade
      */
     public static function getClassAlias(): string
     {
-        return 'Marwa\App\Core\Container';
+        return 'app';
     }
 }

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
-use Marwa\App\Configs\Config;
-use Marwa\App\Facades\Facade;
-use Marwa\App\Http\Response\ResponseFactory;
-use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Psr\Http\Message\ResponseInterface;
+use Marwa\App\Configs\{Env};
+use Marwa\App\Facades\{Facade, App};
 
+use Marwa\App\Core\Container;
 
 final class Application
 {
@@ -24,6 +22,8 @@ final class Application
      * Base path for the application, defaults to the directory of this file.
      */
     private ?string $path = null;
+
+    private ?Container $container = null;
 
     /**
      * 
@@ -122,59 +122,41 @@ final class Application
             define('VENDOR_PATH', BASE_PATH . '/vendor');
         }
     }
+
+    private function bootContainer(): void
+    {
+        $this->container = Container::getInstance();
+
+        // ... register services
+        Facade::setContainer($this->container);
+    }
+
     private function bootConfig(): void
     {
-        // ... register services
-        Facade::setContainer(app());
+        //Boot the container
+        $this->bootContainer();
 
-        $config = new Config(BASE_PATH, CONFIG_PATH);
-
-        if (env('APP_ENV') === "production")
-            $config->setAutoCache(true);
-
-        $config->load();
-
-        app()->singleton('config', $config);
-        //enable debugging.....
-        $this->enableDebug();
-
-        //loading and adding providers to service containers
-        if (!is_null($config->get('app.providers')))
-            app()->loadProviders($config->get('app.providers'));
-
-        //dd("Printing Configuration", $config->all(), $config->get('env'), $config->get('app.debug'));
-
-
+        // dd($this->container);
+        App::register('Marwa\App\ServiceProvider\AppBootableServiceProvider');
     }
+
     /**
      * 
      */
     public function run(): void
     {
 
-        $resp = new ResponseFactory();
-
         $this->calcRenderTime();
-        //dd('Running Application Succesfully', app('config')->all(), $this->renderTime);
+        //$response = $response = Response::json(['status' => 'ok', 'body' => Request::all()], 201, ['X-Response-Time' => $this->renderTime]);
+        //$emitter = new SapiEmitter();
 
-        $response = $response = $resp->json(['status' => 'ok'], 201, ['X-Response-Time' => $this->renderTime]);
-
-        $emitter = new SapiEmitter();
-        $emitter->emit($response);
-
+        // $emitter->emit($response);
+        //if ($x)
+        d("Welcome");
+        //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
         exit(0);
     }
 
-    private function enableDebug()
-    {
-        //Enable Debug Bar
-        if (config("app.debug") && config('app.env') === 'development') {
-
-            $whoops = new \Whoops\Run;
-            $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
-            $whoops->register();
-        }
-    }
 
     /**
      * [renderTime description] it will return application render time

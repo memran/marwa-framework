@@ -1,6 +1,6 @@
 <?php
 
-namespace Marwa\App\ServiceProviders;
+namespace Marwa\App\ServiceProvider;
 
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;

@@ -193,13 +193,7 @@ if (!function_exists('config')) {
      */
     function config(string $key, mixed $default = null): mixed
     {
-        $config = app('config');
-
-        if ($config === null) {
-            throw new RuntimeException('Config not initialized. Ensure you have booted the application.');
-        }
-
-        return $config->get($key, $default);
+        return app('config')->get($key, $default);
     }
 }
 
@@ -232,19 +226,7 @@ if (!function_exists('generate_key')) {
 if (!function_exists('env')) {
     function env(string $key, mixed $default = null): mixed
     {
-        $raw = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-        if ($raw === false || $raw === null) return $default;
-
-        $lower = strtolower(trim((string)$raw));
-        return match ($lower) {
-            'true'  => true,
-            'false' => false,
-            'null'  => null,
-            'empty' => '',
-            default => (is_numeric($raw)
-                ? (str_contains((string)$raw, '.') ? (float)$raw : (int)$raw)
-                : $raw),
-        };
+        return app('env')->get($key, $default);
     }
 }
 

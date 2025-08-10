@@ -35,7 +35,8 @@
     "laminas/laminas-httphandlerrunner": "^2.12",
     "symfony/dotenv": "^7.3",
     "filp/whoops": "^2.18",
-    "rakit/validation": "^1.4"
+    "rakit/validation": "^1.4",
+    "symfony/translation": "^7.3"
     
   },
   "autoload": {
