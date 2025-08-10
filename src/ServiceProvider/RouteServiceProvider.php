@@ -25,7 +25,7 @@ final class RouteServiceProvider extends AbstractServiceProvider
             return new Router(app(), app('request'), config('app.middlewares'));
         });
 
-        //$loader = new RouteDirectoryLoader(ROUTES_PATH);
-        //$loader->load();
+        $loader = new RouteDirectoryLoader(ROUTES_PATH);
+        $loader->load();
     }
 }

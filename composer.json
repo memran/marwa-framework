@@ -36,7 +36,8 @@
     "symfony/dotenv": "^7.3",
     "filp/whoops": "^2.18",
     "rakit/validation": "^1.4",
-    "symfony/translation": "^7.3"
+    "symfony/translation": "^7.3",
+    "twig/twig": "^3.21"
     
   },
   "autoload": {
@@ -44,7 +45,8 @@
       "src/Helpers/Helper.php"
     ],
     "psr-4": {
-        "Marwa\\App\\": "src/"    
+        "Marwa\\App\\": "src/",
+        "App\\": "app/"     
       }
   },
   "require-dev": {

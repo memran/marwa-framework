@@ -10,10 +10,9 @@ use Marwa\App\Requests\Request;
 use Marwa\App\Core\Debug;
 use Marwa\Logging\ErrorHandler;
 use Marwa\App\Http\Response\ResponseFactory;
-use Marwa\App\Routes\Router;
 use Marwa\App\Support\Runtime;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Marwa\App\Routes\RouteDirectoryLoader;
+use Marwa\App\Views\{ViewFactory, TwigCompiler};
 
 class AppBootableServiceProvider extends AbstractServiceProvider implements BootableServiceProviderInterface
 {
@@ -30,7 +29,8 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
             'logger',
             'request',
             'response',
-            'emitter'
+            'emitter',
+            'view'
         ];
 
         return in_array($id, $services);
@@ -63,6 +63,12 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
 
             $this->getContainer()->addShared('emitter', function () {
                 return new SapiEmitter();
+            });
+
+            $this->getContainer()->addShared('view', function () {
+                $factory = new ViewFactory(VIEWS_PATH);
+                TwigCompiler::compile($factory);
+                return $factory;
             });
         }
     }

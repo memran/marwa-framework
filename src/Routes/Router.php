@@ -219,7 +219,46 @@ final class Router
 
         return $route;
     }
+    public function middleware(...$middleware): self
+    {
+        if (!($this->currentRoute instanceof Route)) {
+            return $this; // no-op if called before mapping
+        }
 
+        // Support: ->middleware(A::class), ->middleware(A::class, B::class), ->middleware([A::class, B::class])
+        $list = $this->normalizeMiddlewareVariadic($middleware);
+        foreach ($list as $mw) {
+            $this->currentRoute->middleware($mw);
+        }
+        return $this;
+    }
+    /**
+     * Map a handler to all common HTTP verbs (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)
+     */
+    public function any(string $path, $handler): self
+    {
+        $verbs = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+        foreach ($verbs as $method) {
+            $this->map($method, $path, $handler);
+        }
+        // Set currentRoute to last mapped verb for chaining
+        $this->currentRoute = $this->map('GET', $path, $handler);
+        return $this;
+    }
+    /**
+     * Normalize middleware input from variadic/array.
+     *
+     * @param array<int,mixed> $variadic
+     * @return array<int,string|object>
+     */
+    private function normalizeMiddlewareVariadic(array $variadic): array
+    {
+        // If single array passed, unwrap it
+        if (count($variadic) === 1 && is_array($variadic[0])) {
+            $variadic = $variadic[0];
+        }
+        return array_values($variadic);
+    }
     public function getRouter(): mixed
     {
         return $this;

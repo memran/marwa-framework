@@ -151,11 +151,7 @@ final class Application
         if (env('APP_ENV') === 'development') {
             $this->calcRenderTime();
         }
-        // if (app('router') === Router::getRouter()) {
-        //     dd("Equals");
-        // }
-        $loader = new RouteDirectoryLoader(ROUTES_PATH);
-        $loader->load();
+
         //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
         //dd('Routing Dispatch', app('router'));
 

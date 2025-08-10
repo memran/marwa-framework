@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
-use Marwa\App\Facades\{Facade, App};
+use Marwa\App\Facades\{Facade, App, Response};
 
 /**
  * Dump one or more variables without stopping execution.
@@ -382,5 +382,13 @@ if (!function_exists('error_handler')) {
     function error_handler(): mixed
     {
         return app()->get('error_handler');
+    }
+}
+
+
+if (! function_exists('view')) {
+    function view($template, $data = [])
+    {
+        return Response::html(app('view')->make($template, $data));
     }
 }

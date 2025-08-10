@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full antialiased scroll-smooth" x-data="{ dark: (localStorage.getItem('theme') ?? 'system') === 'dark' || ((localStorage.getItem('theme') ?? 'system') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) }" x-bind:class="dark ? 'dark' : ''">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}MarwaPHP — Welcome{% endblock %}</title>
+
+  {# Tailwind (CDN for dev). For prod, compile Tailwind and replace with your app.css #}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Optional: Tailwind config for brand colors
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#0ea5e9', dark: '#22d3ee' }
+          },
+          boxShadow: {
+            'brand': '0 10px 30px -10px rgba(14,165,233,.35)'
+          },
+          keyframes: {
+            gradient: {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' },
+            }
+          },
+          animation: {
+            'gradient': 'gradient 12s ease infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  {# Alpine.js for tiny interactions #}
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    /* Soft radial background blob (kept tiny; works with dark mode) */
+    .bg-grid {
+      background-image:
+        radial-gradient(circle at 1px 1px, rgb(0 0 0 / .06) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+    .dark .bg-grid {
+      background-image:
+        radial-gradient(circle at 1px 1px, rgb(255 255 255 / .06) 1px, transparent 0);
+    }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-full bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 selection:bg-brand/20">
+  {# Animated gradient backdrop #}
+  <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand/15 via-emerald-400/10 to-fuchsia-500/10 bg-[length:200%_200%] animate-gradient"></div>
+    <div class="absolute inset-0 bg-grid"></div>
+  </div>
+
+  {% include 'partials/header.twig' %}
+
+  <main id="app" class="relative">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'partials/footer.twig' %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
