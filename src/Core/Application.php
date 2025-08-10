@@ -4,23 +4,13 @@ declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
-use Marwa\App\Configs\{Env};
-use Marwa\App\Facades\{Facade, App};
+use Marwa\App\Facades\{Facade, App, Router};
 
 use Marwa\App\Core\Container;
 
 final class Application
 {
-    private string $configPath;
-    /**
-     * Application constructor.
-     *
-     * @param string $configPath Path to the configuration file.
-     */
-    private string $basePath;
-    /**
-     * Base path for the application, defaults to the directory of this file.
-     */
+
     private ?string $path = null;
 
     private ?Container $container = null;
@@ -50,8 +40,9 @@ final class Application
         }
 
         $this->setBasePath($this->path);
-        $this->bootConfig();
-        //$this->bootstrapErrorHandler();
+
+        //boot configuration and others
+        $this->bootstrap();
     }
 
     private function setBasePath(string $path): void
@@ -122,7 +113,9 @@ final class Application
             define('VENDOR_PATH', BASE_PATH . '/vendor');
         }
     }
-
+    /**
+     * 
+     */
     private function bootContainer(): void
     {
         $this->container = Container::getInstance();
@@ -130,14 +123,17 @@ final class Application
         // ... register services
         Facade::setContainer($this->container);
     }
-
-    private function bootConfig(): void
+    /**
+     * 
+     */
+    private function bootstrap(): void
     {
         //Boot the container
         $this->bootContainer();
 
         // dd($this->container);
         App::register('Marwa\App\ServiceProvider\AppBootableServiceProvider');
+        App::register('Marwa\App\ServiceProvider\RouteServiceProvider');
         //Loading All service providers and register
         App::loadProviders(config('app.providers'));
     }
@@ -152,7 +148,11 @@ final class Application
         if (env('APP_ENV') === 'development') {
             $this->calcRenderTime();
         }
-        dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
+        //dd("Printing Configuration", app('config')->all(), app('config')->get('app.env'), app('config')->get('app.debug'));
+        dd('Routing Dispatch', Router::dispatch());
+
+        app('emitter')->emit();
+
         exit(0);
     }
 

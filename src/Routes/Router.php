@@ -2,18 +2,20 @@
 
 namespace Marwa\App\Routes;
 
-use FastRoute\RouteCollector;
-use League\Route\RouteCollection;
 use League\Route\Router as LeagueRouter;
+use Marwa\App\Exceptions\NotFoundException;
 use Psr\Http\Message\ServerRequestInterface;
-use Marwa\App\Contracts\RouterInterface;
 
-class Router implements RouterInterface
+class Router
 {
     /**
      * @var LeagueRouter
      */
     protected $router;
+    /**
+     * @var ServerRequestInterface $request
+     */
+    protected $request;
 
 
     /**
@@ -21,9 +23,10 @@ class Router implements RouterInterface
      */
     protected $currentRoute;
 
-    public function __construct()
+    public function __construct(ServerRequestInterface $request)
     {
         $this->router = new LeagueRouter();
+        $this->request = $request;
     }
 
     public function get(string $path, $handler): self
@@ -67,18 +70,33 @@ class Router implements RouterInterface
     public function group(array $attributes, callable $callback): void
     {
         $prefix = $attributes['prefix'] ?? '';
-        $this->router->group($prefix, function (League\Route\RouteCollection $routes) use ($callback) {
+        $this->router->group($prefix, function ($routes) use ($callback) {
             $callback($this);
         });
     }
 
-    public function dispatch(ServerRequestInterface $request)
+    public function dispatch()
     {
-        return $this->router->dispatch($request);
+        return $this->router->dispatch($this->request);
     }
 
     public function getInternalRouter(): LeagueRouter
     {
         return $this->router;
+    }
+    /**
+     * [__call description] magic method to call parent router
+     * @param  [type] $method [description]
+     * @param  [type] $params [description]
+     * @return [type]         [description]
+     */
+    public function __call($method, $params)
+    {
+
+        if (method_exists($this->router, $method)) {
+            $this->router->$method(...$params);
+        } else {
+            throw new NotFoundException('Sorry Method not Found');
+        }
     }
 }
