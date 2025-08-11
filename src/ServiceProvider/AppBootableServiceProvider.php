@@ -88,31 +88,30 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
 
         if (env('APP_ENV') === 'development') {
             Debug::enable();
-
-            if (env('APP_DEBUG', false)) {
-                $this->getContainer()->addShared('error_handler', function () {
-
-                    $handler = ErrorHandler::bootstrap([
-                        'app_name'       => config('app.app_name'),
-                        'env'            => config('app.env'),   // development or 'production'
-                        'log_path'       => private_storage() . DS . 'logs',
-                        'max_log_bytes'  => config('app.max_log_bytes'),
-                        'debug'          => config('app.debug', false),
-                        'log_level'      => config('app.log_level', 'error'),
-                        'sensitive_keys' => config('app.sensitive_keys', []),
-                    ]);
-                    // Enable Laravel-style reporter
-                    $handler->enableExceptionReporter();
-                    return $handler;
-                });
-
-                //loading Logger
-                $this->getContainer()->addShared('logger', function () {
-                    return app('error_handler')->getLogger();
-                });
-            }
         }
 
+        if (env('APP_DEBUG', false)) {
+            $this->getContainer()->addShared('error_handler', function () {
+
+                $handler = ErrorHandler::bootstrap([
+                    'app_name'       => config('app.app_name'),
+                    'env'            => config('app.env'),   // development or 'production'
+                    'log_path'       => private_storage() . DS . 'logs',
+                    'max_log_bytes'  => config('app.max_log_bytes'),
+                    'debug'          => config('app.debug', false),
+                    'log_level'      => config('app.log_level', 'error'),
+                    'sensitive_keys' => config('app.sensitive_keys', []),
+                ]);
+                // Enable Laravel-style reporter
+                $handler->enableExceptionReporter();
+                return $handler;
+            });
+
+            //loading Logger
+            $this->getContainer()->addShared('logger', function () {
+                return app('error_handler')->getLogger();
+            });
+        }
         $this->getContainer()->addShared('config', function () {
             $config = new Config(BASE_PATH);
             $config->load();

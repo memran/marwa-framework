@@ -6,6 +6,7 @@ use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Marwa\App\Facades\{Facade, App, Response};
+use Marwa\App\Events\EventManager;
 
 /**
  * Dump one or more variables without stopping execution.
@@ -369,9 +370,24 @@ if (!function_exists('logger')) {
      * Get the logger instance.
      * @return \Marwa\App\Logging\Logger
      */
-    function logger(): mixed
+    function logger(mixed $msg = null): mixed
     {
+        if ($msg != null)
+            return app('logger')->debug($msg);
+
         return app('logger');
+    }
+}
+
+if (!function_exists('event')) {
+    /**
+     * Get the Event instance.
+     * @return \Marwa\App\Events\EventManager
+     */
+    function event(): mixed
+    {
+
+        return app(EventManager::class);
     }
 }
 if (!function_exists('info')) {

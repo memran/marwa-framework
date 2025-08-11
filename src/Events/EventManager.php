@@ -16,8 +16,9 @@ final class EventManager
 
     public function __construct()
     {
-        $listenerRegistry = new PrioritizedListenerRegistry();
-        $this->dispatcher = new EventDispatcher($listenerRegistry);
+        //$listenerRegistry = new PrioritizedListenerRegistry();
+        //$this->dispatcher = new EventDispatcher($listenerRegistry);
+        $this->dispatcher = new EventDispatcher();
     }
 
     /**
@@ -31,6 +32,7 @@ final class EventManager
     {
         //$callable = $this->normalizeListener($listener);
         // league/event v3 offers subscribeTo($event, $listener)
+        //dd($event, $listener);
         $this->dispatcher->subscribeTo($event, $listener, $priority);
     }
 
@@ -40,12 +42,13 @@ final class EventManager
      * @param object|string $event
      * @param mixed ...$payload
      */
-    public function dispatch(object|string $event, mixed ...$payload): object
+    public function dispatch(object $event): object
     {
         // If string event name, wrap into a generic object with public payload
-        if (is_string($event)) {
-            $event = (object) ['name' => $event, 'payload' => $payload];
-        }
+        // if (is_string($event)) {
+        //     $event = (object) ['name' => $event, 'payload' => $payload];
+        // }
+
         return $this->dispatcher->dispatch($event);
     }
 

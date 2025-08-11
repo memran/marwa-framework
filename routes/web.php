@@ -4,7 +4,7 @@ use Marwa\App\Facades\Response;
 use Marwa\App\Facades\Router;
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\CanViewMiddleware;
-use Marwa\App\Events\EventManager;
+
 use App\Events\Event\UserRegistered;
 
 
@@ -15,17 +15,14 @@ Router::get('/', function ($req) {
 })->name('home');
 
 Router::get("/events", function () {
-    //Event::dispatch(new UserRegistered(userId: 42, email: 'alice@example.com'));
-    /** @var EventManager $events */
-    $events = app(EventManager::class);
-
-
     // Dispatch a class-based event (preferred)
-    $events->dispatch(new UserRegistered(42, 'jane@example.com'));
+    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
+    $event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
 
+    logger()->debug("From Controller ID#" . $event->id);
     // Dispatch a string event name (also supported)
-    $events->dispatch('order.paid', ['order_id' => 1234]);
-    return Response::json(['events', 'Succesfully done!']);
+    //$events->dispatch('order.paid', ['order_id' => 1234]);
+    return Response::json(['events', 'Succesfully done!', $event]);
 });
 
 Router::get('/edit/{id}', function ($req, $args) {

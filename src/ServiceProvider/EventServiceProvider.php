@@ -30,7 +30,7 @@ final class EventServiceProvider extends AbstractServiceProvider implements Boot
     }
     public function register(): void
     {
-        dd("Loading Event Service Provider");
+
         $container = $this->getContainer();
 
         // Our EventManager
@@ -41,7 +41,6 @@ final class EventServiceProvider extends AbstractServiceProvider implements Boot
 
     public function boot(): void
     {
-
         $this->getContainer()->get(EventManager::class)->register(config('event.listeners'));
     }
 }
