@@ -374,6 +374,16 @@ if (!function_exists('logger')) {
         return app('logger');
     }
 }
+if (!function_exists('info')) {
+    /**
+     * Get the logger instance.
+     * @return \Marwa\App\Logging\Logger
+     */
+    function info($msg): mixed
+    {
+        return app('logger')->info($msg);
+    }
+}
 if (!function_exists('error_handler')) {
     /**
      * Get the error handler instance.

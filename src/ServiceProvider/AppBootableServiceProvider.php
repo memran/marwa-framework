@@ -89,8 +89,7 @@ class AppBootableServiceProvider extends AbstractServiceProvider implements Boot
         if (env('APP_ENV') === 'development') {
             Debug::enable();
 
-            if (env('APP_DEBUG')) {
-
+            if (env('APP_DEBUG', false)) {
                 $this->getContainer()->addShared('error_handler', function () {
 
                     $handler = ErrorHandler::bootstrap([

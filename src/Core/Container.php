@@ -165,7 +165,6 @@ final class Container implements ContainerInterface, BindingInterface
      */
     public function loadProviders(array $providers): void
     {
-
         $list = $providers ?? [];
         foreach ($list as $entry) {
             // Register with underlying League container

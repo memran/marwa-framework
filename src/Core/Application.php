@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Marwa\App\Core;
 
-use Marwa\App\Facades\{Facade, App, Response, Router};
+use Marwa\App\Facades\{Facade, App};
 use Marwa\App\Core\Container;
-use Marwa\App\Routes\RouteDirectoryLoader;
 
 final class Application
 {
