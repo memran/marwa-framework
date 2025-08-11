@@ -1,12 +1,11 @@
 <?php
 
-use Marwa\App\Facades\Response;
+use Marwa\App\Facades\{Response, Event, Storage};
 use Marwa\App\Facades\Router;
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\CanViewMiddleware;
 
 use App\Events\Event\UserRegistered;
-
 
 
 Router::get('/', function ($req) {
@@ -15,11 +14,13 @@ Router::get('/', function ($req) {
 })->name('home');
 
 Router::get("/events", function () {
+
+    //Storage::disk()->put("storage", "hello world");
     // Dispatch a class-based event (preferred)
     //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-    $event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-
-    logger()->debug("From Controller ID#" . $event->id);
+    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
+    $event = Event::dispatch(new UserRegistered(42, 'jane@example.com'));
+    //logger()->debug("From Controller ID#" . $event->id);
     // Dispatch a string event name (also supported)
     //$events->dispatch('order.paid', ['order_id' => 1234]);
     return Response::json(['events', 'Succesfully done!', $event]);
