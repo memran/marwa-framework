@@ -7,7 +7,6 @@ use League\Container\ReflectionContainer;
 use Psr\Container\ContainerInterface;
 use Marwa\App\Contracts\BindingInterface;
 use Marwa\App\Exceptions\NotFoundException;
-use PHPUnit\Framework\MockObject\Rule\Parameters;
 
 final class Container implements ContainerInterface, BindingInterface
 {

@@ -33,7 +33,9 @@ final class EventServiceProvider extends AbstractServiceProvider implements Boot
 
         $container = $this->getContainer();
 
-        $container->addShared(EventManager::class);
+        $container->addShared(EventManager::class, function () {
+            return new EventManager(app()->psr());
+        });
     }
 
     public function boot(): void
