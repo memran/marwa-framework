@@ -8,6 +8,7 @@ use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use Marwa\App\Events\EventManager;
 
+
 /**
  * Tiny League\Container service provider.
  *
@@ -32,10 +33,7 @@ final class EventServiceProvider extends AbstractServiceProvider implements Boot
 
         $container = $this->getContainer();
 
-        // Our EventManager
-        $container->addShared(EventManager::class, function (): EventManager {
-            return new EventManager();
-        });
+        $container->addShared(EventManager::class);
     }
 
     public function boot(): void

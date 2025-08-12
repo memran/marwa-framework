@@ -37,9 +37,9 @@
     "rakit/validation": "^1.4",
     "symfony/translation": "^7.3",
     "twig/twig": "^3.21",
-    "league/event": "^3.0",
     "league/flysystem": "^3.30",
-    "aura/session": "^4.0"
+    "aura/session": "^4.0",
+    "memran/marwa-event": "^0.1.0"
     
   },
   "autoload": {
