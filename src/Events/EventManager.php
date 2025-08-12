@@ -37,7 +37,7 @@ final class EventManager
      * @param callable|string $listener Callable or class-string with handle($event)
      * @param int $priority Higher runs earlier (0 default)
      */
-    public function listen(string $event, callable|string $listener, int|string $priority = 0): void
+    public function listen(string $event, callable|string|array $listener, int|string $priority = 0): void
     {
 
         $this->events->listen($event, $listener, $this->convertStringToPriority($priority));
@@ -62,18 +62,12 @@ final class EventManager
 
         foreach (($config ?? []) as $event => $listeners) {
             //dd($event, $listeners);
-            if (is_string($listeners)) {
+            if (is_array($listeners)) {
+                [$callable, $priority] = [$listeners[0], $listeners[1]];
+                //dd($callable, $priority);
+                $this->listen($event, $callable, $priority);
+            } else {
                 $this->listen($event, $listeners, 0);
-            } else if (is_array($listeners)) {
-                foreach ($listeners as $listener) {
-                    if (is_array($listener)) {
-                        [$classOrCallable, $priority] = [$listener[0], $listener[1]];
-
-                        $this->listen($event, $classOrCallable, $this->convertStringToPriority($priority));
-                    } else {
-                        $this->listen($event, $listener, 0);
-                    }
-                }
             }
         }
     }

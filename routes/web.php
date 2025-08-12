@@ -20,8 +20,8 @@ Router::get("/events", function () {
     // });
     //Storage::disk()->put("storage", "hello world");
     // Dispatch a class-based event (preferred)
-    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
     $event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
+    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
     //$event = Event::dispatch(new UserRegistered(42, 'jane@example.com'));
     //logger()->debug("From Controller ID#" . $event->id);
     // Dispatch a string event name (also supported)
