@@ -22,8 +22,7 @@ final class FilesystemServiceProvider extends AbstractServiceProvider
     public function provides(string $id): bool
     {
         $services = [
-            'storage',
-            'file'
+            'storage'
         ];
 
         return in_array($id, $services);
@@ -36,10 +35,6 @@ final class FilesystemServiceProvider extends AbstractServiceProvider
         // Our Filemanager
         $container->addShared('storage', function () {
             return new FilesystemManager(config('file'));
-        });
-
-        $container->addShared('file', function () {
-            return (new FilesystemManager(config('file')))->disk();
         });
     }
 }

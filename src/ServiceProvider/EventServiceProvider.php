@@ -7,7 +7,6 @@ namespace Marwa\App\ServiceProvider;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use League\Container\ServiceProvider\BootableServiceProviderInterface;
 use Marwa\App\Events\EventManager;
-use Marwa\App\Events\EventAutoRegistrar;
 
 /**
  * Tiny League\Container service provider.
@@ -41,6 +40,11 @@ final class EventServiceProvider extends AbstractServiceProvider implements Boot
 
     public function boot(): void
     {
-        $this->getContainer()->get(EventManager::class)->register(config('event.listeners'));
+        $container = $this->getContainer();
+        $container->get(
+            EventManager::class
+        )->register(
+            config('event.listeners')
+        );
     }
 }

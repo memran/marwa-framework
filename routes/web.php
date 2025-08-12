@@ -15,14 +15,18 @@ Router::get('/', function ($req) {
 
 Router::get("/events", function () {
 
+    event()->listen(UserRegistered::class, function (object $event) {
+        logger()->debug('calling from callable event' . $event->id);
+    });
     //Storage::disk()->put("storage", "hello world");
     // Dispatch a class-based event (preferred)
+    $event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
     //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-    $event = Event::dispatch(new UserRegistered(42, 'jane@example.com'));
+    //$event = Event::dispatch(new UserRegistered(42, 'jane@example.com'));
     //logger()->debug("From Controller ID#" . $event->id);
     // Dispatch a string event name (also supported)
-    //$events->dispatch('order.paid', ['order_id' => 1234]);
+    //$event = Event::dispatch('order.paid', ['order_id' => 1234]);
+
     return Response::json(['events', 'Succesfully done!', $event]);
 });
 
