@@ -94,7 +94,6 @@ final class EventManager
     {
         // Already callable
         if (is_callable($handler)) {
-            dd('it is callable');
             return $handler;
         }
 
