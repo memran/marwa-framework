@@ -6,7 +6,9 @@ use League\Container\Container as LeagueContainer;
 use League\Container\ReflectionContainer;
 use Psr\Container\ContainerInterface;
 use Marwa\App\Contracts\BindingInterface;
+use Marwa\App\Exceptions\InvalidArgumentException;
 use Marwa\App\Exceptions\NotFoundException;
+use Throwable;
 
 final class Container implements ContainerInterface, BindingInterface
 {
@@ -167,7 +169,11 @@ final class Container implements ContainerInterface, BindingInterface
         $list = $providers ?? [];
         foreach ($list as $entry) {
             // Register with underlying League container
-            $this->register($entry);
+            try {
+                $this->register($entry);
+            } catch (Throwable $th) {
+                new InvalidArgumentException($entry);
+            }
         }
     }
 }
