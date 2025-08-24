@@ -1,4 +1,8 @@
 # Marwa Framework
+[![Latest Version](https://img.shields.io/packagist/v/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![Total Downloads](https://img.shields.io/packagist/dt/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![License](https://img.shields.io/packagist/l/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![PHP Version](https://img.shields.io/packagist/php-v/memran/marwa-framework.svg?style=flat-square)](https://php.net)
 
 A lightweight, modular PHP micro-framework built for speed, scalability, and simplicity. It adheres to PSR standards and offers rich features like routing, ORM, CLI tools, authentication, mailing, and more — making it ideal for rapid API or web application development.
 
