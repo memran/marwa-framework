@@ -1,8 +1,0 @@
-{% macro render(text, href="#", colorFrom="brand", colorTo="cyan-400") %}
-<a href="{{ href }}"
-   class="group relative inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-md bg-gradient-to-r from-{{ colorFrom }} to-{{ colorTo }} transition-all duration-300 motion-safe:hover:scale-105 motion-safe:hover:shadow-xl hover:from-{{ colorTo }} hover:to-{{ colorFrom }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand">
-    <span class="relative z-10">{{ text }}</span>
-    <span aria-hidden="true"
-          class="absolute inset-0 rounded-xl bg-gradient-to-r from-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition duration-300"></span>
-</a>
-{% endmacro %}

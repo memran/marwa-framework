@@ -6,4 +6,4 @@ namespace Marwa\Framework\Exceptions;
 
 use Exception;
 
-class NotFoundException extends Exception {}
+class ConfigNotFoundException extends Exception {}

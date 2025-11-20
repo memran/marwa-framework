@@ -1,6 +1,8 @@
 {
-  "name": "memran/marwa-framework",
-  "description": "PSR-7, PSR-15 Modular PHP Micro Framework.",
+  "name": "marwa/framework",
+  "description": "MarwaPHP -  A future‑proof, PSR‑compliant PHP framework core.Minimal, modular, and fast — with developer‑friendly APIs.",
+  "type": "library",
+  "license": "MIT",
   "keywords": [
     "http",
     "psr-3",
@@ -14,10 +16,8 @@
     "MarwaPHP Framework",
     "marwaphp",
     "Marwa Framework",
-    "PHP 8",
-    "PHP 7"
+    "PHP 8"
   ],
-  "license": "MIT",
   "authors": [
     {
       "name": "Mohammad Emran",
@@ -25,44 +25,46 @@
     }
   ],
   "require": {
-    "php": " >= 7.1",
-    "memran/marwa-logger": "^1.0",
-    "symfony/yaml": "^7.3",
+    "php": "^8.2",
+    "memran/marwa-logger": "dev-main",
+    "memran/marwa-error-handler": "dev-main",
+    "memran/marwa-support": "dev-main",
+    "memran/marwa-db": "dev-main",
+    "memran/marwa-view": "dev-main",
+    "memran/marwa-debugbar": "dev-main",
+    "memran/marwa-entity": "dev-main",
+    "memran/marwa-module": "dev-main",
+    "memran/marwa-event": "dev-main",
+    "memran/marwa-router": "dev-main",
     "league/container": "^5.1",
-    "league/route": "^6.2",
-    "laminas/laminas-diactoros": "^3.6",
-    "laminas/laminas-httphandlerrunner": "^2.12",
     "symfony/dotenv": "^7.3",
-    "filp/whoops": "^2.18",
-    "rakit/validation": "^1.4",
-    "symfony/translation": "^7.3",
-    "twig/twig": "^3.21",
-    "league/flysystem": "^3.30",
-    "aura/session": "^4.0",
-    "memran/marwa-event": "^0.1.0"
-    
+    "relay/relay": "^3.0",
+    "symfony/event-dispatcher": "^7.3",
+    "psr/event-dispatcher": "^1.0",
+    "nesbot/carbon": "^3.10",
+    "symfony/console": "^7.3"
   },
   "autoload": {
-    "files": [
-      "src/Helpers/Helper.php"
-    ],
     "psr-4": {
-        "Marwa\\App\\": "src/",
-        "App\\": "app/"     
-      }
+      "Marwa\\Framework\\": "src/"
+    },
+    "files": [
+      "src/Supports/Helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Marwa\\Framework\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "test": "php vendor/bin/testify",
+    "stan": "php vendor/bin/phpstan analyse"
   },
   "require-dev": {
-    "phpunit/phpunit": "^8",
-    "squizlabs/php_codesniffer": "3.*",
-    "phpstan/phpstan": "*",
-    "phpstan/phpstan-phpunit": "^0.12",
-    "symfony/var-dumper": "^7.3"
-  },
-  "scripts": {
-    "phpcs": "vendor/bin/phpcs src",
-    "phpcbf": "vendor/bin/phpcbf src",
-    "analyse": "vendor/bin/phpstan analyse -l 4 --no-progress src",
-    "check": "vendor/bin/phpunit && vendor/bin/phpstan analyse -l 4 --no-progress src",
-    "test": "vendor/bin/phpunit"
+    "memran/php-testify": "^1.0",
+    "phpstan/phpstan": "^2.1"
   }
 }

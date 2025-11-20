@@ -1,26 +1,16 @@
 <?php
 
-/**
- * @author    Mohammad Emran <memran.dhk@gmail.com>
- * @copyright 2018
- *
- * @see https://www.github.com/memran
- * @see http://www.memran.me
- */
+declare(strict_types=1);
 
-namespace Marwa\App\Facades;
+namespace Marwa\Framework\Facades;
 
-use Marwa\App\Facades\Facade;
+use Marwa\Framework\Adapters\RouterAdapter;
+use Marwa\Framework\Facades\Facade;
 
 final class Router extends Facade
 {
-    /**
-     * [getClassAlias description]
-     *
-     * @return string
-     */
-    public static function getClassAlias(): string
+    protected static function getFacadeAccessor(): string
     {
-        return 'router';
+        return RouterAdapter::class;
     }
 }

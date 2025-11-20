@@ -1,47 +1,26 @@
 <?php
 
-use Marwa\App\Facades\{Response, Event, Storage};
-use Marwa\App\Facades\Router;
-use App\Middlewares\AuthMiddleware;
-use App\Middlewares\CanViewMiddleware;
+use Carbon\Carbon;
+use Marwa\Framework\Facades\{Router, Config};
+use Marwa\Router\Response;
 
-use App\Events\UserRegistered;
+Router::get('/web', fn() => Response::json(['hello' => 'marwa']));
+Router::get('/', function () {
+    $key = Config::get('app.key');
+    $time = Carbon::now();
+    $body = "<h1>Welcome to MarwaPHP</h1>.
+        <br> 
+        Current Time is Now: {$time}
+        <hr>
+    ";
+    return Response::html($body);
+})->name('hello')->register();
 
+Router::get('/test', function () {
+    dd("it works");
+    return Response::json(['msg' => 'Ok!!']);
+})->name('test')->register();
 
-Router::get('/', function ($req) {
-    return view('index', ['name' => 'Marwa']);
-    //return Response::html("It works");
-})->name('home');
-
-Router::get("/events", function () {
-
-    // event()->listen(UserRegistered::class, function (object $event) {
-    //     logger()->debug('calling from callable event' . $event->id);
-    // });
-    //Storage::disk()->put("storage", "hello world");
-    // Dispatch a class-based event (preferred)
-    $event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-    //$event = event()->dispatch(new UserRegistered(42, 'jane@example.com'));
-    //$event = Event::dispatch(new UserRegistered(42, 'jane@example.com'));
-    //logger()->debug("From Controller ID#" . $event->id);
-    // Dispatch a string event name (also supported)
-    //$event = Event::dispatch('order.paid', ['order_id' => 1234]);
-
-    return Response::json(['action' => 'events', 'msg' => 'Succesfully done!', "metadata" => $event]);
-});
-
-Router::get('/edit/{id}', function ($req, $args) {
-    return Response::html("It works {$args['id']}");
-})->middleware(new AuthMiddleware());
-
-
-Router::get('/save/{id}', function ($req, $args) {
-    return Response::html("It works with request class {$req->input('id')}");
-});
-
-// Group middleware + per-route middleware combined
-Router::group(['prefix' => '/admin', 'middleware' => [new AuthMiddleware()]], function () {
-    Router::get('/dashboard', 'App\Controllers\HomeController::index')
-        ->middleware(new CanViewMiddleware())
-        ->name('admin.dashboard');
-});
+Router::get('/home', function () {
+    return view('home/index', ['csrf' => bin2hex(random_bytes(16))]);
+})->name('home')->register();

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Facades;
 
-use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
+use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Facades\Facade;
 
-final class Event extends Facade
+final class Log extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return EventDispatcherAdapter::class;
+        return LoggerAdapter::class;
     }
 }
