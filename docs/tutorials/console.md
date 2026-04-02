@@ -58,9 +58,14 @@ php bin/console module:cache
 php bin/console make:command CleanupCommand
 php bin/console make:controller Admin/PostController --resource
 php bin/console make:model Billing/Invoice --migration
+php bin/console make:module Blog
 php bin/console make:ai-helper SupportAgent --with-command
 ```
 
 `make:controller` generates controllers in `app/Http/Controllers`. Use `--resource` to scaffold CRUD-style methods.
 
 `make:model` generates `marwa-db` model classes in `app/Models`. Use `--migration` to call the registered `make:migration` command and create a matching table migration in `database/migrations`.
+
+`make:module` generates a `marwa-module` compatible folder in the first configured `module.paths` location, including `manifest.php`, a module service provider, `routes/http.php`, `resources/views/index.twig`, and `Console/Commands`.
+
+For the generated provider to autoload in a host application, map `App\\Modules\\` to `modules/` in the consumer `composer.json`.

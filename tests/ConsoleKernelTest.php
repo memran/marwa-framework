@@ -12,6 +12,7 @@ use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
+use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -104,6 +105,7 @@ PHP
         self::assertTrue($console->has('make:command'));
         self::assertTrue($console->has('make:controller'));
         self::assertTrue($console->has('make:model'));
+        self::assertTrue($console->has('make:module'));
         self::assertTrue($console->has('make:ai-helper'));
         self::assertSame('Console App', $console->getName());
         self::assertSame('1.2.3', $console->getVersion());
@@ -127,6 +129,7 @@ PHP
         self::assertContains(MakeCommandCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
@@ -255,6 +258,45 @@ PHP
 
         self::assertIsArray($migrations);
         self::assertCount(1, $migrations);
+    }
+
+    public function testMakeModuleCommandCreatesModuleScaffoldInConfiguredModulesPath(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/module.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => ['{$this->basePath}/modules'],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:module');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'Blog',
+        ]);
+
+        self::assertSame(0, $status);
+
+        $modulePath = $this->basePath . '/modules/Blog';
+        self::assertFileExists($modulePath . '/manifest.php');
+        self::assertFileExists($modulePath . '/BlogServiceProvider.php');
+        self::assertFileExists($modulePath . '/routes/http.php');
+        self::assertFileExists($modulePath . '/resources/views/index.twig');
+        self::assertDirectoryExists($modulePath . '/Console/Commands');
+
+        $manifest = (string) file_get_contents($modulePath . '/manifest.php');
+        self::assertStringContainsString("'slug' => 'blog'", $manifest);
+        self::assertStringContainsString("App\\Modules\\Blog\\BlogServiceProvider::class", $manifest);
+        self::assertStringContainsString("'commands' => 'Console/Commands'", $manifest);
     }
 
     private function removeDirectory(string $path): void

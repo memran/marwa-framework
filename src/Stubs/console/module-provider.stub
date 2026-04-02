@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Marwa\Module\Contracts\ModuleServiceProviderInterface;
+
+final class {{ class }} implements ModuleServiceProviderInterface
+{
+    public function register($app): void
+    {
+        $app->set('module.{{ slug }}.registered', true);
+    }
+
+    public function boot($app): void
+    {
+        $app->set('module.{{ slug }}.booted', true);
+    }
+}

@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+use Marwa\Framework\Facades\Router;
+use Marwa\Router\Response;
+
+Router::get('/{{ module_slug }}', fn () => Response::json([
+    'module' => '{{ module_name }}',
+    'ok' => true,
+]))->register();

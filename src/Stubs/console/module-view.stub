@@ -1,0 +1,2 @@
+<h1>{{ module_name }} Module</h1>
+<p>Module views are loaded with the <code>@slug/view</code> namespace convention.</p>

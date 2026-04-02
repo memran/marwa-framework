@@ -13,6 +13,7 @@ use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
+use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\RouteCacheCommand;
@@ -52,6 +53,7 @@ final class ConsoleConfig
                 MakeCommandCommand::class,
                 MakeControllerCommand::class,
                 MakeModelCommand::class,
+                MakeModuleCommand::class,
                 MakeAiHelperCommand::class,
             ],
             'discover' => [],

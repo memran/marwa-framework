@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => '{{ module_name }}',
+    'slug' => '{{ module_slug }}',
+    'version' => '1.0.0',
+    'providers' => [
+        {{ provider_class }}::class,
+    ],
+    'paths' => [
+        'views' => 'resources/views',
+        'commands' => 'Console/Commands',
+    ],
+    'routes' => [
+        'http' => 'routes/http.php',
+    ],
+];
