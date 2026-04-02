@@ -23,6 +23,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
 - Secure encrypted session support with hardened cookie defaults and lazy HTTP session startup
+- Path-bound file utility for atomic writes, JSON serialization, copy, move, and deletion workflows
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
@@ -183,6 +184,18 @@ return [
     'sameSite' => 'Lax',
     'encrypt' => true,
 ];
+```
+
+## File Support
+
+Use `Marwa\Framework\Supports\File` for atomic writes and common filesystem operations.
+
+```php
+use Marwa\Framework\Supports\File;
+
+$config = File::path(storage_path('cache/app.json'))
+    ->writeJson(['ready' => true])
+    ->readJson();
 ```
 
 ## Usage Example
