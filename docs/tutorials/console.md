@@ -53,6 +53,7 @@ When `config/database.php` enables `marwa-db`, the console kernel also registers
 php bin/console bootstrap:cache
 php bin/console bootstrap:clear
 php bin/console config:cache
+php bin/console key:generate --show-env
 php bin/console route:cache
 php bin/console module:cache
 php bin/console make:command CleanupCommand
@@ -72,3 +73,5 @@ php bin/console make:ai-helper SupportAgent --with-command
 For the generated provider to autoload in a host application, map `App\\Modules\\` to `modules/` in the consumer `composer.json`.
 
 `make:theme` generates `resources/views/themes/<name>` with a valid `marwa-view` `manifest.php`, starter Twig templates, and an `assets/css/app.css` file. Use `--parent` to scaffold theme inheritance.
+
+`key:generate` prints a cryptographically secure random key using the shared helper implementation. Use `--show-env` for `APP_KEY=...` output, `--length` to control byte length, and `--raw` if you do not want hex encoding.

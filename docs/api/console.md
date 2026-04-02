@@ -32,6 +32,7 @@ Supported keys:
 
 ## Built-in Scaffold Commands
 
+- `key:generate` outputs a cryptographically secure random key for app configuration
 - `make:command` generates Symfony Console commands in `app/Console/Commands`
 - `make:controller` generates controllers in `app/Http/Controllers`
 - `make:model` generates `marwa-db` models in `app/Models`

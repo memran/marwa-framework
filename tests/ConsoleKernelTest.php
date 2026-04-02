@@ -8,6 +8,7 @@ use League\Container\Container;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Console\CommandRegistry;
+use Marwa\Framework\Console\Commands\GenerateKeyCommand;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
@@ -16,6 +17,7 @@ use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class ConsoleKernelTest extends TestCase
@@ -101,6 +103,7 @@ PHP
         self::assertTrue($console->has('demo:run'));
         self::assertTrue($console->has('bootstrap:cache'));
         self::assertTrue($console->has('config:cache'));
+        self::assertTrue($console->has('key:generate'));
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('make:command'));
@@ -129,6 +132,7 @@ PHP
         $app = new Application($this->basePath);
 
         self::assertContains(MakeCommandCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(GenerateKeyCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
@@ -215,6 +219,41 @@ PHP
         self::assertStringContainsString('namespace App\\Http\\Controllers\\Admin;', $contents);
         self::assertStringContainsString('final class PostController', $contents);
         self::assertStringContainsString('public function index(): ResponseInterface', $contents);
+    }
+
+    public function testKeyGenerateCommandPrintsEnvReadyHexKey(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('key:generate');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--length' => '16',
+            '--show-env' => true,
+        ]);
+
+        self::assertSame(0, $status);
+
+        $display = trim($tester->getDisplay());
+        self::assertMatchesRegularExpression('/^APP_KEY=[a-f0-9]{32}$/', $display);
+    }
+
+    public function testKeyGenerateCommandRejectsInvalidLength(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('key:generate');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--length' => '0',
+        ]);
+
+        self::assertSame(Command::INVALID, $status);
+        self::assertStringContainsString('positive integer', $tester->getDisplay());
     }
 
     public function testMakeModelCommandCreatesModelAndMatchingMigration(): void

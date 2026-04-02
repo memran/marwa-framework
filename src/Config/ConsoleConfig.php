@@ -9,6 +9,7 @@ use Marwa\Framework\Console\Commands\BootstrapCacheCommand;
 use Marwa\Framework\Console\Commands\BootstrapClearCommand;
 use Marwa\Framework\Console\Commands\ConfigCacheCommand;
 use Marwa\Framework\Console\Commands\ConfigClearCommand;
+use Marwa\Framework\Console\Commands\GenerateKeyCommand;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
@@ -47,6 +48,7 @@ final class ConsoleConfig
                 BootstrapClearCommand::class,
                 ConfigCacheCommand::class,
                 ConfigClearCommand::class,
+                GenerateKeyCommand::class,
                 RouteCacheCommand::class,
                 RouteClearCommand::class,
                 ModuleCacheCommand::class,
