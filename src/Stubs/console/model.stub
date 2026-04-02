@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Marwa\DB\ORM\Model;
+
+final class {{ class }} extends Model
+{
+    protected static ?string $table = '{{ table }}';
+
+    /**
+     * @var list<string>
+     */
+    protected static array $fillable = [];
+}

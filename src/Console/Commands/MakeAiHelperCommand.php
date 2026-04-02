@@ -20,7 +20,8 @@ final class MakeAiHelperCommand extends AbstractCommand
     {
         $this
             ->addArgument('name', InputArgument::REQUIRED, 'Helper class name, for example SupportAgent.')
-            ->addOption('with-command', null, InputOption::VALUE_NONE, 'Also generate a matching console command stub.');
+            ->addOption('with-command', null, InputOption::VALUE_NONE, 'Also generate a matching console command stub.')
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite existing generated files.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -43,7 +44,8 @@ final class MakeAiHelperCommand extends AbstractCommand
             [
                 '{{ namespace }}' => 'App\\AI',
                 '{{ class }}' => $className,
-            ]
+            ],
+            (bool) $input->getOption('force')
         );
 
         $output->writeln(sprintf('<info>Created AI helper:</info> %s', $helperTarget));
@@ -61,7 +63,8 @@ final class MakeAiHelperCommand extends AbstractCommand
                     '{{ class }}' => $commandClass,
                     '{{ helper_class }}' => $className,
                     '{{ command_name }}' => 'ai:' . $commandName,
-                ]
+                ],
+                (bool) $input->getOption('force')
             );
 
             $output->writeln(sprintf('<info>Created AI command:</info> %s', $commandTarget));
@@ -73,20 +76,8 @@ final class MakeAiHelperCommand extends AbstractCommand
     /**
      * @param array<string, string> $replacements
      */
-    private function writeStub(string $stubPath, string $targetPath, array $replacements): void
+    private function writeStub(string $stubPath, string $targetPath, array $replacements, bool $force = false): void
     {
-        if (!is_file($stubPath)) {
-            throw new \RuntimeException(sprintf('Stub file [%s] was not found.', $stubPath));
-        }
-
-        $directory = dirname($targetPath);
-        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
-            throw new \RuntimeException(sprintf('Unable to create directory [%s].', $directory));
-        }
-
-        $contents = (string) file_get_contents($stubPath);
-        $contents = str_replace(array_keys($replacements), array_values($replacements), $contents);
-
-        file_put_contents($targetPath, $contents);
+        $this->writeStubFile($stubPath, $targetPath, $replacements, $force);
     }
 }

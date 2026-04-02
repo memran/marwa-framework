@@ -49,4 +49,69 @@ abstract class AbstractCommand extends Command
     {
         return $this->app()->basePath($path);
     }
+
+    /**
+     * @return array{namespace:string,class:string,target:string}
+     */
+    protected function buildClassTarget(
+        string $name,
+        string $baseNamespace,
+        string $baseDirectory,
+        string $defaultClass,
+        string $suffix = ''
+    ): array {
+        $segments = preg_split('/[\\\\\/]+/', trim($name)) ?: [];
+        $segments = array_values(array_filter(array_map(
+            static fn (string $segment): string => preg_replace('/[^A-Za-z0-9_]/', '', $segment) ?: '',
+            $segments
+        )));
+
+        if ($segments === []) {
+            $segments = [$defaultClass];
+        }
+
+        $className = array_pop($segments) ?: $defaultClass;
+
+        if ($suffix !== '' && !str_ends_with($className, $suffix)) {
+            $className .= $suffix;
+        }
+
+        $namespace = $baseNamespace . ($segments !== [] ? '\\' . implode('\\', $segments) : '');
+        $relativeDirectory = $baseDirectory . ($segments !== [] ? '/' . implode('/', $segments) : '');
+
+        return [
+            'namespace' => $namespace,
+            'class' => $className,
+            'target' => $this->basePath($relativeDirectory . '/' . $className . '.php'),
+        ];
+    }
+
+    protected function frameworkStubPath(string $relativePath): string
+    {
+        return dirname(__DIR__) . '/Stubs/' . ltrim($relativePath, '/');
+    }
+
+    /**
+     * @param array<string, string> $replacements
+     */
+    protected function writeStubFile(string $stubPath, string $targetPath, array $replacements, bool $force = false): void
+    {
+        if (!is_file($stubPath)) {
+            throw new \RuntimeException(sprintf('Stub file [%s] was not found.', $stubPath));
+        }
+
+        if (!$force && is_file($targetPath)) {
+            throw new \RuntimeException(sprintf('Target file [%s] already exists.', $targetPath));
+        }
+
+        $directory = dirname($targetPath);
+        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+            throw new \RuntimeException(sprintf('Unable to create directory [%s].', $directory));
+        }
+
+        $contents = (string) file_get_contents($stubPath);
+        $contents = str_replace(array_keys($replacements), array_values($replacements), $contents);
+
+        file_put_contents($targetPath, $contents);
+    }
 }

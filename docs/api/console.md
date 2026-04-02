@@ -16,6 +16,8 @@ Use this base class for framework-aware commands. It provides:
 - `config()` for the config repository
 - `logger()` for the PSR-3 logger
 - `basePath()` for filesystem paths inside the host app
+- `buildClassTarget()` for nested PSR-4 scaffold targets like `Admin/PostController`
+- `frameworkStubPath()` and `writeStubFile()` for generator commands
 
 ## `config/console.php`
 
@@ -27,3 +29,10 @@ Supported keys:
 - `discover`: list of `namespace` and `path` discovery rules
 - `autoDiscover`: optional package discovery rules
 - `stubsPath`: override the default AI helper stub directory (`src/Stubs/ai` by default)
+
+## Built-in Scaffold Commands
+
+- `make:command` generates Symfony Console commands in `app/Console/Commands`
+- `make:controller` generates controllers in `app/Http/Controllers`
+- `make:model` generates `marwa-db` models in `app/Models`
+- `make:model --migration` also runs the registered `make:migration` command from `marwa-db`

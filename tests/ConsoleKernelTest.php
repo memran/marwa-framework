@@ -10,8 +10,11 @@ use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
+use Marwa\Framework\Console\Commands\MakeControllerCommand;
+use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final class ConsoleKernelTest extends TestCase
 {
@@ -32,13 +35,13 @@ final class ConsoleKernelTest extends TestCase
         foreach ([
             $this->basePath . '/config/console.php',
             $this->basePath . '/config/module.php',
+            $this->basePath . '/config/database.php',
             $this->basePath . '/.env',
         ] as $file) {
             @unlink($file);
         }
 
-        @rmdir($this->basePath . '/config');
-        @rmdir($this->basePath);
+        $this->removeDirectory($this->basePath);
 
         unset(
             $GLOBALS['marwa_app'],
@@ -99,6 +102,8 @@ PHP
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('make:command'));
+        self::assertTrue($console->has('make:controller'));
+        self::assertTrue($console->has('make:model'));
         self::assertTrue($console->has('make:ai-helper'));
         self::assertSame('Console App', $console->getName());
         self::assertSame('1.2.3', $console->getVersion());
@@ -120,6 +125,8 @@ PHP
         $app = new Application($this->basePath);
 
         self::assertContains(MakeCommandCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
@@ -177,5 +184,106 @@ PHP
         self::assertTrue($console->has('make:migration'));
         self::assertTrue($console->has('make:seeder'));
         self::assertTrue($console->has('db:seed'));
+    }
+
+    public function testMakeControllerCommandCreatesNestedResourceController(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:controller');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'Admin/Post',
+            '--resource' => true,
+        ]);
+
+        self::assertSame(0, $status);
+
+        $path = $this->basePath . '/app/Http/Controllers/Admin/PostController.php';
+        self::assertFileExists($path);
+
+        $contents = (string) file_get_contents($path);
+
+        self::assertStringContainsString('namespace App\\Http\\Controllers\\Admin;', $contents);
+        self::assertStringContainsString('final class PostController', $contents);
+        self::assertStringContainsString('public function index(): ResponseInterface', $contents);
+    }
+
+    public function testMakeModelCommandCreatesModelAndMatchingMigration(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<'PHP'
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+        ],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:model');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'Billing/Category',
+            '--migration' => true,
+        ]);
+
+        self::assertSame(0, $status);
+
+        $modelPath = $this->basePath . '/app/Models/Billing/Category.php';
+        self::assertFileExists($modelPath);
+
+        $model = (string) file_get_contents($modelPath);
+        self::assertStringContainsString('namespace App\\Models\\Billing;', $model);
+        self::assertStringContainsString("protected static ?string \$table = 'categories';", $model);
+
+        $migrations = glob($this->basePath . '/database/migrations/*_create_categories_table.php');
+
+        self::assertIsArray($migrations);
+        self::assertCount(1, $migrations);
+    }
+
+    private function removeDirectory(string $path): void
+    {
+        if (!is_dir($path)) {
+            return;
+        }
+
+        $items = scandir($path);
+
+        if ($items === false) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $current = $path . DIRECTORY_SEPARATOR . $item;
+
+            if (is_dir($current)) {
+                $this->removeDirectory($current);
+                continue;
+            }
+
+            @unlink($current);
+        }
+
+        @rmdir($path);
     }
 }
