@@ -15,6 +15,7 @@ use Marwa\Framework\Console\Commands\MakeControllerCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
+use Marwa\Framework\Console\Commands\ScheduleRunCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -104,6 +105,7 @@ PHP
         self::assertTrue($console->has('bootstrap:cache'));
         self::assertTrue($console->has('config:cache'));
         self::assertTrue($console->has('key:generate'));
+        self::assertTrue($console->has('schedule:run'));
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('make:command'));
@@ -133,6 +135,7 @@ PHP
 
         self::assertContains(MakeCommandCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(GenerateKeyCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(ScheduleRunCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
@@ -254,6 +257,34 @@ PHP
 
         self::assertSame(Command::INVALID, $status);
         self::assertStringContainsString('positive integer', $tester->getDisplay());
+    }
+
+    public function testScheduleRunCommandExecutesEverySecondTasks(): void
+    {
+        $app = new Application($this->basePath);
+        $app->schedule()
+            ->call(function (Application $application, \DateTimeImmutable $time): void {
+                file_put_contents(
+                    $application->basePath('schedule-output.log'),
+                    $time->format('H:i:s') . PHP_EOL,
+                    FILE_APPEND
+                );
+            }, 'write-schedule-output')
+            ->everySecond();
+
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('schedule:run');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--for' => '1',
+            '--sleep' => '1',
+        ]);
+
+        self::assertSame(0, $status);
+        self::assertFileExists($this->basePath . '/schedule-output.log');
+        self::assertStringContainsString('Ran [write-schedule-output]', $tester->getDisplay());
     }
 
     public function testMakeModelCommandCreatesModelAndMatchingMigration(): void

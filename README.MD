@@ -27,6 +27,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
+- Lightweight scheduler and file-backed queue services for cron-driven recurring work and deferred jobs
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
 - Twig-powered view adapter with theme support and cache directory bootstrapping
@@ -122,6 +123,7 @@ php bin/console make:controller Admin/PostController --resource
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
+php bin/console schedule:run --for=60 --sleep=1
 ```
 
 ## PHPUnit
@@ -257,6 +259,34 @@ When enabled, the framework bootstraps `Marwa\DB\Connection\ConnectionManager`, 
 - `make:migration`
 - `make:seeder`
 - `db:seed`
+
+## Scheduling and Queue
+
+Register recurring tasks through the shared application scheduler:
+
+```php
+use Marwa\Framework\Application;
+
+$app = new Application(dirname(__DIR__));
+
+$app->schedule()
+    ->call(function (Application $app, DateTimeImmutable $time): void {
+        file_put_contents($app->basePath('storage/heartbeat.log'), $time->format(DATE_ATOM) . PHP_EOL, FILE_APPEND);
+    }, 'heartbeat')
+    ->everySecond();
+
+$app->schedule()
+    ->queue('emails:send-digest', ['batch' => 1], name: 'queue-digest')
+    ->everyMinute();
+```
+
+Run due tasks every second from cron by keeping the command alive for one minute:
+
+```cron
+* * * * * php /path/to/bin/console schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
+```
+
+The file-backed queue stores pending, processing, and failed jobs under `storage/queue`. Override defaults through `config/queue.php` and `config/schedule.php`.
 
 ## Lifecycle
 

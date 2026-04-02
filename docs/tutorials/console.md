@@ -75,3 +75,37 @@ For the generated provider to autoload in a host application, map `App\\Modules\
 `make:theme` generates `resources/views/themes/<name>` with a valid `marwa-view` `manifest.php`, starter Twig templates, and an `assets/css/app.css` file. Use `--parent` to scaffold theme inheritance.
 
 `key:generate` prints a cryptographically secure random key using the shared helper implementation. Use `--show-env` for `APP_KEY=...` output, `--length` to control byte length, and `--raw` if you do not want hex encoding.
+
+## Scheduling
+
+The framework includes a lightweight scheduler and a file-backed queue for deferred jobs.
+
+```php
+use Marwa\Framework\Application;
+
+$app = new Application(dirname(__DIR__));
+
+$app->schedule()
+    ->call(function (Application $app, DateTimeImmutable $time): void {
+        file_put_contents($app->basePath('storage/heartbeat.log'), $time->format(DATE_ATOM) . PHP_EOL, FILE_APPEND);
+    }, 'heartbeat')
+    ->everySecond();
+
+$app->schedule()
+    ->queue('reports:send', ['type' => 'daily'], name: 'queue-report')
+    ->everyMinute();
+```
+
+Run the scheduler once:
+
+```bash
+php bin/console schedule:run
+```
+
+Run it every second from cron by keeping the process alive for one minute:
+
+```cron
+* * * * * php /path/to/bin/console schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
+```
+
+Queued jobs are written to `storage/queue/<queue>/pending`, move to `processing` while reserved, and land in `failed` when explicitly failed by user code.

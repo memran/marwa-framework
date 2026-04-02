@@ -218,6 +218,50 @@ Supported keys:
 - `commandPaths`: manifest `paths` keys that should be treated as command directories
 - `commandConventions`: module-relative fallback directories for command discovery
 
+## `config/queue.php`
+
+Defined by `Marwa\Framework\Config\QueueConfig`.
+
+Supported keys:
+
+- `enabled`: enable the shared file-backed queue
+- `default`: default queue name
+- `path`: queue storage root
+- `retryAfter`: retry visibility timeout in seconds for user-defined workers
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'default' => 'default',
+    'path' => storage_path('queue'),
+    'retryAfter' => 90,
+];
+```
+
+## `config/schedule.php`
+
+Defined by `Marwa\Framework\Config\ScheduleConfig`.
+
+Supported keys:
+
+- `enabled`: enable the scheduler runtime
+- `lockPath`: directory for overlap-prevention lock files
+- `defaultLoopSeconds`: default `schedule:run --for` value
+- `defaultSleepSeconds`: default `schedule:run --sleep` value
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'lockPath' => storage_path('framework/schedule'),
+    'defaultLoopSeconds' => 60,
+    'defaultSleepSeconds' => 1,
+];
+```
+
 Example:
 
 ```php

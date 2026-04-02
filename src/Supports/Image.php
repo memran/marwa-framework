@@ -124,7 +124,7 @@ final class Image
             throw new \RuntimeException('Unable to crop image.');
         }
 
-        imagedestroy($this->resource);
+        $this->destroyResource($this->resource);
         $this->resource = $crop;
         imagesavealpha($this->resource, true);
 
@@ -205,7 +205,7 @@ final class Image
 
     public function __destruct()
     {
-        imagedestroy($this->resource);
+        $this->destroyResource($this->resource);
     }
 
     private function resample(
@@ -228,14 +228,21 @@ final class Image
         imagefill($canvas, 0, 0, $transparent);
 
         if (!imagecopyresampled($canvas, $this->resource, 0, 0, $srcX, $srcY, $targetWidth, $targetHeight, $srcWidth, $srcHeight)) {
-            imagedestroy($canvas);
+            $this->destroyResource($canvas);
             throw new \RuntimeException('Unable to resample image.');
         }
 
-        imagedestroy($this->resource);
+        $this->destroyResource($this->resource);
         $this->resource = $canvas;
 
         return $this;
+    }
+
+    private function destroyResource(GdImage $resource): void
+    {
+        if (PHP_VERSION_ID < 80500) {
+            imagedestroy($resource);
+        }
     }
 
     private static function detectMimeType(string $path, ?string $fallback = null): string

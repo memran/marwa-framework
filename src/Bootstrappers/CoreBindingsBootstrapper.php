@@ -16,6 +16,8 @@ use Marwa\Framework\Console\ConsoleApplication;
 use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Framework\Queue\FileQueue;
+use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
 use Psr\Log\LoggerInterface;
@@ -92,6 +94,16 @@ final class CoreBindingsBootstrapper
         $container->addShared(CommandDiscovery::class)
             ->addArgument($app)
             ->addArgument($container->get(LoggerInterface::class));
+
+        $container->addShared(FileQueue::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class))
+            ->addArgument($container->get(LoggerInterface::class));
+
+        $container->addShared(Scheduler::class)
+            ->addArgument($app)
+            ->addArgument($container->get(LoggerInterface::class))
+            ->addArgument($container->get(FileQueue::class));
 
         $container->addShared(ConsoleApplication::class)
             ->addArgument(ConsoleConfig::defaults($app)['name'])

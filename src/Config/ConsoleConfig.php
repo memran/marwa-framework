@@ -20,6 +20,7 @@ use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\RouteCacheCommand;
 use Marwa\Framework\Console\Commands\RouteClearCommand;
+use Marwa\Framework\Console\Commands\ScheduleRunCommand;
 
 final class ConsoleConfig
 {
@@ -49,6 +50,7 @@ final class ConsoleConfig
                 ConfigCacheCommand::class,
                 ConfigClearCommand::class,
                 GenerateKeyCommand::class,
+                ScheduleRunCommand::class,
                 RouteCacheCommand::class,
                 RouteClearCommand::class,
                 ModuleCacheCommand::class,

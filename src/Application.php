@@ -12,6 +12,9 @@ use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Bootstrappers\CoreBindingsBootstrapper;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleKernel;
+use Marwa\Framework\Queue\FileQueue;
+use Marwa\Framework\Scheduling\Scheduler;
+use Marwa\Framework\Scheduling\Task;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
 use Marwa\Module\Contracts\ModuleServiceProviderInterface;
 use Marwa\Module\ModuleBuilder;
@@ -182,6 +185,21 @@ final class Application
     public function registerCommands(iterable $commands): void
     {
         $this->container->get(CommandRegistry::class)->registerMany($commands);
+    }
+
+    public function schedule(): Scheduler
+    {
+        return $this->container->get(Scheduler::class);
+    }
+
+    public function registerTask(Task $task): void
+    {
+        $this->schedule()->register($task);
+    }
+
+    public function queue(): FileQueue
+    {
+        return $this->container->get(FileQueue::class);
     }
 
     public function add(string $id, mixed $value): void

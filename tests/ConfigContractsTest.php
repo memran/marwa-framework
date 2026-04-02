@@ -12,6 +12,8 @@ use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Config\ModuleConfig;
+use Marwa\Framework\Config\QueueConfig;
+use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Config\SessionConfig;
 use Marwa\Framework\Config\ViewConfig;
 use Marwa\Framework\Middlewares\SessionMiddleware;
@@ -112,5 +114,20 @@ final class ConfigContractsTest extends TestCase
         self::assertTrue($defaults['httpOnly']);
         self::assertSame('Lax', $defaults['sameSite']);
         self::assertTrue($defaults['encrypt']);
+    }
+
+    public function testQueueAndScheduleConfigsExposeExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+
+        self::assertTrue(QueueConfig::defaults($app)['enabled']);
+        self::assertSame('default', QueueConfig::defaults($app)['default']);
+        self::assertSame($this->basePath . '/storage/queue', QueueConfig::defaults($app)['path']);
+        self::assertSame(90, QueueConfig::defaults($app)['retryAfter']);
+
+        self::assertTrue(ScheduleConfig::defaults($app)['enabled']);
+        self::assertSame($this->basePath . '/storage/framework/schedule', ScheduleConfig::defaults($app)['lockPath']);
+        self::assertSame(1, ScheduleConfig::defaults($app)['defaultLoopSeconds']);
+        self::assertSame(1, ScheduleConfig::defaults($app)['defaultSleepSeconds']);
     }
 }
