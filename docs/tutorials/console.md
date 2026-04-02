@@ -62,6 +62,7 @@ php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
 php bin/console make:ai-helper SupportAgent --with-command
+php bin/console schedule:table
 ```
 
 `make:controller` generates controllers in `app/Http/Controllers`. Use `--resource` to scaffold CRUD-style methods.
@@ -107,5 +108,32 @@ Run it every second from cron by keeping the process alive for one minute:
 ```cron
 * * * * * php /path/to/bin/console schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
 ```
+
+Scheduler storage is configurable through `config/schedule.php`:
+
+```php
+return [
+    'driver' => 'file', // or cache, database
+    'file' => [
+        'path' => storage_path('framework/schedule'),
+    ],
+    'cache' => [
+        'namespace' => 'schedule',
+    ],
+    'database' => [
+        'connection' => 'sqlite',
+        'table' => 'schedule_jobs',
+    ],
+];
+```
+
+If you use the `database` driver, generate the table migration first:
+
+```bash
+php bin/console schedule:table
+php bin/console migrate
+```
+
+With the file driver, state and overlap locks are stored below `storage/framework/schedule`. With the cache driver, the scheduler uses the configured cache backend and key namespace for both state and overlap locks. With the database driver, the scheduler persists task status and overlap locks in the configured `schedule_jobs` table.
 
 Queued jobs are written to `storage/queue/<queue>/pending`, move to `processing` while reserved, and land in `failed` when explicitly failed by user code.

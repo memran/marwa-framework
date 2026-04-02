@@ -20,6 +20,7 @@ use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
+use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
 use Marwa\Framework\Supports\Storage;
@@ -115,10 +116,15 @@ final class CoreBindingsBootstrapper
             ->addArgument($container->get(Config::class))
             ->addArgument($container->get(LoggerInterface::class));
 
+        $container->addShared(ScheduleStoreResolver::class)
+            ->addArgument($container->get(DatabaseBootstrapper::class))
+            ->addArgument($container->get(CacheInterface::class));
+
         $container->addShared(Scheduler::class)
             ->addArgument($app)
             ->addArgument($container->get(LoggerInterface::class))
-            ->addArgument($container->get(FileQueue::class));
+            ->addArgument($container->get(FileQueue::class))
+            ->addArgument($container->get(ScheduleStoreResolver::class));
 
         $container->addShared(ConsoleApplication::class)
             ->addArgument(ConsoleConfig::defaults($app)['name'])

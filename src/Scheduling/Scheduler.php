@@ -7,6 +7,8 @@ namespace Marwa\Framework\Scheduling;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Queue\FileQueue;
+use Marwa\Framework\Scheduling\Stores\ScheduleStoreInterface;
+use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -19,14 +21,26 @@ final class Scheduler
     private array $tasks = [];
 
     /**
-     * @var array{enabled:bool,lockPath:string,defaultLoopSeconds:int,defaultSleepSeconds:int}|null
+     * @var array{
+     *     enabled:bool,
+     *     driver:string,
+     *     lockPath:string,
+     *     file:array{path:string},
+     *     cache:array{namespace:string},
+     *     database:array{connection:string,table:string},
+     *     defaultLoopSeconds:int,
+     *     defaultSleepSeconds:int
+     * }|null
      */
     private ?array $config = null;
+
+    private ?ScheduleStoreInterface $store = null;
 
     public function __construct(
         private Application $app,
         private LoggerInterface $logger,
-        private FileQueue $queue
+        private FileQueue $queue,
+        private ScheduleStoreResolver $storeResolver
     ) {}
 
     public function register(Task $task): Task
@@ -107,12 +121,14 @@ final class Scheduler
 
         foreach ($this->due($currentTime) as $task) {
             $lock = null;
+            $store = $this->store();
 
             if ($task->shouldPreventOverlaps()) {
-                $lock = $this->acquireLock($task);
+                $lock = $store->acquireLock($task, $currentTime, max(60, $task->intervalSeconds() * 2));
 
                 if ($lock === null) {
                     $summary['skipped'][] = $task->name();
+                    $store->record($task, $currentTime, 'skipped', 'Skipped because it is already running.');
                     continue;
                 }
             }
@@ -120,18 +136,17 @@ final class Scheduler
             try {
                 $task->run($this->app, $currentTime);
                 $summary['ran'][] = $task->name();
+                $store->record($task, $currentTime, 'success');
             } catch (\Throwable $exception) {
                 $summary['failed'][] = $task->name();
+                $store->record($task, $currentTime, 'failed', $exception->getMessage());
                 $this->logger->error('Scheduled task failed.', [
                     'task' => $task->name(),
                     'exception' => $exception::class,
                     'message' => $exception->getMessage(),
                 ]);
             } finally {
-                if (is_resource($lock)) {
-                    flock($lock, LOCK_UN);
-                    fclose($lock);
-                }
+                $store->releaseLock($task, $lock);
             }
         }
 
@@ -139,7 +154,16 @@ final class Scheduler
     }
 
     /**
-     * @return array{enabled:bool,lockPath:string,defaultLoopSeconds:int,defaultSleepSeconds:int}
+     * @return array{
+     *     enabled:bool,
+     *     driver:string,
+     *     lockPath:string,
+     *     file:array{path:string},
+     *     cache:array{namespace:string},
+     *     database:array{connection:string,table:string},
+     *     defaultLoopSeconds:int,
+     *     defaultSleepSeconds:int
+     * }
      */
     public function configuration(): array
     {
@@ -155,37 +179,14 @@ final class Scheduler
         return $this->config;
     }
 
-    /**
-     * @return resource|null
-     */
-    private function acquireLock(Task $task)
+    private function store(): ScheduleStoreInterface
     {
-        $directory = $this->configuration()['lockPath'];
-
-        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
-            throw new \RuntimeException(sprintf('Unable to create scheduler lock directory [%s].', $directory));
+        if ($this->store !== null) {
+            return $this->store;
         }
 
-        $path = $directory . DIRECTORY_SEPARATOR . $this->normalizeName($task->name()) . '.lock';
-        $handle = fopen($path, 'c+');
+        $this->store = $this->storeResolver->resolve($this->configuration());
 
-        if ($handle === false) {
-            throw new \RuntimeException(sprintf('Unable to create scheduler lock file [%s].', $path));
-        }
-
-        if (!flock($handle, LOCK_EX | LOCK_NB)) {
-            fclose($handle);
-
-            return null;
-        }
-
-        return $handle;
-    }
-
-    private function normalizeName(string $name): string
-    {
-        $normalized = preg_replace('/[^A-Za-z0-9_\-]+/', '-', strtolower($name)) ?: 'task';
-
-        return trim($normalized, '-');
+        return $this->store;
     }
 }

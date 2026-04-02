@@ -16,6 +16,7 @@ use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
 use Marwa\Framework\Console\Commands\ScheduleRunCommand;
+use Marwa\Framework\Console\Commands\ScheduleTableCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -106,6 +107,7 @@ PHP
         self::assertTrue($console->has('config:cache'));
         self::assertTrue($console->has('key:generate'));
         self::assertTrue($console->has('schedule:run'));
+        self::assertTrue($console->has('schedule:table'));
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('make:command'));
@@ -136,6 +138,7 @@ PHP
         self::assertContains(MakeCommandCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(GenerateKeyCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(ScheduleRunCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(ScheduleTableCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
@@ -285,6 +288,42 @@ PHP
         self::assertSame(0, $status);
         self::assertFileExists($this->basePath . '/schedule-output.log');
         self::assertStringContainsString('Ran [write-schedule-output]', $tester->getDisplay());
+    }
+
+    public function testScheduleTableCommandCreatesMigrationUsingConfiguredTable(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/schedule.php',
+            <<<'PHP'
+<?php
+
+return [
+    'driver' => 'database',
+    'database' => [
+        'table' => 'scheduler_entries',
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('schedule:table');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([]);
+
+        self::assertSame(0, $status);
+
+        $files = glob($this->basePath . '/database/migrations/*_create_scheduler_entries_table.php');
+
+        self::assertIsArray($files);
+        self::assertCount(1, $files);
+
+        $contents = (string) file_get_contents($files[0]);
+        self::assertStringContainsString("Schema::create('scheduler_entries'", $contents);
+        self::assertStringContainsString('$table->string(\'status\', 50)->default(\'idle\');', $contents);
     }
 
     public function testMakeModelCommandCreatesModelAndMatchingMigration(): void

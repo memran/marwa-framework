@@ -29,7 +29,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Flysystem-backed storage service with local disks, helper/facade access, and disk switching
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
-- Lightweight scheduler and file-backed queue services for cron-driven recurring work and deferred jobs
+- Lightweight scheduler with configurable file or database state storage, plus a file-backed queue for cron-driven recurring work and deferred jobs
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
 - Twig-powered view adapter with theme support and cache directory bootstrapping
@@ -125,6 +125,7 @@ php bin/console make:controller Admin/PostController --resource
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
+php bin/console schedule:table
 php bin/console schedule:run --for=60 --sleep=1
 ```
 
@@ -217,6 +218,36 @@ $files = storage()->files('', true);
 ```
 
 By default the `local` disk points to `storage/app` and the `public` disk points to `storage/app/public`.
+
+## Scheduling
+
+The scheduler can persist lock and execution state using files, the shared cache service, or the database.
+
+```php
+return [
+    'enabled' => true,
+    'driver' => 'cache', // file, cache, or database
+    'file' => [
+        'path' => storage_path('framework/schedule'),
+    ],
+    'cache' => [
+        'namespace' => 'schedule',
+    ],
+    'database' => [
+        'connection' => 'sqlite',
+        'table' => 'schedule_jobs',
+    ],
+];
+```
+
+Generate the scheduler table migration with:
+
+```bash
+php bin/console schedule:table
+php bin/console migrate
+```
+
+With the `file` driver, scheduler state is written under `storage/framework/schedule`. With the `cache` driver, scheduler state and overlap locks are stored through the configured cache backend. With the `database` driver, the scheduler stores overlap locks and the latest execution status in the configured table.
 
 ## File Support
 

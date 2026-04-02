@@ -116,4 +116,9 @@ final class Task
     {
         return $this->withoutOverlapping;
     }
+
+    public function intervalSeconds(): int
+    {
+        return $this->intervalSeconds;
+    }
 }

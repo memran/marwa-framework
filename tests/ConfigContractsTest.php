@@ -131,7 +131,12 @@ final class ConfigContractsTest extends TestCase
         self::assertSame(90, QueueConfig::defaults($app)['retryAfter']);
 
         self::assertTrue(ScheduleConfig::defaults($app)['enabled']);
+        self::assertSame('file', ScheduleConfig::defaults($app)['driver']);
         self::assertSame($this->basePath . '/storage/framework/schedule', ScheduleConfig::defaults($app)['lockPath']);
+        self::assertSame($this->basePath . '/storage/framework/schedule', ScheduleConfig::defaults($app)['file']['path']);
+        self::assertSame('schedule', ScheduleConfig::defaults($app)['cache']['namespace']);
+        self::assertSame('sqlite', ScheduleConfig::defaults($app)['database']['connection']);
+        self::assertSame('schedule_jobs', ScheduleConfig::defaults($app)['database']['table']);
         self::assertSame(1, ScheduleConfig::defaults($app)['defaultLoopSeconds']);
         self::assertSame(1, ScheduleConfig::defaults($app)['defaultSleepSeconds']);
     }

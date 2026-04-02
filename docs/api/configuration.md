@@ -242,6 +242,45 @@ Encrypted sessions require `APP_KEY` to be configured.
 
 The session service also supports flash data through `flash()`, `now()`, `reflash()`, and `keep()`.
 
+## `config/schedule.php`
+
+Defined by `Marwa\Framework\Config\ScheduleConfig`.
+
+Supported keys:
+
+- `enabled`: enable the scheduler runtime
+- `driver`: `file`, `cache`, or `database`
+- `lockPath`: legacy alias for `file.path`
+- `file.path`: directory used for file-based lock and state records
+- `cache.namespace`: cache key prefix used for scheduler state and locks
+- `database.connection`: `marwa-db` connection name used by the scheduler store
+- `database.table`: table used for scheduler state and overlap locks
+- `defaultLoopSeconds`: default `schedule:run --for` duration
+- `defaultSleepSeconds`: default `schedule:run --sleep` duration
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'driver' => 'cache',
+    'file' => [
+        'path' => storage_path('framework/schedule'),
+    ],
+    'cache' => [
+        'namespace' => 'schedule',
+    ],
+    'database' => [
+        'connection' => 'sqlite',
+        'table' => 'schedule_jobs',
+    ],
+    'defaultLoopSeconds' => 60,
+    'defaultSleepSeconds' => 1,
+];
+```
+
+Use `php bin/console schedule:table` to create a migration stub for the configured scheduler table when the database driver is enabled.
+
 ## `config/storage.php`
 
 Defined by `Marwa\Framework\Config\StorageConfig`.
