@@ -216,7 +216,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
         }
 
         if ($config['transactional']) {
-            $this->transactions = new TransactionalStore($store);
+            $this->transactions = new SafeTransactionalStore($store, $this->resolveMemoryLimit($config['memory']['limit']));
             $store = $this->transactions;
         }
 
@@ -231,7 +231,10 @@ final class ScrapbookCacheAdapter implements CacheInterface
             return $this->transactions;
         }
 
-        $this->transactions = new TransactionalStore($this->store());
+        $this->transactions = new SafeTransactionalStore(
+            $this->store(),
+            $this->resolveMemoryLimit($this->configuration()['memory']['limit'])
+        );
         $this->store = $this->transactions;
         $this->cache = new SimpleCache($this->transactions);
 
