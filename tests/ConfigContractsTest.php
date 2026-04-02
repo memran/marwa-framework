@@ -16,6 +16,7 @@ use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Config\SessionConfig;
+use Marwa\Framework\Config\StorageConfig;
 use Marwa\Framework\Config\ViewConfig;
 use Marwa\Framework\Middlewares\SessionMiddleware;
 use PHPUnit\Framework\TestCase;
@@ -58,6 +59,8 @@ final class ConfigContractsTest extends TestCase
         self::assertSame($this->basePath . '/resources/views', ViewConfig::defaults($app)['viewsPath']);
         self::assertSame($this->basePath . '/storage/cache/views', ViewConfig::defaults($app)['cachePath']);
         self::assertSame($this->basePath . '/storage/cache/framework.sqlite', CacheConfig::defaults($app)['sqlite']['path']);
+        self::assertSame($this->basePath . '/storage/app', StorageConfig::defaults($app)['disks']['local']['root']);
+        self::assertSame($this->basePath . '/storage/app/public', StorageConfig::defaults($app)['disks']['public']['root']);
         self::assertSame($this->basePath . '/storage/logs', LoggerConfig::defaults($app)['storage']['path']);
     }
 

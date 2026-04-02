@@ -22,6 +22,7 @@ use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
+use Marwa\Framework\Supports\Storage;
 use Psr\Log\LoggerInterface;
 
 final class CoreBindingsBootstrapper
@@ -35,6 +36,10 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(Config::class)
             ->addArgument($app->basePath('config'));
+
+        $container->addShared(Storage::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class));
 
         $container->addShared(LoggerAdapter::class, function () use ($app, $container) {
             return (new LoggerAdapter($app, $container->get(Config::class)))->getLogger();

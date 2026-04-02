@@ -96,6 +96,15 @@ $thumb = image(public_path('images/photo.jpg'))
 
 Returns a GD-backed image instance from disk, or a blank 1x1 canvas when no path is provided.
 
+### `storage(?string $disk = null): \Marwa\Framework\Supports\Storage`
+
+```php
+storage()->write('docs/readme.txt', 'Hello');
+$public = storage('public');
+```
+
+Returns the shared Flysystem-backed storage manager, optionally scoped to a configured disk.
+
 ### `view(string $tplName = '', array $params = []): mixed`
 
 ```php

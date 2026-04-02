@@ -26,6 +26,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Path-bound file utility for atomic writes, JSON serialization, copy, move, and deletion workflows
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Scrapbook-backed cache service with SQLite or memory drivers, buffering, collections, and optional stampede protection
+- Flysystem-backed storage service with local disks, helper/facade access, and disk switching
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - Lightweight scheduler and file-backed queue services for cron-driven recurring work and deferred jobs
@@ -203,6 +204,19 @@ cache()->remember('stats', 60, function (): array {
 ```
 
 By default the cache uses SQLite at `storage/cache/framework.sqlite` when `pdo_sqlite` is available, and falls back to an in-memory store otherwise.
+
+## Storage
+
+The framework exposes a Flysystem-backed storage manager for disk-based file operations.
+
+```php
+storage()->write('docs/readme.txt', 'Hello');
+storage('public')->write('avatars/user.txt', 'public');
+
+$files = storage()->files('', true);
+```
+
+By default the `local` disk points to `storage/app` and the `public` disk points to `storage/app/public`.
 
 ## File Support
 

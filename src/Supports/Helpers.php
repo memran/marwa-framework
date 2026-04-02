@@ -16,6 +16,7 @@ use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Image as ImageSupport;
 use Marwa\Framework\Supports\Runtime;
+use Marwa\Framework\Supports\Storage as StorageSupport;
 use Marwa\Module\ModuleHandle;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -131,6 +132,14 @@ function cache(?string $key = null, mixed $default = null): mixed
     }
 
     return $cache;
+}
+
+function storage(?string $disk = null): StorageSupport
+{
+    /** @var StorageSupport $storage */
+    $storage = app(StorageSupport::class);
+
+    return $disk !== null ? $storage->disk($disk) : $storage;
 }
 
 /** Get environment variable with default. */

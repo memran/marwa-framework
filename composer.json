@@ -49,7 +49,9 @@
     "memran/marwa-module": "^1.0.1",
     "memran/marwa-entity": "^1.0",
     "memran/marwa-db": "^1.2",
-    "matthiasmullie/scrapbook": "^1.5"
+    "matthiasmullie/scrapbook": "^1.5",
+    "league/flysystem": "^3.29",
+    "league/flysystem-local": "^3.29"
   },
   "autoload": {
     "psr-4": {

@@ -242,6 +242,38 @@ Encrypted sessions require `APP_KEY` to be configured.
 
 The session service also supports flash data through `flash()`, `now()`, `reflash()`, and `keep()`.
 
+## `config/storage.php`
+
+Defined by `Marwa\Framework\Config\StorageConfig`.
+
+Supported keys:
+
+- `default`: default storage disk name
+- `disks`: configured disk definitions
+- `disks.<name>.driver`: currently `local`
+- `disks.<name>.root`: root directory for the disk
+- `disks.<name>.visibility`: default Flysystem visibility
+
+Example:
+
+```php
+return [
+    'default' => 'local',
+    'disks' => [
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app'),
+            'visibility' => 'private',
+        ],
+        'public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'visibility' => 'public',
+        ],
+    ],
+];
+```
+
 ## `config/module.php`
 
 Defined by `Marwa\Framework\Config\ModuleConfig`.
