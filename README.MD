@@ -1,10 +1,30 @@
 # Marwa Framework
 
+[![Latest Version](https://img.shields.io/packagist/v/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![Total Downloads](https://img.shields.io/packagist/dt/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
 [![CI](https://github.com/memran/marwa-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/memran/marwa-framework/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
 [![PHP Version](https://img.shields.io/packagist/php-v/memran/marwa-framework.svg?style=flat-square)](https://php.net)
 
-Marwa Framework is a modular PHP 8.2+ framework core focused on HTTP bootstrapping, routing, middleware orchestration, events, and console integration. The codebase targets library consumers rather than a full standalone app skeleton.
+Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applications that want a lightweight bootstrap layer without giving up routing, middleware, events, console support, or modern developer ergonomics. It is designed as a library-first foundation that stays simple to extend in host applications.
+
+## Features
+
+- PSR-4 autoloading and PSR-friendly HTTP, container, logging, cache, and event integration
+- HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
+- Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
+- Console kernel integration via Symfony Console
+- Twig-powered view adapter with theme support and cache directory bootstrapping
+- Debug and maintenance middleware for local development and operational controls
+- Production-ready quality tooling with PHPUnit, PHPStan, PHP-CS-Fixer, and GitHub Actions CI
+
+## Documentation
+
+- [Repository Guidelines](AGENTS.md)
+- [Documentation Index](docs/README.md)
+- [Quick Start Tutorial](docs/tutorials/quick-start.md)
+- [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
+- [API Reference](docs/api/application.md)
 
 ## Requirements
 
@@ -83,6 +103,13 @@ GitHub Actions runs Composer validation, static analysis, linting, and PHPUnit o
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) for repository-specific contributor guidance. Pull requests should describe the problem, the approach taken, and the verification steps used.
+
+## Community
+
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributing Guide](CONTRIBUTING.MD)
+- [Security Policy](SECURITY.md)
+- [Support](SUPPORT.md)
 
 ## License
 
