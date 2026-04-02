@@ -77,6 +77,16 @@ $userId = session('user_id');
 
 Returns the encrypted session service or reads one session value.
 
+### `image(?string $path = null): \Marwa\Framework\Supports\Image`
+
+```php
+$thumb = image(public_path('images/photo.jpg'))
+    ->fit(320, 180)
+    ->save(storage_path('cache/thumb.jpg'));
+```
+
+Returns a GD-backed image instance from disk, or a blank 1x1 canvas when no path is provided.
+
 ### `view(string $tplName = '', array $params = []): mixed`
 
 ```php

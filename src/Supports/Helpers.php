@@ -13,6 +13,7 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Supports\Image as ImageSupport;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Module\ModuleHandle;
 use Marwa\Router\Response;
@@ -231,6 +232,15 @@ function session(?string $key = null, mixed $default = null): mixed
     }
 
     return $session;
+}
+
+function image(?string $path = null): ImageSupport
+{
+    if ($path !== null && trim($path) !== '') {
+        return ImageSupport::fromFile($path);
+    }
+
+    return ImageSupport::canvas(1, 1, '#00000000');
 }
 
 /**

@@ -23,6 +23,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
 - Secure encrypted session support with hardened cookie defaults and lazy HTTP session startup
+- GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
