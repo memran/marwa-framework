@@ -23,6 +23,7 @@ final class AppBootstrapper
         private Config $config,
         private ProviderBootstrapper $providerBootstrapper,
         private ErrorHandlerBootstrapper $errorHandlerBootstrapper,
+        private DatabaseBootstrapper $databaseBootstrapper,
         private ModuleBootstrapper $moduleBootstrapper
     ) {}
 
@@ -57,6 +58,7 @@ final class AppBootstrapper
         $this->providerBootstrapper->bootstrap($appConfig['providers']);
         $this->app->dispatch(new ProvidersBootstrapped(providers: $appConfig['providers']));
         $this->errorHandlerBootstrapper->bootstrap();
+        $this->databaseBootstrapper->bootstrap();
         $this->moduleBootstrapper->bootstrap();
         $this->app->boot();
         $this->appConfig = $appConfig;

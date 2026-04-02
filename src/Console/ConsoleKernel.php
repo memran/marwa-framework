@@ -7,8 +7,10 @@ namespace Marwa\Framework\Console;
 use Marwa\Framework\Adapters\Event\ConsoleBootstrapped;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
+use Marwa\Framework\Bootstrappers\DatabaseBootstrapper;
 use Marwa\Framework\Bootstrappers\ModuleBootstrapper;
 use Marwa\Framework\Config\ConsoleConfig;
+use Marwa\Framework\Console\Configurators\MarwaDbConsoleConfigurator;
 use Marwa\Framework\Supports\Config;
 use Psr\Log\LoggerInterface;
 
@@ -96,16 +98,10 @@ final class ConsoleKernel
 
     private function registerMarwaDbConfigurator(): void
     {
-        foreach ([
-            'Marwa\\Db\\Console\\ConsoleCommandConfigurator',
-            'Marwa\\Db\\Console\\CommandConfigurator',
-        ] as $configurator) {
-            if (!class_exists($configurator)) {
-                continue;
-            }
-
-            $this->registry->registerConfigurator($configurator);
-
+        if (class_exists(\Marwa\DB\Bootstrap::class)) {
+            /** @var DatabaseBootstrapper $databaseBootstrapper */
+            $databaseBootstrapper = $this->app->make(DatabaseBootstrapper::class);
+            $this->registry->registerConfigurator(new MarwaDbConsoleConfigurator($this->app, $databaseBootstrapper));
             return;
         }
 

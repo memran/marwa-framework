@@ -9,7 +9,7 @@ Marwa Framework uses Symfony Console for CLI tooling. The console layer shares t
 1. `Application` boots the environment and container.
 2. `ConsoleKernel` loads `config/app.php` and `config/console.php`.
 3. `AppBootstrapper` registers application providers and module runtime services.
-4. Commands are collected from built-in framework commands, `config/console.php`, programmatic registration, discovery rules, module command paths, and optional packages like `marwa-db`.
+4. Commands are collected from built-in framework commands, `config/console.php`, programmatic registration, discovery rules, module command paths, and enabled package integrations like `marwa-db`.
 5. `ConsoleApplication` starts Symfony Console.
 
 ## Minimal Usage
@@ -36,6 +36,16 @@ return [
 ```
 
 When `config/module.php` enables `marwa-module`, the console kernel also discovers commands from module directories declared through manifest `paths.commands` or the default `Console/Commands` and `src/Console/Commands` conventions.
+
+When `config/database.php` enables `marwa-db`, the console kernel also registers:
+
+- `migrate`
+- `migrate:rollback`
+- `migrate:refresh`
+- `migrate:status`
+- `make:migration`
+- `make:seeder`
+- `db:seed`
 
 ## Scaffolding
 

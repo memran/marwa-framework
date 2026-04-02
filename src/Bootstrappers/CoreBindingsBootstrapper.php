@@ -55,11 +55,18 @@ final class CoreBindingsBootstrapper
             ->addArgument($app)
             ->addArgument($container->get(ErrorHandlerAdapter::class));
 
+        $container->addShared(DatabaseBootstrapper::class)
+            ->addArgument($app)
+            ->addArgument($container)
+            ->addArgument($container->get(Config::class))
+            ->addArgument($container->get(LoggerInterface::class));
+
         $container->addShared(AppBootstrapper::class)
             ->addArgument($app)
             ->addArgument($container->get(Config::class))
             ->addArgument($container->get(ProviderBootstrapper::class))
             ->addArgument($container->get(ErrorHandlerBootstrapper::class))
+            ->addArgument($container->get(DatabaseBootstrapper::class))
             ->addArgument($container->get(ModuleBootstrapper::class));
 
         $container->addShared(ModuleBootstrapper::class)

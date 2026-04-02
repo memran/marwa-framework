@@ -117,6 +117,40 @@ return [
 ];
 ```
 
+## `config/database.php`
+
+Defined by `Marwa\Framework\Config\DatabaseConfig`.
+
+Supported keys:
+
+- `enabled`: enable shared `marwa-db` bootstrap
+- `default`: default connection name
+- `connections`: named connection map in the `marwa-db` package format
+- `debug`: default debug flag applied to connections unless overridden
+- `useDebugPanel`: enable the package debug panel on the connection manager
+- `migrationsPath`: application migrations directory
+- `seedersPath`: application seeders directory
+- `seedersNamespace`: namespace used by seeder discovery and scaffolding
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => base_path('database/database.sqlite'),
+            'debug' => false,
+        ],
+    ],
+    'migrationsPath' => base_path('database/migrations'),
+    'seedersPath' => base_path('database/seeders'),
+    'seedersNamespace' => 'Database\\Seeders',
+];
+```
+
 ## `config/bootstrap.php`
 
 Defined by `Marwa\Framework\Config\BootstrapConfig`.

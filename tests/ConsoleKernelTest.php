@@ -145,4 +145,37 @@ PHP
 
         self::assertTrue($console->has('blog:hello'));
     }
+
+    public function testConsoleKernelRegistersMarwaDbCommandsWhenDatabaseIsEnabled(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<'PHP'
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+        ],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        self::assertTrue($console->has('migrate'));
+        self::assertTrue($console->has('migrate:rollback'));
+        self::assertTrue($console->has('migrate:refresh'));
+        self::assertTrue($console->has('migrate:status'));
+        self::assertTrue($console->has('make:migration'));
+        self::assertTrue($console->has('make:seeder'));
+        self::assertTrue($console->has('db:seed'));
+    }
 }

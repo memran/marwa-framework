@@ -7,6 +7,7 @@ namespace Marwa\Framework\Tests;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;
+use Marwa\Framework\Config\DatabaseConfig;
 use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
 use Marwa\Framework\Config\LoggerConfig;
@@ -83,5 +84,17 @@ final class ConfigContractsTest extends TestCase
         self::assertFalse(ModuleConfig::defaults($app)['forceRefresh']);
         self::assertSame(['commands'], ModuleConfig::defaults($app)['commandPaths']);
         self::assertSame(['Console/Commands', 'src/Console/Commands'], ModuleConfig::defaults($app)['commandConventions']);
+    }
+
+    public function testDatabaseConfigExposesExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = DatabaseConfig::defaults($app);
+
+        self::assertFalse($defaults['enabled']);
+        self::assertSame('sqlite', $defaults['default']);
+        self::assertSame($this->basePath . '/database/migrations', $defaults['migrationsPath']);
+        self::assertSame($this->basePath . '/database/seeders', $defaults['seedersPath']);
+        self::assertSame('Database\\Seeders', $defaults['seedersNamespace']);
     }
 }

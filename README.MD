@@ -24,6 +24,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
+- First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
 - Twig-powered view adapter with theme support and cache directory bootstrapping
 - Shared error handling through `marwa-error-handler` for HTTP and console with logger/debug reporter integration
 - Debug and maintenance middleware for local development and operational controls
@@ -61,7 +62,7 @@ composer install
 cp .env.example .env
 ```
 
-The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, or `config/error.php`, those settings override the built-in defaults.
+The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, or `config/database.php`, those settings override the built-in defaults.
 
 ## Ecosystem Alignment
 
@@ -71,8 +72,9 @@ The framework is aligned around the MarwaPHP package set:
 - `memran/marwa-view` for Twig-based rendering and theming
 - `memran/marwa-event` for PSR-14 event dispatching with listener priorities
 - `memran/marwa-module` for runtime module discovery, provider boot, routes, views, and console command discovery
+- `memran/marwa-db` for shared database bootstrap, ORM/schema wiring, and migration/seeder console commands
 - `memran/marwa-error-handler`, `memran/marwa-debugbar`, and `memran/marwa-logger` for runtime diagnostics
-- optional `memran/marwa-db`, `memran/marwa-module`, `memran/marwa-entity`, and `memran/marwa-support` integrations in consuming apps
+- optional `memran/marwa-module`, `memran/marwa-entity`, and `memran/marwa-support` integrations in consuming apps
 
 `marwa-db` console commands are auto-registered when that package is installed and exposes a compatible configurator or command namespace.
 
@@ -166,6 +168,35 @@ return [
 ```
 
 Lifecycle events include `ApplicationStarted`, `AppBooted`, `RequestHandlingStarted`, `RequestHandled`, `AppTerminated`, and `ConsoleBootstrapped`. See [docs/tutorials/events.md](/Users/memran/projects/php-projects/marwa-framework/docs/tutorials/events.md) for full examples.
+
+## Database
+
+Enable database integration in `config/database.php`:
+
+```php
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => base_path('database/database.sqlite'),
+        ],
+    ],
+];
+```
+
+When enabled, the framework bootstraps `Marwa\DB\Connection\ConnectionManager`, initializes `Marwa\DB\Facades\DB`, `Marwa\DB\ORM\Model`, and `Marwa\DB\Schema\Schema`, and registers these console commands:
+
+- `migrate`
+- `migrate:rollback`
+- `migrate:refresh`
+- `migrate:status`
+- `make:migration`
+- `make:seeder`
+- `db:seed`
 
 ## Lifecycle
 
