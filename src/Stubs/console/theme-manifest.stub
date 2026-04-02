@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => '{{ theme_name }}',
+{{ parent_line }}    'views_path' => 'views',
+    'assets_url' => '{{ assets_url }}',
+];

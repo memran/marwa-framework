@@ -59,6 +59,7 @@ php bin/console make:command CleanupCommand
 php bin/console make:controller Admin/PostController --resource
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
+php bin/console make:theme dark --parent=default
 php bin/console make:ai-helper SupportAgent --with-command
 ```
 
@@ -69,3 +70,5 @@ php bin/console make:ai-helper SupportAgent --with-command
 `make:module` generates a `marwa-module` compatible folder in the first configured `module.paths` location, including `manifest.php`, a module service provider, `routes/http.php`, `resources/views/index.twig`, and `Console/Commands`.
 
 For the generated provider to autoload in a host application, map `App\\Modules\\` to `modules/` in the consumer `composer.json`.
+
+`make:theme` generates `resources/views/themes/<name>` with a valid `marwa-view` `manifest.php`, starter Twig templates, and an `assets/css/app.css` file. Use `--parent` to scaffold theme inheritance.

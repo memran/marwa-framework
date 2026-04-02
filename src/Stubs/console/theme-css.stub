@@ -1,0 +1,15 @@
+body {
+    margin: 0;
+    font-family: Georgia, serif;
+    background: linear-gradient(180deg, #f7f1e3 0%, #fffdf8 100%);
+    color: #2f241f;
+}
+
+.theme-shell {
+    max-width: 48rem;
+    margin: 4rem auto;
+    padding: 2rem;
+    border: 1px solid #d8c7b8;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1rem 3rem rgba(47, 36, 31, 0.08);
+}

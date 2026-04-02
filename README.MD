@@ -111,6 +111,7 @@ php bin/console make:command CleanupCommand
 php bin/console make:controller Admin/PostController --resource
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
+php bin/console make:theme dark --parent=default
 ```
 
 ## PHPUnit

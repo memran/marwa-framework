@@ -37,3 +37,4 @@ Supported keys:
 - `make:model` generates `marwa-db` models in `app/Models`
 - `make:model --migration` also runs the registered `make:migration` command from `marwa-db`
 - `make:module` generates a `marwa-module` folder scaffold in the first configured module path
+- `make:theme` generates a `marwa-view` theme under `resources/views/themes/<name>`

@@ -13,6 +13,7 @@ use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
+use Marwa\Framework\Console\Commands\MakeThemeCommand;
 use Marwa\Framework\Tests\Fixtures\Console\Commands\DemoCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -106,6 +107,7 @@ PHP
         self::assertTrue($console->has('make:controller'));
         self::assertTrue($console->has('make:model'));
         self::assertTrue($console->has('make:module'));
+        self::assertTrue($console->has('make:theme'));
         self::assertTrue($console->has('make:ai-helper'));
         self::assertSame('Console App', $console->getName());
         self::assertSame('1.2.3', $console->getVersion());
@@ -130,6 +132,7 @@ PHP
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(MakeThemeCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
@@ -297,6 +300,34 @@ PHP
         self::assertStringContainsString("'slug' => 'blog'", $manifest);
         self::assertStringContainsString("App\\Modules\\Blog\\BlogServiceProvider::class", $manifest);
         self::assertStringContainsString("'commands' => 'Console/Commands'", $manifest);
+    }
+
+    public function testMakeThemeCommandCreatesThemeScaffoldInViewsThemesDirectory(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:theme');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'dark',
+            '--parent' => 'default',
+        ]);
+
+        self::assertSame(0, $status);
+
+        $themePath = $this->basePath . '/resources/views/themes/dark';
+        self::assertFileExists($themePath . '/manifest.php');
+        self::assertFileExists($themePath . '/views/layout.twig');
+        self::assertFileExists($themePath . '/views/home/index.twig');
+        self::assertFileExists($themePath . '/assets/css/app.css');
+        self::assertDirectoryExists($themePath . '/assets/images');
+
+        $manifest = (string) file_get_contents($themePath . '/manifest.php');
+        self::assertStringContainsString("'name' => 'dark'", $manifest);
+        self::assertStringContainsString("'parent' => 'default'", $manifest);
+        self::assertStringContainsString("'assets_url' => '/themes/dark'", $manifest);
     }
 
     private function removeDirectory(string $path): void
