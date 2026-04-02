@@ -7,7 +7,8 @@ namespace Marwa\Framework\Facades;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 
 /**
- * @method static void dispatch(object|string $event)
+ * @method static object dispatch(object $event)
+ * @method static void listen(string $event, callable|array<int|string, mixed>|string $listener, int $priority = 0)
  */
 final class Event extends Facade
 {

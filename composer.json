@@ -11,12 +11,19 @@
     "psr-15",
     "psr-16",
     "framework",
+    "ecosystem",
     "PHP Framework",
     "Opensource Framework",
     "MarwaPHP Framework",
     "marwaphp",
     "Marwa Framework",
-    "PHP 8"
+    "PHP 8",
+    "marwa-router",
+    "marwa-view",
+    "marwa-event",
+    "marwa-db",
+    "marwa-module",
+    "marwa-entity"
   ],
   "authors": [
     {
@@ -35,10 +42,13 @@
     "league/container": "^5.1",
     "symfony/dotenv": "^7.3",
     "relay/relay": "^3.0",
-    "symfony/event-dispatcher": "^7.3",
     "psr/event-dispatcher": "^1.0",
     "nesbot/carbon": "^3.10",
-    "symfony/console": "^7.3"
+    "symfony/console": "^7.3",
+    "memran/marwa-support": "^1.2",
+    "memran/marwa-module": "^1.0.1",
+    "memran/marwa-entity": "^1.0",
+    "memran/marwa-db": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -54,10 +64,10 @@
     }
   },
   "suggest": {
-    "memran/marwa-db": "Optional database toolkit integration for consuming apps.",
-    "memran/marwa-entity": "Optional entity and validation layer for consuming apps.",
-    "memran/marwa-module": "Optional modular application support for consuming apps.",
-    "memran/marwa-support": "Optional support helpers shared across the wider Marwa ecosystem."
+    "memran/marwa-db": "Optional database toolkit integration; console commands auto-register when available.",
+    "memran/marwa-entity": "Optional entity builder and validation layer for domain models.",
+    "memran/marwa-module": "Optional module management for modular application structure.",
+    "memran/marwa-support": "Optional support helpers and utility primitives for consuming apps."
   },
   "minimum-stability": "dev",
   "prefer-stable": true,

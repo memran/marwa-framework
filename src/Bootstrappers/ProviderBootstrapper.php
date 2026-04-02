@@ -10,6 +10,11 @@ use Psr\Log\LoggerInterface;
 
 final class ProviderBootstrapper
 {
+    /**
+     * @var array<string, true>
+     */
+    private array $bootstrappedProviders = [];
+
     public function __construct(
         private Container $container,
         private LoggerInterface $logger
@@ -35,7 +40,17 @@ final class ProviderBootstrapper
                 continue;
             }
 
+            if (isset($this->bootstrappedProviders[$providerClass])) {
+                continue;
+            }
+
             $this->container->addServiceProvider(new $providerClass());
+            $this->bootstrappedProviders[$providerClass] = true;
         }
+    }
+
+    public function hasBootstrapped(string $providerClass): bool
+    {
+        return isset($this->bootstrappedProviders[$providerClass]);
     }
 }

@@ -22,11 +22,13 @@ final class ViewAdapter
         $this->config->loadIfExists(ViewConfigContract::KEY . '.php');
         $defaults = ViewConfigContract::defaults($this->app);
 
+        $viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
         $cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
+        $this->ensureDirectory($viewsPath);
         $this->ensureDirectory($cachePath);
 
         $config = new ViewConfig(
-            viewsPath: $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']),
+            viewsPath: $viewsPath,
             cachePath: $cachePath,
             debug: $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']),
         );
@@ -47,6 +49,11 @@ final class ViewAdapter
         return $this->engine;
     }
 
+    public function addNamespace(string $namespace, string $path): void
+    {
+        $this->engine->addNamespace($namespace, $path);
+    }
+
     /**
      * @param array<string, mixed> $params
      */
@@ -55,18 +62,22 @@ final class ViewAdapter
         return Response::html($this->engine->render($tplname, $params));
     }
 
-    protected function getThemeBuilder(): ThemeBuilder
+    protected function getThemeBuilder(): ?ThemeBuilder
     {
         $defaults = ViewConfigContract::defaults($this->app);
         $viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
         $themesBaseDir = $viewsPath . DIRECTORY_SEPARATOR . 'themes';
         $this->ensureDirectory($themesBaseDir);
+        $defaultTheme = $this->config->getString(ViewConfigContract::KEY . '.defaultTheme', $defaults['defaultTheme']);
 
-        $themeBuilder = ThemeBootstrap::initFromDirectory(
+        if (!$this->hasThemeManifest($themesBaseDir, $defaultTheme)) {
+            return null;
+        }
+
+        return ThemeBootstrap::initFromDirectory(
             themesBaseDir: $themesBaseDir,
-            defaultTheme: $this->config->getString(ViewConfigContract::KEY . '.defaultTheme', $defaults['defaultTheme'])
+            defaultTheme: $defaultTheme
         );
-        return $themeBuilder;
     }
 
     private function ensureDirectory(string $path): void
@@ -76,5 +87,13 @@ final class ViewAdapter
         }
 
         mkdir($path, 0775, true);
+    }
+
+    private function hasThemeManifest(string $themesBaseDir, string $defaultTheme): bool
+    {
+        $themePath = $themesBaseDir . DIRECTORY_SEPARATOR . $defaultTheme;
+
+        return is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.php')
+            || is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.json');
     }
 }

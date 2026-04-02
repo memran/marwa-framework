@@ -9,16 +9,14 @@ use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\{AppBooted, AppTerminated};
 use Marwa\Framework\Adapters\Http\RelayPipelineAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
+use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\MiddlewareBootstrapper;
-use Marwa\Framework\Bootstrappers\ProviderBootstrapper;
-use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\MiddlewarePipelineInterface;
 use Marwa\Framework\Middlewares\DebugbarMiddleware;
 use Marwa\Framework\Middlewares\MaintenanceMiddleware;
 use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
-use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -35,10 +33,9 @@ final class HttpKernel
 
     public function __construct(
         private Application $app,
-        private Config $config,
         private EventDispatcherInterface $events,
         private LoggerInterface $logger,
-        private ProviderBootstrapper $providerBootstrapper,
+        private AppBootstrapper $appBootstrapper,
         private MiddlewareBootstrapper $middlewareBootstrapper
     ) {
         $this->bootKernel();
@@ -50,12 +47,7 @@ final class HttpKernel
             ErrorHandlerAdapter::boot();
         }
 
-        $this->config->loadIfExists(AppConfig::KEY . '.php');
-
-        /** @var array{providers:list<class-string>,middlewares:list<class-string>,debugbar:bool,collectors:list<string>} $appConfig */
-        $appConfig = array_replace_recursive(AppConfig::defaults(), $this->config->getArray(AppConfig::KEY, []));
-
-        $this->providerBootstrapper->bootstrap($appConfig['providers']);
+        $appConfig = $this->appBootstrapper->bootstrap();
 
         $this->pipeline = new RelayPipelineAdapter($this->app->container());
         $this->middlewareBootstrapper->bootstrap(

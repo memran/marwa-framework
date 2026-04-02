@@ -75,6 +75,33 @@ final class Config
     }
 
     /**
+     * Prime the repository from an already-built config cache payload.
+     *
+     * @param array<string, mixed> $items
+     */
+    public function prime(array $items): void
+    {
+        foreach ($items as $key => $value) {
+            if (!is_array($value)) {
+                throw new \TypeError('Cached config payload must be an array keyed by config file name.');
+            }
+
+            $this->items[$key] = $value;
+            if (!in_array($key, $this->loadedFiles, true)) {
+                $this->loadedFiles[] = $key;
+            }
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function all(): array
+    {
+        return $this->items;
+    }
+
+    /**
      * Get a configuration value using dot notation.
      * @param string $key Dot notation key (e.g., "file.key.subkey").
      * @param mixed $default Default value if key not found.

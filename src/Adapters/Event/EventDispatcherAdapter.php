@@ -10,10 +10,11 @@ use Marwa\Event\Core\EventDispatcher;
 use Marwa\Event\Core\ListenerProvider;
 use Marwa\Event\Resolver\ListenerResolver;
 use Marwa\Framework\Config\EventConfig;
+use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Supports\Config;
 use Psr\Container\ContainerInterface;
 
-class EventDispatcherAdapter
+class EventDispatcherAdapter implements EventDispatcherInterface
 {
     protected ContainerInterface $container;
 
@@ -60,16 +61,16 @@ class EventDispatcherAdapter
      * PSR-14 dispatch method.
      *
      * @param object $event
-     * @return void
+     * @return object
      */
-    public function dispatch(object|string $event): void
+    public function dispatch(object $event): object
     {
-        $this->bus->dispatch($event);
+        return $this->bus->dispatch($event);
     }
 
-    public function fire(object|string $event): void
+    public function fire(object $event): object
     {
-        $this->bus->dispatch($event);
+        return $this->dispatch($event);
     }
 
     /**
@@ -77,7 +78,7 @@ class EventDispatcherAdapter
      */
     public function listen(string $event, callable|array|string $listener, int $priority = 0): void
     {
-        $this->bus->listen($event, $listener);
+        $this->bus->listen($event, $listener, $priority);
     }
 
     public function subscribe(Subscriber|string $subscriber): void

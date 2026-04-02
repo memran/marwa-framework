@@ -1,10 +1,11 @@
 # Marwa Framework
 
-[![Latest Version](https://img.shields.io/packagist/v/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
-[![Total Downloads](https://img.shields.io/packagist/dt/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![Packagist](https://img.shields.io/badge/Packagist-memran%2Fmarwa--framework-F28D1A?style=flat-square&logo=packagist&logoColor=white)](https://packagist.org/packages/memran/marwa-framework)
+[![Latest Version](https://img.shields.io/packagist/v/memran/marwa-framework?style=flat-square&logo=packagist&logoColor=white)](https://packagist.org/packages/memran/marwa-framework)
+[![Total Downloads](https://img.shields.io/packagist/dt/memran/marwa-framework?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
 [![CI](https://github.com/memran/marwa-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/memran/marwa-framework/actions/workflows/ci.yml)
-[![License](https://img.shields.io/packagist/l/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
-[![PHP Version](https://img.shields.io/packagist/php-v/memran/marwa-framework.svg?style=flat-square)](https://php.net)
+[![License](https://img.shields.io/github/license/memran/marwa-framework?style=flat-square)](https://github.com/memran/marwa-framework/blob/main/LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)](https://www.php.net/)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%206-brightgreen?style=flat-square)](https://phpstan.org/)
 [![PHPUnit](https://img.shields.io/badge/PHPUnit-11.5-blue?style=flat-square)](https://phpunit.de/)
 
@@ -21,7 +22,8 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - PSR-4 autoloading and PSR-friendly HTTP, container, logging, cache, and event integration
 - HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
-- Console kernel integration via Symfony Console
+- Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
+- First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - Twig-powered view adapter with theme support and cache directory bootstrapping
 - Debug and maintenance middleware for local development and operational controls
 - Production-ready quality tooling with PHPUnit, PHPStan, PHP-CS-Fixer, and GitHub Actions CI
@@ -32,6 +34,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Documentation Index](docs/README.md)
 - [Quick Start Tutorial](docs/tutorials/quick-start.md)
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
+- [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
 
@@ -58,13 +61,28 @@ cp .env.example .env
 
 The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, or `config/view.php`, those settings override the built-in defaults.
 
+## Ecosystem Alignment
+
+The framework is aligned around the MarwaPHP package set:
+
+- `memran/marwa-router` for routing and not-found handling
+- `memran/marwa-view` for Twig-based rendering and theming
+- `memran/marwa-event` for PSR-14 event dispatching with listener priorities
+- `memran/marwa-module` for runtime module discovery, provider boot, routes, views, and console command discovery
+- `memran/marwa-error-handler`, `memran/marwa-debugbar`, and `memran/marwa-logger` for runtime diagnostics
+- optional `memran/marwa-db`, `memran/marwa-module`, `memran/marwa-entity`, and `memran/marwa-support` integrations in consuming apps
+
+`marwa-db` console commands are auto-registered when that package is installed and exposes a compatible configurator or command namespace.
+
 ## Project Layout
 
 ```text
 src/                  Framework source
+src/Console/          Console kernel, commands, and discovery services
 src/Adapters/         Integration adapters for router, events, view, error handling
 src/Middlewares/      HTTP middleware
 src/Providers/        Service providers
+stubs/                Framework command and AI helper scaffolds
 routes/               Example route registration
 resources/views/      Example templates
 tests/                PHPUnit coverage for framework behavior
@@ -124,6 +142,143 @@ use Marwa\Router\Response;
 
 Router::get('/health', fn () => Response::json(['ok' => true]))->register();
 ```
+
+## Lifecycle
+
+### HTTP Lifecycle
+
+```text
+Application
+  -> boot container + env + core singletons
+  -> HttpKernel
+      -> load app config
+      -> register service providers
+      -> bootstrap modules
+      -> build middleware pipeline
+      -> dispatch AppBooted event
+      -> Relay pipeline
+          -> RequestIdMiddleware
+          -> MaintenanceMiddleware
+          -> RouterMiddleware
+          -> DebugbarMiddleware
+      -> router dispatch
+      -> PSR-7 response
+      -> dispatch AppTerminated event
+      -> emit response
+```
+
+### Console Lifecycle
+
+```text
+Application
+  -> boot container + env + core singletons
+  -> ConsoleKernel
+      -> load app + console config
+      -> register service providers
+      -> bootstrap modules
+      -> collect built-in commands
+      -> collect configured commands
+      -> discover package/app/module commands
+      -> build Symfony Console application
+      -> run selected command
+```
+
+### Runtime Split
+
+```text
+Application
+  -> shared container, config, logger, events
+  -> HttpKernel for web requests
+  -> ConsoleKernel for CLI commands
+```
+
+## Console
+
+The console kernel uses Symfony Console and the same DI container as the HTTP kernel.
+
+```php
+use Marwa\Framework\Application;
+
+$app = new Application(__DIR__);
+$app->registerCommand(App\Console\Commands\CleanupCommand::class);
+
+exit($app->console()->handle());
+```
+
+Optional `config/console.php`:
+
+```php
+<?php
+
+return [
+    'name' => 'My App Console',
+    'version' => '1.0.0',
+    'commands' => [
+        App\Console\Commands\CleanupCommand::class,
+    ],
+    'discover' => [
+        ['namespace' => 'App\\Console\\Commands', 'path' => 'app/Console/Commands'],
+    ],
+];
+```
+
+Optional `config/module.php`:
+
+```php
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => [
+        base_path('modules'),
+    ],
+    'commandPaths' => ['commands'],
+    'commandConventions' => ['Console/Commands', 'src/Console/Commands'],
+];
+```
+
+When `marwa-module` is enabled, the runtime binds `ModuleRepositoryInterface`, `ModuleRegistryInterface`, and `ModuleBuilder`, boots module service providers, loads module routes and view namespaces, and auto-discovers Symfony commands from module command directories.
+
+Scaffolding commands:
+
+```bash
+php bin/console bootstrap:cache
+php bin/console bootstrap:clear
+php bin/console config:cache
+php bin/console route:cache
+php bin/console module:cache
+php bin/console make:command CleanupCommand
+php bin/console make:ai-helper SupportAgent --with-command
+```
+
+## Bootstrap Cache
+
+The framework now includes bootstrap cache infrastructure for starter distributions such as `marwa-php`.
+
+Cached artifacts:
+
+- config cache: `bootstrap/cache/config.php`
+- route cache: `bootstrap/cache/routes.php`
+- module cache: `bootstrap/cache/modules.php`
+
+Supported commands:
+
+```bash
+php bin/console bootstrap:cache
+php bin/console bootstrap:clear
+php bin/console config:cache
+php bin/console config:clear
+php bin/console route:cache
+php bin/console route:clear
+php bin/console module:cache
+php bin/console module:clear
+```
+
+Current behavior:
+
+- `AppBootstrapper` loads cached config when `bootstrap/cache/config.php` exists
+- `KernalServiceProvider` loads compiled routes when `bootstrap/cache/routes.php` exists
+- `ModuleBootstrapper` loads module manifests from `config/module.php` or code defaults and reuses the module cache when present
 
 ## Quality and CI
 

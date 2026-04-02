@@ -74,3 +74,47 @@ Supported keys:
 - `storage.driver`: sink driver such as `file`
 - `storage.path`: log output directory
 - `storage.prefix`: file name prefix
+
+## `config/bootstrap.php`
+
+Defined by `Marwa\Framework\Config\BootstrapConfig`.
+
+Supported keys:
+
+- `configCache`: full path to cached merged config output
+- `routeCache`: full path to compiled route cache output
+- `moduleCache`: full path to module manifest cache output
+
+Default paths:
+
+- `bootstrap/cache/config.php`
+- `bootstrap/cache/routes.php`
+- `bootstrap/cache/modules.php`
+
+## `config/module.php`
+
+Defined by `Marwa\Framework\Config\ModuleConfig`.
+
+Supported keys:
+
+- `enabled`: enable module-aware starter behavior
+- `paths`: list of module root directories
+- `cache`: full path to the module manifest cache file
+- `forceRefresh`: ignore the module cache and rescan the filesystem
+- `commandPaths`: manifest `paths` keys that should be treated as command directories
+- `commandConventions`: module-relative fallback directories for command discovery
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'paths' => [
+        base_path('modules'),
+    ],
+    'cache' => base_path('bootstrap/cache/modules.php'),
+    'forceRefresh' => false,
+    'commandPaths' => ['commands'],
+    'commandConventions' => ['Console/Commands', 'src/Console/Commands'],
+];
+```

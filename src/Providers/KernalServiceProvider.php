@@ -9,6 +9,7 @@ use Marwa\Framework\Adapters\{RouterAdapter, ViewAdapter};
 use Marwa\Framework\Adapters\ServiceProviderAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
+use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Contracts\BootServiceProviderInterface;
 use Marwa\Framework\Supports\Config;
 
@@ -41,7 +42,9 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
             });
         }
 
-        $this->getContainer()->addShared(ViewAdapter::class);
+        $this->getContainer()->addShared(ViewAdapter::class)
+            ->addArgument($this->getContainer()->get(Application::class))
+            ->addArgument($config);
     }
 
     public function boot(): void
@@ -51,6 +54,15 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
 
         /** @var Application $app */
         $app = $this->getContainer()->get(Application::class);
+        /** @var RouterAdapter $router */
+        $router = $this->getContainer()->get(RouterAdapter::class);
+        $routeCache = BootstrapConfig::defaults($app)['routeCache'];
+
+        if (\is_file($routeCache)) {
+            $router->loadCompiledRoutesFrom($routeCache);
+            return;
+        }
+
         $web = $app->basePath('routes/web.php');
         $api = $app->basePath('routes/api.php');
 

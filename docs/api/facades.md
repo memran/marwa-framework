@@ -29,13 +29,13 @@ Reads typed configuration values from loaded config files.
 
 ```php
 use Marwa\Framework\Facades\Event;
-use Marwa\Framework\Adapters\Event\NamedEvent;
 
-Event::dispatch(new NamedEvent('user.created'));
+Event::listen(UserRegistered::class, SendWelcomeMail::class, 100);
+Event::dispatch(new UserRegistered('user@example.com'));
 ```
 
 Short description:
-Dispatches events through the configured event bus.
+Dispatches object events and registers prioritized listeners through the configured `marwa-event` bus.
 
 ## `Log`
 

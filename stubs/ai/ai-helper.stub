@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+final class {{ class }}
+{
+    public function systemPrompt(): string
+    {
+        return 'Describe the role, boundaries, and response format for this AI helper.';
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public function handle(string $input, array $context = []): array
+    {
+        return [
+            'input' => $input,
+            'context' => $context,
+            'instructions' => $this->systemPrompt(),
+        ];
+    }
+}

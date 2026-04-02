@@ -6,11 +6,15 @@ namespace Marwa\Framework;
 
 use League\Container\Container;
 use League\Container\ReflectionContainer;
+use League\Container\ServiceProvider\ServiceProviderInterface;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
-use Marwa\Framework\Adapters\Logger\LoggerAdapter;
-use Marwa\Framework\Contracts\EventDispatcherInterface;
-use Marwa\Framework\Supports\Config;
-use Psr\Log\LoggerInterface;
+use Marwa\Framework\Bootstrappers\CoreBindingsBootstrapper;
+use Marwa\Framework\Console\CommandRegistry;
+use Marwa\Framework\Console\ConsoleKernel;
+use Marwa\Module\Contracts\ModuleRegistryInterface;
+use Marwa\Module\Contracts\ModuleServiceProviderInterface;
+use Marwa\Module\ModuleBuilder;
+use Marwa\Module\ModuleHandle;
 use Symfony\Component\Dotenv\Dotenv;
 
 /**
@@ -22,6 +26,16 @@ final class Application
     private Container $container;
     private string $basePath;
     private bool $booted = false;
+
+    /**
+     * @var array<string, ModuleServiceProviderInterface>
+     */
+    private array $moduleServiceProviders = [];
+
+    /**
+     * @var array<string, true>
+     */
+    private array $bootedModuleServiceProviders = [];
 
     public function __construct(string $basePath)
     {
@@ -56,29 +70,7 @@ final class Application
 
     private function bindAppSingletons(): void
     {
-        date_default_timezone_set(env('TIMEZONE', 'Asia/Dhaka'));
-
-        $this->container->addShared(self::class, $this);
-
-        // Bind config repository (lazy loader)
-        $this->container->addShared(Config::class)
-            ->addArgument($this->basePath('config'));
-
-        $this->container->addShared(LoggerAdapter::class, function () {
-            return (new LoggerAdapter($this, $this->container->get(Config::class)))->getLogger();
-        });
-
-        $this->container->addShared(LoggerInterface::class, function () {
-            return $this->container->get(LoggerAdapter::class);
-        });
-
-        $this->container->addShared(EventDispatcherAdapter::class)
-            ->addArgument($this->container())
-            ->addArgument($this->container->get(Config::class));
-
-        $this->container->addShared(EventDispatcherInterface::class, function () {
-            return $this->container->get(EventDispatcherAdapter::class);
-        });
+        (new CoreBindingsBootstrapper())->bootstrap($this, $this->container);
     }
 
     // ---------------------------------------------------------------------
@@ -167,5 +159,121 @@ final class Application
         }
 
         return env('APP_ENV');
+    }
+
+    public function registerCommand(object|string $command): void
+    {
+        $this->container->get(CommandRegistry::class)->register($command);
+    }
+
+    /**
+     * @param iterable<object|string> $commands
+     */
+    public function registerCommands(iterable $commands): void
+    {
+        $this->container->get(CommandRegistry::class)->registerMany($commands);
+    }
+
+    public function add(string $id, mixed $value): void
+    {
+        $this->container->addShared($id, $value);
+    }
+
+    public function set(string $id, mixed $value): void
+    {
+        $this->add($id, $value);
+    }
+
+    public function addServiceProvider(string|ServiceProviderInterface|ModuleServiceProviderInterface $provider): void
+    {
+        if (is_string($provider)) {
+            if (!class_exists($provider)) {
+                throw new \InvalidArgumentException(sprintf('Service provider [%s] does not exist.', $provider));
+            }
+
+            $provider = new $provider();
+        }
+
+        if ($provider instanceof ServiceProviderInterface) {
+            $this->container->addServiceProvider($provider);
+
+            return;
+        }
+
+        if ($provider instanceof ModuleServiceProviderInterface) {
+            $class = $provider::class;
+
+            if (isset($this->moduleServiceProviders[$class])) {
+                return;
+            }
+
+            if (method_exists($provider, 'setContainer')) {
+                $provider->setContainer($this->container);
+            }
+
+            $provider->register($this);
+            $this->moduleServiceProviders[$class] = $provider;
+
+            return;
+        }
+
+        throw new \InvalidArgumentException(sprintf(
+            'Service provider [%s] must implement %s or %s.',
+            $provider::class,
+            ServiceProviderInterface::class,
+            ModuleServiceProviderInterface::class
+        ));
+    }
+
+    public function bootModuleServiceProviders(): void
+    {
+        foreach ($this->moduleServiceProviders as $class => $provider) {
+            if (isset($this->bootedModuleServiceProviders[$class])) {
+                continue;
+            }
+
+            $provider->boot($this);
+            $this->bootedModuleServiceProviders[$class] = true;
+        }
+    }
+
+    public function console(): ConsoleKernel
+    {
+        return $this->container->get(ConsoleKernel::class);
+    }
+
+    /**
+     * @return array<string, \Marwa\Module\Module>
+     */
+    public function modules(): array
+    {
+        if (!$this->has(ModuleRegistryInterface::class)) {
+            return [];
+        }
+
+        /** @var ModuleRegistryInterface $registry */
+        $registry = $this->make(ModuleRegistryInterface::class);
+
+        return $registry->all();
+    }
+
+    public function hasModule(string $slug): bool
+    {
+        if (!$this->has(ModuleBuilder::class)) {
+            return false;
+        }
+
+        /** @var ModuleBuilder $builder */
+        $builder = $this->make(ModuleBuilder::class);
+
+        return $builder->has($slug);
+    }
+
+    public function module(string $slug): ModuleHandle
+    {
+        /** @var ModuleBuilder $builder */
+        $builder = $this->make(ModuleBuilder::class);
+
+        return $builder->current($slug);
     }
 }

@@ -34,6 +34,16 @@ final class RouterAdapter
         return $this;
     }
 
+    public function loadCompiledRoutesFrom(string $file): bool
+    {
+        return $this->router->loadCompiledRoutesFrom($file);
+    }
+
+    public function compileRoutesTo(string $file): void
+    {
+        $this->router->compileRoutesTo($file);
+    }
+
     /**
      * @param array<int, mixed> $arguments
      */
