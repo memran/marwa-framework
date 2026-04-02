@@ -15,7 +15,9 @@ use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
 use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Supports\EncryptedSession;
 use Psr\Log\LoggerInterface;
 
 final class CoreBindingsBootstrapper
@@ -44,6 +46,14 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(EventDispatcherInterface::class, function () use ($container) {
             return $container->get(EventDispatcherAdapter::class);
+        });
+
+        $container->addShared(EncryptedSession::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class));
+
+        $container->addShared(SessionInterface::class, function () use ($container) {
+            return $container->get(EncryptedSession::class);
         });
 
         $container->addShared(ErrorHandlerAdapter::class)

@@ -12,7 +12,9 @@ use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Config\ModuleConfig;
+use Marwa\Framework\Config\SessionConfig;
 use Marwa\Framework\Config\ViewConfig;
+use Marwa\Framework\Middlewares\SessionMiddleware;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigContractsTest extends TestCase
@@ -43,6 +45,7 @@ final class ConfigContractsTest extends TestCase
         self::assertArrayHasKey('middlewares', $defaults);
         self::assertArrayHasKey('debugbar', $defaults);
         self::assertArrayHasKey('collectors', $defaults);
+        self::assertContains(SessionMiddleware::class, $defaults['middlewares']);
     }
 
     public function testViewAndLoggerContractsBuildPathsFromApplicationBasePath(): void
@@ -96,5 +99,18 @@ final class ConfigContractsTest extends TestCase
         self::assertSame($this->basePath . '/database/migrations', $defaults['migrationsPath']);
         self::assertSame($this->basePath . '/database/seeders', $defaults['seedersPath']);
         self::assertSame('Database\\Seeders', $defaults['seedersNamespace']);
+    }
+
+    public function testSessionConfigExposesSecureDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = SessionConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertFalse($defaults['autoStart']);
+        self::assertSame('marwa_session', $defaults['name']);
+        self::assertTrue($defaults['httpOnly']);
+        self::assertSame('Lax', $defaults['sameSite']);
+        self::assertTrue($defaults['encrypt']);
     }
 }

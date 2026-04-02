@@ -167,6 +167,44 @@ Default paths:
 - `bootstrap/cache/routes.php`
 - `bootstrap/cache/modules.php`
 
+## `config/session.php`
+
+Defined by `Marwa\Framework\Config\SessionConfig`.
+
+Supported keys:
+
+- `enabled`: enable the framework session service
+- `autoStart`: start the session automatically through middleware on every HTTP request
+- `name`: cookie/session name
+- `lifetime`: session lifetime in seconds
+- `path`: cookie path
+- `domain`: cookie domain
+- `secure`: mark the cookie as HTTPS-only
+- `httpOnly`: prevent JavaScript access to the cookie
+- `sameSite`: cookie `SameSite` value such as `Lax`, `Strict`, or `None`
+- `encrypt`: encrypt stored session payloads with `APP_KEY`
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'autoStart' => false,
+    'name' => 'marwa_session',
+    'lifetime' => 7200,
+    'path' => '/',
+    'domain' => '',
+    'secure' => env('APP_ENV') === 'production',
+    'httpOnly' => true,
+    'sameSite' => 'Lax',
+    'encrypt' => true,
+];
+```
+
+Encrypted sessions require `APP_KEY` to be configured.
+
+The session service also supports flash data through `flash()`, `now()`, `reflash()`, and `keep()`.
+
 ## `config/module.php`
 
 Defined by `Marwa\Framework\Config\ModuleConfig`.

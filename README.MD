@@ -22,6 +22,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - PSR-4 autoloading and PSR-friendly HTTP, container, logging, cache, and event integration
 - HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
+- Secure encrypted session support with hardened cookie defaults and lazy HTTP session startup
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
@@ -64,6 +65,12 @@ cp .env.example .env
 ```
 
 The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, or `config/database.php`, those settings override the built-in defaults.
+
+Encrypted sessions require `APP_KEY` in `.env`. Generate one with:
+
+```bash
+php bin/console key:generate --show-env
+```
 
 ## Ecosystem Alignment
 
@@ -149,6 +156,33 @@ TIMEZONE=Asia/Dhaka
 ```
 
 Use `APP_DEBUG=false` and `DEBUGBAR_ENABLED=false` in production. The framework now generates cryptographically secure request IDs, avoids loading missing config files as hard failures, and registers shared PHP error, exception, and shutdown handlers for both HTTP and console runtimes.
+
+## Sessions
+
+The framework provides encrypted session storage through `Marwa\Framework\Contracts\SessionInterface` and the `session()` helper.
+
+```php
+session()->set('user_id', 42);
+session()->flash('status', 'Profile updated');
+$userId = session('user_id');
+session()->regenerate();
+```
+
+Optional `config/session.php`:
+
+```php
+<?php
+
+return [
+    'enabled' => true,
+    'autoStart' => false,
+    'name' => 'marwa_session',
+    'secure' => env('APP_ENV') === 'production',
+    'httpOnly' => true,
+    'sameSite' => 'Lax',
+    'encrypt' => true,
+];
+```
 
 ## Usage Example
 

@@ -66,6 +66,17 @@ Returns the router adapter from the container.
 
 Returns the shared `marwa-db` connection manager after bootstrap.
 
+### `session(?string $key = null, mixed $default = null): mixed`
+
+```php
+$session = session();
+session()->set('user_id', 42);
+session()->flash('status', 'Saved');
+$userId = session('user_id');
+```
+
+Returns the encrypted session service or reads one session value.
+
 ### `view(string $tplName = '', array $params = []): mixed`
 
 ```php

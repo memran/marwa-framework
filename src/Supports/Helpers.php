@@ -11,6 +11,7 @@ use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Module\ModuleHandle;
@@ -218,6 +219,18 @@ function db(): ConnectionManager
     $manager = app(ConnectionManager::class);
 
     return $manager;
+}
+
+function session(?string $key = null, mixed $default = null): mixed
+{
+    /** @var SessionInterface $session */
+    $session = app(SessionInterface::class);
+
+    if ($key !== null) {
+        return $session->get($key, $default);
+    }
+
+    return $session;
 }
 
 /**
