@@ -56,6 +56,8 @@ PHP
         @rmdir($this->basePath . '/bootstrap');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $GLOBALS['marwa_module_routes'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
+        restore_error_handler();
+        restore_exception_handler();
         BlogModuleServiceProvider::$registerCalls = 0;
         BlogModuleServiceProvider::$bootCalls = 0;
     }

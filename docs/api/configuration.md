@@ -75,6 +75,32 @@ Supported keys:
 - `storage.path`: log output directory
 - `storage.prefix`: file name prefix
 
+## `config/error.php`
+
+Defined by `Marwa\Framework\Config\ErrorConfig`.
+
+Supported keys:
+
+- `enabled`: register the global PHP error, exception, and shutdown handlers
+- `appName`: application name shown in fallback output and logs
+- `environment`: environment passed to `marwa-error-handler`
+- `useLogger`: forward uncaught errors to the shared PSR-3 logger
+- `useDebugReporter`: report uncaught exceptions to the debug bar when available
+- `renderer`: custom `Marwa\ErrorHandler\Contracts\RendererInterface` implementation
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'appName' => 'My App',
+    'environment' => env('APP_ENV', 'production'),
+    'useLogger' => true,
+    'useDebugReporter' => true,
+    'renderer' => Marwa\ErrorHandler\Support\FallbackRenderer::class,
+];
+```
+
 ## `config/bootstrap.php`
 
 Defined by `Marwa\Framework\Config\BootstrapConfig`.

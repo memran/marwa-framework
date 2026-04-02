@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
+use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Application;
@@ -45,10 +46,19 @@ final class CoreBindingsBootstrapper
             return $container->get(EventDispatcherAdapter::class);
         });
 
+        $container->addShared(ErrorHandlerAdapter::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class))
+            ->addArgument($container->get(LoggerInterface::class));
+
+        $container->addShared(ErrorHandlerBootstrapper::class)
+            ->addArgument($container->get(ErrorHandlerAdapter::class));
+
         $container->addShared(AppBootstrapper::class)
             ->addArgument($app)
             ->addArgument($container->get(Config::class))
             ->addArgument($container->get(ProviderBootstrapper::class))
+            ->addArgument($container->get(ErrorHandlerBootstrapper::class))
             ->addArgument($container->get(ModuleBootstrapper::class));
 
         $container->addShared(ModuleBootstrapper::class)

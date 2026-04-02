@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework;
 
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\{AppBooted, AppTerminated};
 use Marwa\Framework\Adapters\Http\RelayPipelineAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
@@ -17,7 +16,6 @@ use Marwa\Framework\Middlewares\DebugbarMiddleware;
 use Marwa\Framework\Middlewares\MaintenanceMiddleware;
 use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
-use Marwa\Framework\Supports\Runtime;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -43,10 +41,6 @@ final class HttpKernel
 
     private function bootKernel(): void
     {
-        if (Runtime::isWeb() && env('APP_DEBUG', false)) {
-            ErrorHandlerAdapter::boot();
-        }
-
         $appConfig = $this->appBootstrapper->bootstrap();
 
         $this->pipeline = new RelayPipelineAdapter($this->app->container());

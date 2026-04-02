@@ -50,6 +50,8 @@ PHP
         @rmdir($this->basePath . '/config');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
+        restore_error_handler();
+        restore_exception_handler();
         CountingServiceProvider::$registerCalls = 0;
     }
 

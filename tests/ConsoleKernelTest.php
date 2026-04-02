@@ -16,9 +16,11 @@ use PHPUnit\Framework\TestCase;
 final class ConsoleKernelTest extends TestCase
 {
     private string $basePath;
+    private bool $handlersBooted = false;
 
     protected function setUp(): void
     {
+        $this->handlersBooted = false;
         $this->basePath = sys_get_temp_dir() . '/marwa-console-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
@@ -49,6 +51,10 @@ final class ConsoleKernelTest extends TestCase
             $_SERVER['APP_VERSION'],
             $_SERVER['TIMEZONE']
         );
+        if ($this->handlersBooted) {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
     public function testApplicationBindsTheSharedLeagueContainerInstance(): void
@@ -85,6 +91,7 @@ PHP
 
         $app = new Application($this->basePath);
         $console = $app->console()->application();
+        $this->handlersBooted = true;
 
         self::assertTrue($console->has('demo:run'));
         self::assertTrue($console->has('bootstrap:cache'));
@@ -134,6 +141,7 @@ PHP
 
         $app = new Application($this->basePath);
         $console = $app->console()->application();
+        $this->handlersBooted = true;
 
         self::assertTrue($console->has('blog:hello'));
     }

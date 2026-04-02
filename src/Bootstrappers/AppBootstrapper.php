@@ -20,6 +20,7 @@ final class AppBootstrapper
         private Application $app,
         private Config $config,
         private ProviderBootstrapper $providerBootstrapper,
+        private ErrorHandlerBootstrapper $errorHandlerBootstrapper,
         private ModuleBootstrapper $moduleBootstrapper
     ) {}
 
@@ -50,6 +51,7 @@ final class AppBootstrapper
         $appConfig = array_replace_recursive(AppConfig::defaults(), $this->config->getArray(AppConfig::KEY, []));
 
         $this->providerBootstrapper->bootstrap($appConfig['providers']);
+        $this->errorHandlerBootstrapper->bootstrap();
         $this->moduleBootstrapper->bootstrap();
         $this->appConfig = $appConfig;
 

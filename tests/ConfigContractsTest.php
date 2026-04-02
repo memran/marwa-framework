@@ -7,6 +7,7 @@ namespace Marwa\Framework\Tests;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;
+use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Config\ModuleConfig;
@@ -58,6 +59,17 @@ final class ConfigContractsTest extends TestCase
 
         self::assertSame([], $defaults['listeners']);
         self::assertSame([], $defaults['subscribers']);
+    }
+
+    public function testErrorConfigDefaultsAreProductionSafe(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = ErrorConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertTrue($defaults['useLogger']);
+        self::assertTrue($defaults['useDebugReporter']);
+        self::assertSame('production', $defaults['environment']);
     }
 
     public function testBootstrapAndModuleContractsExposeExpectedPaths(): void

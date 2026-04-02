@@ -25,6 +25,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - Twig-powered view adapter with theme support and cache directory bootstrapping
+- Shared error handling through `marwa-error-handler` for HTTP and console with logger/debug reporter integration
 - Debug and maintenance middleware for local development and operational controls
 - Production-ready quality tooling with PHPUnit, PHPStan, PHP-CS-Fixer, and GitHub Actions CI
 
@@ -59,7 +60,7 @@ composer install
 cp .env.example .env
 ```
 
-The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, or `config/view.php`, those settings override the built-in defaults.
+The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, or `config/error.php`, those settings override the built-in defaults.
 
 ## Ecosystem Alignment
 
@@ -132,7 +133,7 @@ MAINTENANCE=0
 TIMEZONE=Asia/Dhaka
 ```
 
-Use `APP_DEBUG=false` and `DEBUGBAR_ENABLED=false` in production. The framework now generates cryptographically secure request IDs and avoids loading missing config files as hard failures.
+Use `APP_DEBUG=false` and `DEBUGBAR_ENABLED=false` in production. The framework now generates cryptographically secure request IDs, avoids loading missing config files as hard failures, and registers shared PHP error, exception, and shutdown handlers for both HTTP and console runtimes.
 
 ## Usage Example
 
