@@ -26,3 +26,5 @@ final class CleanupCommand extends AbstractCommand
 ## Package Integration
 
 `ConsoleKernel` attempts to register `marwa-db` console commands automatically when that package exposes a compatible console configurator or command namespace. The integration is optional and safely ignored when the package is not installed.
+
+Framework-provided scaffolding stubs now live under `src/Stubs/`. If a consuming app wants custom AI helper stubs, override `console.stubsPath` in `config/console.php`.

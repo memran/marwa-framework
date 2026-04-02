@@ -36,10 +36,10 @@ final class MakeCommandCommand extends AbstractCommand
 
         $commandName = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', substr($className, 0, -7)) ?: 'generated');
         $target = $this->basePath('app/Console/Commands/' . $className . '.php');
-        $stub = $this->basePath('stubs/console/command.stub');
+        $stub = $this->basePath('src/Stubs/console/command.stub');
 
         if (!is_file($stub)) {
-            $stub = dirname(__DIR__, 3) . '/stubs/console/command.stub';
+            $stub = dirname(__DIR__, 2) . '/Stubs/console/command.stub';
         }
 
         $directory = dirname($target);

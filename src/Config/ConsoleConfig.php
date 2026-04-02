@@ -57,7 +57,7 @@ final class ConsoleConfig
                     'optional' => true,
                 ],
             ],
-            'stubsPath' => dirname(__DIR__, 2) . '/stubs/ai',
+            'stubsPath' => dirname(__DIR__) . '/Stubs/ai',
         ];
     }
 

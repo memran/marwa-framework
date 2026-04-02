@@ -26,4 +26,4 @@ Supported keys:
 - `commands`: list of command classes
 - `discover`: list of `namespace` and `path` discovery rules
 - `autoDiscover`: optional package discovery rules
-- `stubsPath`: override the default AI helper stub directory
+- `stubsPath`: override the default AI helper stub directory (`src/Stubs/ai` by default)

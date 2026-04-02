@@ -84,7 +84,7 @@ src/Console/          Console kernel, commands, and discovery services
 src/Adapters/         Integration adapters for router, events, view, error handling
 src/Middlewares/      HTTP middleware
 src/Providers/        Service providers
-stubs/                Framework command and AI helper scaffolds
+src/Stubs/            Framework command and AI helper scaffolds
 routes/               Example route registration
 resources/views/      Example templates
 tests/                PHPUnit coverage for framework behavior
