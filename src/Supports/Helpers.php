@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 
+use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Adapters\Event\AbstractEvent;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
@@ -11,6 +12,8 @@ use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Supports\Runtime;
+use Marwa\Module\ModuleHandle;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -78,6 +81,36 @@ function resources_path(string $path = ''): string
 function module_path(string $path = ''): string
 {
     return base_path('modules' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function database_path(string $path = ''): string
+{
+    return base_path('database' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function public_path(string $path = ''): string
+{
+    return base_path('public' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function bootstrap_path(string $path = ''): string
+{
+    return base_path('bootstrap' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function cache_path(string $path = ''): string
+{
+    return storage_path('cache' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function logs_path(string $path = ''): string
+{
+    return storage_path('logs' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
+function view_path(string $path = ''): string
+{
+    return resources_path('views' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 /** Get config value using "file.key.sub" dot notation. */
 function config(string $key, mixed $default = null): mixed
@@ -169,6 +202,24 @@ function router(): mixed
     return app(RouterAdapter::class);
 }
 
+function module(string $slug): ModuleHandle
+{
+    return app()->module($slug);
+}
+
+function has_module(string $slug): bool
+{
+    return app()->hasModule($slug);
+}
+
+function db(): ConnectionManager
+{
+    /** @var ConnectionManager $manager */
+    $manager = app(ConnectionManager::class);
+
+    return $manager;
+}
+
 /**
  * @param array<string, mixed> $params
  */
@@ -190,6 +241,28 @@ function debugger(): mixed
     }
 
     return null;
+}
+
+function is_local(): bool
+{
+    $app = app();
+
+    return $app->environment('local') === true || $app->environment('development') === true;
+}
+
+function is_production(): bool
+{
+    return app()->environment('production') === true;
+}
+
+function running_in_console(): bool
+{
+    return Runtime::isConsole();
+}
+
+function dispatch(object $event): object
+{
+    return app()->dispatch($event);
 }
 
 if (!function_exists('generate_key')) {

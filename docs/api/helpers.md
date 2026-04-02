@@ -14,14 +14,22 @@ $logger = app(\Marwa\Framework\Adapters\Logger\LoggerAdapter::class);
 Returns the application instance or resolves a service from the container.
 
 ### `base_path(string $path = ''): string`
+### `bootstrap_path(string $path = ''): string`
+### `cache_path(string $path = ''): string`
 ### `config_path(string $path = ''): string`
+### `database_path(string $path = ''): string`
+### `logs_path(string $path = ''): string`
+### `public_path(string $path = ''): string`
 ### `routes_path(string $path = ''): string`
 ### `resources_path(string $path = ''): string`
 ### `storage_path(string $path = ''): string`
 ### `module_path(string $path = ''): string`
+### `view_path(string $path = ''): string`
 
 ```php
 $configFile = config_path('app.php');
+$migrationPath = database_path('migrations');
+$compiledConfig = bootstrap_path('cache/config.php');
 ```
 
 Return absolute paths relative to the application base path.
@@ -54,6 +62,10 @@ Creates a basic HTML response.
 
 Returns the router adapter from the container.
 
+### `db(): \Marwa\DB\Connection\ConnectionManager`
+
+Returns the shared `marwa-db` connection manager after bootstrap.
+
 ### `view(string $tplName = '', array $params = []): mixed`
 
 ```php
@@ -68,6 +80,10 @@ Returns the view adapter or renders a template directly.
 
 Dispatches a framework event.
 
+### `dispatch(object $event): object`
+
+Dispatches any object event through the shared application dispatcher and returns the same event instance.
+
 ### `logger(): LoggerInterface`
 
 Returns the current logger instance.
@@ -75,6 +91,23 @@ Returns the current logger instance.
 ### `debugger(): mixed`
 
 Returns the debug bar instance when enabled, otherwise `null`.
+
+### `module(string $slug): \Marwa\Module\ModuleHandle`
+### `has_module(string $slug): bool`
+
+```php
+if (has_module('blog')) {
+    $blog = module('blog');
+}
+```
+
+Read the active module runtime from the application.
+
+### `is_local(): bool`
+### `is_production(): bool`
+### `running_in_console(): bool`
+
+Helpers for common environment and runtime checks.
 
 ## Utility Helpers
 
