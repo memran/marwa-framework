@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Adapters\Event;
 
 use DateTimeImmutable;
-use Marwa\Framework\Adapters\Event\AbstractEvent;
 
 /**
  * Fired when the Application is terminating.
@@ -19,6 +18,7 @@ final class AppTerminated extends AbstractEvent
     public function __construct(
         public readonly int $statusCode = 0
     ) {
+        parent::__construct();
         $this->time = new DateTimeImmutable();
     }
 }

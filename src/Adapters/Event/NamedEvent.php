@@ -8,7 +8,7 @@ class NamedEvent extends AbstractEvent
 {
     /**
      * @param string $name
-     * @param array|object|null $payload
+     * @param array<string, mixed>|object|null $payload
      */
     public function __construct(string $name, public array|object|null $payload = null)
     {

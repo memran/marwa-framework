@@ -11,7 +11,10 @@ abstract class Facade
      */
     abstract protected static function getFacadeAccessor(): string;
 
-    public static function __callStatic(string $method, array $args)
+    /**
+     * @param array<int, mixed> $args
+     */
+    public static function __callStatic(string $method, array $args): mixed
     {
         $instance = app(static::getFacadeAccessor());
         return $instance->{$method}(...$args);

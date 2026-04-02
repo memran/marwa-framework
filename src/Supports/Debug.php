@@ -4,19 +4,14 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Supports;
 
-use Whoops\Run as WhoopsRun;
-use Whoops\Handler\PrettyPageHandler;
-use Whoops\Handler\JsonResponseHandler;
-
 final class Debug
 {
     private static bool $enabled = false;
-    private static ?WhoopsRun $whoops = null;
+    private static int $previousErrorReporting = E_ALL;
+    private static string|false $previousDisplayErrors = false;
 
     /**
-     * Enable pretty error pages (HTML or JSON)
-     *
-     * @param bool $jsonMode If true, render JSON errors instead of HTML
+     * Toggle PHP runtime error display for local development.
      */
     public static function enable(bool $jsonMode = false): void
     {
@@ -24,35 +19,21 @@ final class Debug
             return;
         }
 
-        $whoops = new WhoopsRun();
-
-        if ($jsonMode) {
-            $handler = new JsonResponseHandler();
-            $handler->addTraceToOutput(true);
-            $whoops->pushHandler($handler);
-        } else {
-            $handler = new PrettyPageHandler();
-            $handler->setPageTitle('Application Error');
-            $whoops->pushHandler($handler);
-        }
-
-        $whoops->register();
-        self::$whoops  = $whoops;
+        self::$previousErrorReporting = error_reporting();
+        self::$previousDisplayErrors = ini_get('display_errors');
+        error_reporting(E_ALL);
+        ini_set('display_errors', '1');
         self::$enabled = true;
     }
 
     /**
-     * Disable Whoops and restore default PHP error handling
+     * Restore the previous PHP error display settings.
      */
     public static function disable(): void
     {
-        if (self::$whoops instanceof WhoopsRun) {
-            self::$whoops->unregister();
-        }
-        restore_error_handler();
-        restore_exception_handler();
+        error_reporting(self::$previousErrorReporting);
+        ini_set('display_errors', self::$previousDisplayErrors === false ? '0' : (string) self::$previousDisplayErrors);
         self::$enabled = false;
-        self::$whoops  = null;
     }
 
     /**

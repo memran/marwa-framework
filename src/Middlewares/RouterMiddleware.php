@@ -4,66 +4,65 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Middlewares;
 
-use League\Route\Http\Exception\{NotFoundException, MethodNotAllowedException};
+use League\Route\Http\Exception\{MethodNotAllowedException, NotFoundException};
+use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\{MiddlewareInterface, RequestHandlerInterface};
 
-use Marwa\Router\Response;
-
 final class RouterMiddleware implements MiddlewareInterface
 {
-  protected $debug = false;
+    protected bool $debug = false;
 
-  public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-  {
-    $this->debug = env('APP_DEBUG');
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $this->debug = (bool) env('APP_DEBUG', false);
 
-    try {
-      debugger()?->mark('dispatch start');
-      $response = router()?->dispatch($request);
-      debugger()?->mark('end');
-      return $response;
-    } catch (NotFoundException $ex) {
-      return $this->render404($request);
-    } catch (MethodNotAllowedException $e) {
-      return Response::json(['error' => 'Method Not Allowed'], 405);
+        try {
+            debugger()?->mark('dispatch start');
+            $response = router()?->dispatch($request);
+            debugger()?->mark('end');
+            return $response;
+        } catch (NotFoundException $ex) {
+            return $this->render404($request);
+        } catch (MethodNotAllowedException $e) {
+            return Response::json(['error' => 'Method Not Allowed'], 405);
+        }
     }
-  }
-  /**
-   * Generate a standard 404 Not Found response.
-   */
-  private function render404(ServerRequestInterface $request): ResponseInterface
-  {
+    /**
+     * Generate a standard 404 Not Found response.
+     */
+    private function render404(ServerRequestInterface $request): ResponseInterface
+    {
 
-    $accept = $request->getHeaderLine('Accept');
+        $accept = $request->getHeaderLine('Accept');
 
-    $path = htmlspecialchars($request->getUri()->getPath(), ENT_QUOTES, 'UTF-8');
+        $path = htmlspecialchars($request->getUri()->getPath(), ENT_QUOTES, 'UTF-8');
 
-    // JSON response if requested by client
-    if (stripos($accept, 'application/json') !== false) {
-      $payload = [
-        'status'  => 404,
-        'error'   => 'Not Found',
-        'method'  => $request->getMethod(),
-        'message' => sprintf('The requested path "%s" was not found on this server.', $path),
-      ];
-      return Response::json($payload);
+        // JSON response if requested by client
+        if (stripos($accept, 'application/json') !== false) {
+            $payload = [
+              'status'  => 404,
+              'error'   => 'Not Found',
+              'method'  => $request->getMethod(),
+              'message' => sprintf('The requested path "%s" was not found on this server.', $path),
+            ];
+            return Response::json($payload);
+        }
+
+        // Otherwise, HTML response
+        $html = $this->renderHtml($path);
+        return Response::html($html);
     }
 
-    // Otherwise, HTML response
-    $html = $this->renderHtml($path);
-    return Response::html($html);
-  }
+    /**
+     * Render a simple HTML 404 page.
+     */
+    private function renderHtml(string $path): string
+    {
+        $debug = $this->debug ? "<p style='color:#888'>Requested path: <code>{$path}</code></p>" : '';
 
-  /**
-   * Render a simple HTML 404 page.
-   */
-  private function renderHtml(string $path): string
-  {
-    $debug = $this->debug ? "<p style='color:#888'>Requested path: <code>{$path}</code></p>" : '';
-
-    return <<<HTML
+        return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,5 +102,5 @@ final class RouterMiddleware implements MiddlewareInterface
 </body>
 </html>
 HTML;
-  }
+    }
 }

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters;
 
-use Marwa\View\View;
-use Marwa\View\ViewConfig;
 use Marwa\Framework\Facades\Config;
 use Marwa\Router\Response;
+use Marwa\View\Theme\{ThemeBootstrap, ThemeBuilder};
+use Marwa\View\View;
+use Marwa\View\ViewConfig;
 use Psr\Http\Message\ResponseInterface;
-use Marwa\View\Extension\{AssetExtension, TextExtension, DateExtension, UrlExtension};
-use Marwa\View\Theme\{ThemeBootstrap, ThemeBuilder}; // Ensure this class exists in your project
 
 final class ViewAdapter
 {
@@ -18,16 +17,17 @@ final class ViewAdapter
 
     public function __construct()
     {
-        Config::load('view.php');
+        Config::loadIfExists('view.php');
+        $cachePath = Config::getString('view.cachePath', storage_path('cache/views'));
+        $this->ensureDirectory($cachePath);
+
         $config = new ViewConfig(
-            viewsPath: Config::getString('view.viewsPath'),
-            cachePath: Config::getString('view.cachePath'),
-            debug: Config::getBool('view.debug'),
+            viewsPath: Config::getString('view.viewsPath', resources_path('views')),
+            cachePath: $cachePath,
+            debug: Config::getBool('view.debug', (bool) env('APP_DEBUG', false)),
         );
 
         $this->createViewEngine($config);
-        // Render a view
-        //echo $view->render('home/index', ['title' => 'Welcome']);
     }
     public function createViewEngine(ViewConfig $config): View
     {
@@ -43,6 +43,9 @@ final class ViewAdapter
         return $this->engine;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function render(string $tplname, array $params = []): ResponseInterface
     {
         return Response::html($this->engine->render($tplname, $params));
@@ -50,11 +53,23 @@ final class ViewAdapter
 
     protected function getThemeBuilder(): ThemeBuilder
     {
-        // 1. Build ThemeBuilder automatically
+        $viewsPath = Config::getString('view.viewsPath', resources_path('views'));
+        $themesBaseDir = $viewsPath . DIRECTORY_SEPARATOR . 'themes';
+        $this->ensureDirectory($themesBaseDir);
+
         $themeBuilder = ThemeBootstrap::initFromDirectory(
-            themesBaseDir: Config::getString('view.viewsPath') . DIRECTORY_SEPARATOR . 'themes',
-            defaultTheme: Config::getString('view.defaultTheme')
+            themesBaseDir: $themesBaseDir,
+            defaultTheme: Config::getString('view.defaultTheme', 'default')
         );
         return $themeBuilder;
+    }
+
+    private function ensureDirectory(string $path): void
+    {
+        if (is_dir($path)) {
+            return;
+        }
+
+        mkdir($path, 0775, true);
     }
 }

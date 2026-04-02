@@ -19,7 +19,6 @@ require_once WEBROOT . DS . 'vendor/autoload.php';
 use Marwa\Framework\Application;
 use Marwa\Framework\Console\ConsoleKernel;
 
-
 $app = new Application(WEBROOT);
 $app->boot();
 

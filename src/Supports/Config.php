@@ -13,39 +13,37 @@ namespace Marwa\Framework\Supports;
 final class Config
 {
     /**
-     * @var array<mixed> 
+     * @var array<string, mixed>
      */
     private array $items = [];
+
     /**
-     * @var array<mixed> 
+     * @var list<string>
      */
     private array $loadedFiles = [];
 
-    /**
-     *  
-     */
-    public function __construct(public  string $basePath) {}
+    public function __construct(public string $basePath) {}
 
     /**
      * Load a configuration file.
      * @param string $filePath Relative or absolute path to config file.
      * @throws \InvalidArgumentException If file does not exist.
-     * @throws \RuntimeException If file has already been loaded.   
+     * @throws \RuntimeException If file has already been loaded.
      * @throws \TypeError If file does not return an array.
-     * 
+     *
      */
     public function load(string $filePath): void
     {
         $this->basePath = rtrim($this->basePath, DIRECTORY_SEPARATOR);
         $filePath = $this->basePath . DIRECTORY_SEPARATOR . ltrim($filePath, DIRECTORY_SEPARATOR);
 
-        if (!file_exists($filePath)) {
+        if (!is_file($filePath)) {
             throw new \InvalidArgumentException("Config file not found: {$filePath}");
         }
 
         $key = pathinfo($filePath, PATHINFO_FILENAME);
 
-        if (in_array($key, $this->loadedFiles)) {
+        if (in_array($key, $this->loadedFiles, true)) {
             throw new \RuntimeException("Config file '{$key}' already loaded");
         }
 
@@ -57,6 +55,23 @@ final class Config
 
         $this->items[$key] = $content;
         $this->loadedFiles[] = $key;
+    }
+
+    /**
+     * Load a configuration file when present and skip duplicates.
+     */
+    public function loadIfExists(string $filePath): bool
+    {
+        $fullPath = rtrim($this->basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($filePath, DIRECTORY_SEPARATOR);
+        $key = pathinfo($fullPath, PATHINFO_FILENAME);
+
+        if ($this->isLoaded($key) || !is_file($fullPath)) {
+            return false;
+        }
+
+        $this->load($filePath);
+
+        return true;
     }
 
     /**
@@ -110,7 +125,7 @@ final class Config
 
     /**
      * Get an integer configuration value.
-     * @param string $key Dot notation key. 
+     * @param string $key Dot notation key.
      * @param int|null $default Default value if key not found.
      * @return int The configuration value.
      */
@@ -143,14 +158,14 @@ final class Config
             throw new \InvalidArgumentException("Config key '{$key}' is required but null");
         }
 
-        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     /**
      * Get an array configuration value.
      * @param string $key Dot notation key.
-     * @param array|null $default Default value if key not found.
-     * @return array The configuration value.
+     * @param array<mixed>|null $default Default value if key not found.
+     * @return array<mixed> The configuration value.
      */
     public function getArray(string $key, ?array $default = null): array
     {
@@ -174,12 +189,33 @@ final class Config
      */
     public function has(string $key): bool
     {
-        return $this->get($key) !== null;
+        $parts = explode('.', $key);
+        $fileKey = array_shift($parts);
+
+        if (!array_key_exists($fileKey, $this->items)) {
+            return false;
+        }
+
+        $value = $this->items[$fileKey];
+
+        foreach ($parts as $part) {
+            if (!is_array($value) || !array_key_exists($part, $value)) {
+                return false;
+            }
+
+            $value = $value[$part];
+        }
+
+        return true;
+    }
+
+    public function isLoaded(string $key): bool
+    {
+        return in_array($key, $this->loadedFiles, true);
     }
 
     /**
-     * Get list of loaded configuration files.
-     * @return array List of loaded config file keys.
+     * @return list<string>
      */
     public function getLoadedFiles(): array
     {

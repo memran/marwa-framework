@@ -4,18 +4,24 @@ declare(strict_types=1);
 
 namespace Marwa\Framework;
 
-use Marwa\Framework\Contracts\MiddlewarePipelineInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Marwa\Framework\Adapters\Http\RelayPipelineAdapter;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Container\Container;
 use League\Container\ServiceProvider\ServiceProviderInterface;
-use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
-use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Psr\Http\Server\MiddlewareInterface;
-use Marwa\Framework\Facades\{Config, Event};
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
+use Marwa\Framework\Adapters\Event\{AppBooted, AppTerminated};
+use Marwa\Framework\Adapters\Http\RelayPipelineAdapter;
+use Marwa\Framework\Adapters\RouterAdapter;
+use Marwa\Framework\Contracts\MiddlewarePipelineInterface;
+use Marwa\Framework\Facades\{Config, Event};
+use Marwa\Framework\Middlewares\DebugbarMiddleware;
+use Marwa\Framework\Middlewares\MaintenanceMiddleware;
+use Marwa\Framework\Middlewares\RequestIdMiddleware;
+use Marwa\Framework\Middlewares\RouterMiddleware;
+use Marwa\Framework\Providers\KernalServiceProvider;
 use Marwa\Framework\Supports\Runtime;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 
 /**
  * HttpKernel orchestrates the HTTP lifecycle:
@@ -29,42 +35,28 @@ final class HttpKernel
     private MiddlewarePipelineInterface $pipeline;
     /**
      * @var Container
-     * 
+     *
      */
     private Container $container;
 
-    protected $notFoundHandler;
-
-
-    // private ?EventDispatcherInterface $events = null;
     public function __construct(
         Application $app
     ) {
         $this->container = $app->container();
-        $this->bootKernal();
+        $this->bootKernel();
     }
 
     /**
-     * Load All Kernal Related Service
+     * Load kernel-related services.
      */
-    private function bootKernal(): void
+    private function bootKernel(): void
     {
-        /**
-         * Enable Error handler
-         */
-        if (Runtime::isWeb()) {
-            if (env('APP_DEBUG', false)) {
-                ErrorHandlerAdapter::boot();
-            }
+        if (Runtime::isWeb() && env('APP_DEBUG', false)) {
+            ErrorHandlerAdapter::boot();
         }
-        /**
-         * Load Default app.php configuration
-         */
-        Config::load('app.php');
 
-        /** 
-         * Register All Service Providers
-         */
+        Config::loadIfExists('app.php');
+
         $this->registerConfiguredProviders();
 
         $this->pipeline = new RelayPipelineAdapter($this->container);
@@ -72,37 +64,55 @@ final class HttpKernel
     }
 
     /**
-     * Middlware Registration from config files
+     * Register middleware configured by the consumer app or framework defaults.
      */
     private function registerMiddlewares(): void
     {
-        $middlewares = Config::getArray('app.middlewares');
+        $middlewares = Config::getArray('app.middlewares', [
+            RequestIdMiddleware::class,
+            MaintenanceMiddleware::class,
+            RouterMiddleware::class,
+            DebugbarMiddleware::class,
+        ]);
 
-        foreach ($middlewares as $mwClass) {
-            if ($mwClass instanceof MiddlewareInterface) {
-                logger()->debug("class is not instance of MiddlewareInterface");
+        foreach ($middlewares as $middleware) {
+            if (is_string($middleware) && class_exists($middleware)) {
+                $middleware = $this->container->get($middleware);
+            }
+
+            if (!$middleware instanceof MiddlewareInterface) {
+                logger()->warning('Skipping invalid middleware registration.', [
+                    'middleware' => is_object($middleware) ? $middleware::class : get_debug_type($middleware),
+                ]);
                 continue;
             }
-            $this->pipeline->push($mwClass);
+
+            $this->pipeline->push($middleware);
         }
     }
+
     /**
-     * register service provider from app.php files
+     * Register service providers from configuration or framework defaults.
      */
     private function registerConfiguredProviders(): void
     {
-        $providers = Config::getArray('app.providers');
+        $providers = Config::getArray('app.providers', [
+            KernalServiceProvider::class,
+        ]);
 
-        // HTTP routes provider may be added by the consumer app
         foreach ($providers as $providerClass) {
-            if (!class_exists($providerClass)) {
-                continue;
-            }
-            if ($providerClass instanceof ServiceProviderInterface) {
+            if (!is_string($providerClass) || !class_exists($providerClass)) {
                 continue;
             }
 
-            $this->container->addServiceProvider(new $providerClass);
+            if (!is_subclass_of($providerClass, ServiceProviderInterface::class)) {
+                logger()->warning('Skipping invalid service provider registration.', [
+                    'provider' => $providerClass,
+                ]);
+                continue;
+            }
+
+            $this->container->addServiceProvider(new $providerClass());
         }
     }
 
@@ -110,17 +120,16 @@ final class HttpKernel
      * Handle an incoming request and produce a response.
      * @param ServerRequestInterface $request
      * @return ResponseInterface
-     * 
+     *
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         debugger()?->mark('handle');
-        // Optional lifecycle event
-        Event::dispatch(new \Marwa\Framework\Adapters\Event\AppBooted(
+
+        Event::dispatch(new AppBooted(
             environment: env('APP_ENV', 'production'),
             basePath: app()->basePath()
         ));
-
 
         return $this->pipeline->handle($request);
     }
@@ -131,7 +140,7 @@ final class HttpKernel
     public function terminate(ResponseInterface $response): void
     {
 
-        Event::dispatch(new \Marwa\Framework\Adapters\Event\AppTerminated(
+        Event::dispatch(new AppTerminated(
             statusCode: $response->getStatusCode()
         ));
 
@@ -140,6 +149,6 @@ final class HttpKernel
 
     public function setNotFound(callable $args): void
     {
-        $this->notFoundHandler = $args;
+        $this->container->get(RouterAdapter::class)->setNotFoundHandler($args);
     }
 }

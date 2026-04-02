@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Middlewares;
 
+use Marwa\Framework\Exceptions\NotFoundException;
+use Marwa\Framework\Supports\Runtime;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\{MiddlewareInterface, RequestHandlerInterface};
-use Marwa\Framework\Supports\Runtime;
-use Marwa\Framework\Exceptions\NotFoundException;
 
 final class DebugbarMiddleware implements MiddlewareInterface
 {
-
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
@@ -23,7 +22,6 @@ final class DebugbarMiddleware implements MiddlewareInterface
         }
 
         if (Runtime::isWeb()) {
-
             if (env('DEBUGBAR_ENABLED', false)) {
                 $bar = debugger();
                 if (is_null($bar)) {
@@ -52,10 +50,9 @@ final class DebugbarMiddleware implements MiddlewareInterface
                     ->withBody($body)
                     ->withHeader('Content-Length', (string) strlen($html));
             }
-            // If DEBUGBAR_ENABLED is false, return the response
             return $response;
-        } else
+        }
 
-            return $response;
+        return $response;
     }
 }

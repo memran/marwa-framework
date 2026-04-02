@@ -6,11 +6,10 @@ namespace Marwa\Framework;
 
 use League\Container\Container;
 use League\Container\ReflectionContainer;
-use Marwa\Framework\Adapters\ErrorHandlerAdapter;
-use Symfony\Component\Dotenv\Dotenv;
-use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
+use Marwa\Framework\Supports\Config;
+use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * Application bootstrapper: container, env, config, providers.
@@ -21,7 +20,6 @@ final class Application
     private Container $container;
     private string $basePath;
     private bool $booted = false;
-
 
     public function __construct(string $basePath)
     {
@@ -56,29 +54,19 @@ final class Application
 
     private function bindAppSingletons(): void
     {
-        /**
-         *  Set Timezone
-         */
         date_default_timezone_set(env('TIMEZONE', 'Asia/Dhaka'));
 
         // Bind config repository (lazy loader)
         $this->container->addShared(Config::class)
             ->addArgument(config_path());
-        /**
-         * logger Singleton
-         */
+
         $this->container->addShared(LoggerAdapter::class, function () {
-            $logger = new LoggerAdapter();
-            return $logger->getLogger();
+            return (new LoggerAdapter())->getLogger();
         });
 
-        /**
-         * event Dispatcher
-         */
         $this->container->addShared(EventDispatcherAdapter::class)
             ->addArgument($this->container());
     }
-
 
     // ---------------------------------------------------------------------
     // Lifecycle
@@ -158,13 +146,11 @@ final class Application
     {
         return $path ? $this->basePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : $this->basePath;
     }
-    /**
-     * 
-     */
-    public function environment(string $env = ''): string|bool
+
+    public function environment(?string $env = null): string|bool|null
     {
-        if (!is_null($env)) {
-            return env('APP_ENV') === $env ? true : false;
+        if ($env !== null) {
+            return env('APP_ENV') === $env;
         }
 
         return env('APP_ENV');

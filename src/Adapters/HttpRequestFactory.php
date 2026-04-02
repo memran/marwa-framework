@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Adapters;
 
 use Marwa\Framework\Contracts\HttpFactoryInterface;
-use Psr\Http\Message\{ServerRequestInterface, ResponseInterface, StreamInterface, UriInterface};
 use Marwa\Router\Http\RequestFactory;
-
+use Psr\Http\Message\{ServerRequestInterface};
 
 /**
  * Thin wrapper over Diactoros factories, using Laravel-style method names.

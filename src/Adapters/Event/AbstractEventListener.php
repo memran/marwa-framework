@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters\Event;
 
-use Marwa\Framework\Adapters\Event\AbstractEvent;
-
 /**
  * Base listener for events.
  *

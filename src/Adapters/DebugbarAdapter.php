@@ -9,7 +9,13 @@ use Marwa\DebugBar\DebugBar;
 class DebugbarAdapter
 {
     protected DebugBar $bar;
+
+    /** @var list<string> */
     protected array $collectors;
+
+    /**
+     * @param list<string> $collectors
+     */
     public function __construct(array $collectors)
     {
         $this->bar = new DebugBar(true);
@@ -24,7 +30,7 @@ class DebugbarAdapter
     /**
      * enable basic debugbar collector
      */
-    public function registerCollectors()
+    public function registerCollectors(): void
     {
         foreach ($this->collectors as $collector) {
             $this->addCollector($collector);

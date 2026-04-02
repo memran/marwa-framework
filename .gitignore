@@ -3,11 +3,10 @@
 .env.testing
 composer.lock
 .DS_Store
+.php-cs-fixer.cache
+.phpunit.cache/
 storage/*
 app/
-config/
 public/
-resources/
-routes/
 database/
 vendor/

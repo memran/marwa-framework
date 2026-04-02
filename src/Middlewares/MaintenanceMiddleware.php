@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Middlewares;
 
+use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\{MiddlewareInterface, RequestHandlerInterface};
-use Marwa\Router\Response;
 
 class MaintenanceMiddleware implements MiddlewareInterface
 {

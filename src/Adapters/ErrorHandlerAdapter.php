@@ -9,8 +9,7 @@ use Marwa\ErrorHandler\Support\FallbackRenderer;
 
 class ErrorHandlerAdapter
 {
-
-    public static function boot()
+    public static function boot(): void
     {
         $errorHandler = new ErrorHandler(appName: env('APP_NAME', 'MyApp'), env: env('APP_ENV', 'development'));
         $errorHandler->setRenderer(new FallbackRenderer());

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Adapters\Event;
 
 use DateTimeImmutable;
-use Marwa\Framework\Adapters\Event\AbstractEvent;
 
 /**
  * Fired when the Application has finished booting all service providers.
@@ -21,6 +20,7 @@ final class AppBooted extends AbstractEvent
         public readonly string $environment = 'production',
         public readonly string $basePath = ''
     ) {
+        parent::__construct();
         $this->time = new DateTimeImmutable();
     }
 }

@@ -1,106 +1,89 @@
 # Marwa Framework
 
-[![Latest Version](https://img.shields.io/packagist/v/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
-[![Total Downloads](https://img.shields.io/packagist/dt/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
+[![CI](https://github.com/memran/marwa-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/memran/marwa-framework/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
 [![PHP Version](https://img.shields.io/packagist/php-v/memran/marwa-framework.svg?style=flat-square)](https://php.net)
 
-A lightweight, modular PHP micro-framework built for speed, scalability, and simplicity. It adheres to PSR standards and offers rich features like routing, ORM, CLI tools, authentication, mailing, and more — making it ideal for rapid API or web application development.
+Marwa Framework is a modular PHP 8.2+ framework core focused on HTTP bootstrapping, routing, middleware orchestration, events, and console integration. The codebase targets library consumers rather than a full standalone app skeleton.
 
----
+## Requirements
 
-## 🚀 Features
-
-- PSR-4 Autoloading & PSR-7 HTTP Message support
-- Expressive Routing System
-- MVC Pattern
-- ORM with Relationships
-- Authentication & Authorization
-- Middleware Support
-- Queue Job Handling
-- Notification System (Email/SMS)
-- Session & Cookie Management
-- Templating with Smarty
-- Built-in CLI (`marwa`)
-
----
-
-## 📦 Requirements
-
-- PHP >= 8.2
+- PHP 8.2 or newer
 - Composer
-- MySQL or supported database
-- Optional: Redis (for cache/session/queue)
+- Extensions required by installed dependencies
 
----
-
-## 📥 Installation
+## Quick Start
 
 ```bash
 git clone https://github.com/memran/marwa-framework.git
 cd marwa-framework
 composer install
-```
-
-Create `.env` file:
-
-```bash
 cp .env.example .env
 ```
 
-Update your environment variables for DB, mail, etc.
+The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, or `config/view.php`, those settings override the built-in defaults.
 
----
+## Project Layout
 
-## 🔧 Running the App
-
-Use PHP's built-in web server:
-
-```bash
-php -S localhost:8000 -t public
+```text
+src/                  Framework source
+src/Adapters/         Integration adapters for router, events, view, error handling
+src/Middlewares/      HTTP middleware
+src/Providers/        Service providers
+routes/               Example route registration
+resources/views/      Example templates
+tests/                PHPUnit coverage for framework behavior
 ```
 
----
+## Development Commands
 
-## 🧭 Example Route
+```bash
+composer test          # Run PHPUnit
+composer test:coverage # Run PHPUnit with text coverage output
+composer analyse       # Run PHPStan
+composer lint          # Check code style with PHP-CS-Fixer
+composer fix           # Apply code style fixes
+composer ci            # Run analyse + lint + tests
+```
+
+## Configuration
+
+Environment variables are loaded from `.env`. Important defaults include:
+
+```dotenv
+APP_ENV=development
+APP_DEBUG=true
+DEBUGBAR_ENABLED=false
+MAINTENANCE=0
+TIMEZONE=Asia/Dhaka
+```
+
+Use `APP_DEBUG=false` and `DEBUGBAR_ENABLED=false` in production. The framework now generates cryptographically secure request IDs and avoids loading missing config files as hard failures.
+
+## Usage Example
 
 ```php
-// routes/web.php
+use Marwa\Framework\Facades\Router;
+use Marwa\Router\Response;
 
-use Marwa\Framework\Facades\Route;
-
-Route::get('/', function () {
-    return 'Hello from Marwa!';
-})->register();
+Router::get('/health', fn () => Response::json(['ok' => true]))->register();
 ```
 
----
+## Quality and CI
 
-## 🎮 Using the CLI
+GitHub Actions runs Composer validation, static analysis, linting, and PHPUnit on every pull request and push to `main`. Keep changes small, add tests for behavior changes, and prefer focused commits with imperative subjects such as `Fix middleware registration`.
 
-The `marwa` CLI allows code generation and system operations:
+## Deployment Notes
 
-```bash
-php marwa make:controller HomeController
-php marwa make:model Product
-php marwa migrate
-```
+- Install with `composer install --no-dev --prefer-dist --optimize-autoloader`
+- Keep `.env` out of version control
+- Disable debug output in production
+- Review route and view files in the consuming app before deployment
 
----
+## Contributing
 
-## 📜 License
+See [AGENTS.md](AGENTS.md) for repository-specific contributor guidance. Pull requests should describe the problem, the approach taken, and the verification steps used.
 
-Licensed under the [MIT License](LICENSE)
+## License
 
----
-
-## 🤝 Contributing
-
-We welcome contributions. Feel free to fork, make a pull request, or suggest features via GitHub issues.
-
----
-
-## 👤 Author
-
-**Mohammad Emran**  
-[GitHub](https://github.com/memran) | [LinkedIn](https://linkedin.com/in/memran)
+Licensed under the [MIT License](LICENSE).

@@ -6,13 +6,13 @@ declare(strict_types=1);
 use Marwa\Framework\Adapters\Event\AbstractEvent;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
-use Marwa\Framework\Application;
-use Marwa\Framework\Supports\Config;
-use Marwa\Framework\Contracts\EventDispatcherInterface;
-use Psr\Http\Message\ResponseInterface;
-use Marwa\Router\Response;
 use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Adapters\ViewAdapter;
+use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Supports\Config;
+use Marwa\Router\Response;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,11 +22,12 @@ use Psr\Log\LoggerInterface;
  */
 function app(?string $abstract = null): mixed
 {
-    /** @var Application $app */
     $app = $GLOBALS['marwa_app'] ?? null;
+
     if (!$app instanceof Application) {
         throw new RuntimeException('Application instance not set. Assign $GLOBALS["marwa_app"] = $app at bootstrap.');
     }
+
     return $abstract ? $app->make($abstract) : $app;
 }
 
@@ -39,49 +40,48 @@ function base_path(string $path = ''): string
 
 /**
  * Route Path
- * @string 
+ * @string
  */
-function routes_path()
+function routes_path(string $path = ''): string
 {
-    return base_path("routes");
+    return base_path('routes' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 
 /**
  * Storage Path
  * @return string
  */
-function storage_path()
+function storage_path(string $path = ''): string
 {
-    return base_path("storage");
+    return base_path('storage' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 /**
  * Config Path
  * @return string
  */
-function config_path()
+function config_path(string $path = ''): string
 {
-    return base_path('config');
+    return base_path('config' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 /**
  * Resources Path
  * @return string
  */
-function resources_path()
+function resources_path(string $path = ''): string
 {
-    return base_path("resources");
+    return base_path('resources' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 /**
  * Module Path
  * @return string
  */
-function module_path()
+function module_path(string $path = ''): string
 {
-    return base_path("modules");
+    return base_path('modules' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
 /** Get config value using "file.key.sub" dot notation. */
 function config(string $key, mixed $default = null): mixed
 {
-    /** @var Config $repo */
     return app()->make(Config::class)->get($key, $default);
 }
 
@@ -90,27 +90,54 @@ function config(string $key, mixed $default = null): mixed
 if (!function_exists('env')) {
     function env(string $key, mixed $default = null): mixed
     {
-        static $loaded = false;
+        static $loadedPaths = [];
 
-        if (!$loaded && file_exists('.env')) {
-            $lines = file('.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $envPath = isset($GLOBALS['marwa_app']) && $GLOBALS['marwa_app'] instanceof Application
+            ? base_path('.env')
+            : getcwd() . DIRECTORY_SEPARATOR . '.env';
+
+        if (!isset($loadedPaths[$envPath]) && is_file($envPath)) {
+            $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+
             foreach ($lines as $line) {
-                if (strpos(trim($line), '#') === 0) continue;
+                $line = trim($line);
+
+                if ($line === '' || str_starts_with($line, '#')) {
+                    continue;
+                }
 
                 [$name, $value] = array_pad(explode('=', $line, 2), 2, '');
-                $_ENV[trim($name)] = trim($value);
+                $name = trim($name);
+                $value = trim(preg_replace('/\s+#.*$/', '', $value) ?? $value);
+                $value = trim($value, " \t\n\r\0\x0B\"'");
+
+                if ($name === '') {
+                    continue;
+                }
+
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
             }
-            $loaded = true;
+
+            $loadedPaths[$envPath] = true;
         }
 
-        $value = $_ENV[$key] ?? $default;
+        $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+
+        if ($value === false) {
+            return $default;
+        }
+
+        if (!is_string($value)) {
+            return $value;
+        }
 
         return match (strtolower($value)) {
             'true', '(true)' => true,
             'false', '(false)' => false,
             'empty', '(empty)' => '',
             'null', '(null)' => null,
-            default => is_numeric($value) ? (strpos($value, '.') ? (float) $value : (int) $value) : $value,
+            default => is_numeric($value) ? (str_contains($value, '.') ? (float) $value : (int) $value) : $value,
         };
     }
 }
@@ -124,9 +151,12 @@ function response(string $body = '', int $status = 200): ResponseInterface
 /** Dispatch an event if dispatcher is bound. */
 function event(AbstractEvent $event): void
 {
-
-    /** @var EventDispatcherInterface $bus */
     $bus = app(EventDispatcherAdapter::class);
+
+    if (!$bus instanceof EventDispatcherInterface) {
+        throw new RuntimeException('Event dispatcher binding is invalid.');
+    }
+
     $bus->dispatch($event);
 }
 
@@ -139,12 +169,16 @@ function router(): mixed
     return app(RouterAdapter::class);
 }
 
+/**
+ * @param array<string, mixed> $params
+ */
 function view(string $tplName = '', array $params = []): mixed
 {
-    if ($tplName != null)
+    if ($tplName !== '') {
         return app(ViewAdapter::class)->render($tplName, $params);
-    else
-        return app(ViewAdapter::class);
+    }
+
+    return app(ViewAdapter::class);
 }
 
 function debugger(): mixed
@@ -196,11 +230,7 @@ if (!function_exists('with')) {
      */
     function with($value, callable $callback)
     {
-        if ($callback) {
-            return $callback($value) ?? $value;
-        }
-
-        return $value;
+        return $callback($value) ?? $value;
     }
 }
 
@@ -217,9 +247,7 @@ if (!function_exists('tap')) {
      */
     function tap($value, callable $callback)
     {
-        if ($callback) {
-            $callback($value);
-        }
+        $callback($value);
 
         return $value;
     }
@@ -227,7 +255,7 @@ if (!function_exists('tap')) {
 
 
 if (!function_exists('dd')) {
-    function dd(...$vars): never
+    function dd(mixed ...$vars): never
     {
         foreach ($vars as $var) {
             var_dump($var);

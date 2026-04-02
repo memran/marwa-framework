@@ -26,16 +26,12 @@
   ],
   "require": {
     "php": "^8.2",
-    "memran/marwa-logger": "dev-main",
-    "memran/marwa-error-handler": "dev-main",
-    "memran/marwa-support": "dev-main",
-    "memran/marwa-db": "dev-main",
-    "memran/marwa-view": "dev-main",
-    "memran/marwa-debugbar": "dev-main",
-    "memran/marwa-entity": "dev-main",
-    "memran/marwa-module": "dev-main",
-    "memran/marwa-event": "dev-main",
-    "memran/marwa-router": "dev-main",
+    "memran/marwa-logger": "^1.0",
+    "memran/marwa-error-handler": "^1.1",
+    "memran/marwa-view": "^1.0",
+    "memran/marwa-debugbar": "^1.0",
+    "memran/marwa-event": "^0.2",
+    "memran/marwa-router": "^1.3",
     "league/container": "^5.1",
     "symfony/dotenv": "^7.3",
     "relay/relay": "^3.0",
@@ -57,14 +53,30 @@
       "Marwa\\Framework\\Tests\\": "tests/"
     }
   },
+  "suggest": {
+    "memran/marwa-db": "Optional database toolkit integration for consuming apps.",
+    "memran/marwa-entity": "Optional entity and validation layer for consuming apps.",
+    "memran/marwa-module": "Optional modular application support for consuming apps.",
+    "memran/marwa-support": "Optional support helpers shared across the wider Marwa ecosystem."
+  },
   "minimum-stability": "dev",
   "prefer-stable": true,
   "scripts": {
-    "test": "php vendor/bin/testify",
-    "stan": "php vendor/bin/phpstan analyse"
+    "test": "vendor/bin/phpunit",
+    "test:coverage": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
+    "analyse": "php vendor/bin/phpstan analyse --memory-limit=1G --no-progress --debug",
+    "stan": "@analyse",
+    "lint": "php vendor/bin/php-cs-fixer fix --dry-run --diff --verbose --sequential --allow-unsupported-php-version=yes",
+    "fix": "php vendor/bin/php-cs-fixer fix --verbose --sequential --allow-unsupported-php-version=yes",
+    "ci": [
+      "@analyse",
+      "@lint",
+      "@test"
+    ]
   },
   "require-dev": {
-    "memran/php-testify": "^1.0",
-    "phpstan/phpstan": "^2.1"
+    "friendsofphp/php-cs-fixer": "^3.89",
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^11.5"
   }
 }
