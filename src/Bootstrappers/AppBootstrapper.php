@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Bootstrappers;
 
+use Marwa\Framework\Adapters\Event\ApplicationBootstrapping;
+use Marwa\Framework\Adapters\Event\ProvidersBootstrapped;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;
@@ -33,6 +35,8 @@ final class AppBootstrapper
             return $this->appConfig;
         }
 
+        $this->app->dispatch(new ApplicationBootstrapping(basePath: $this->app->basePath()));
+
         $cacheFile = BootstrapConfig::defaults($this->app)['configCache'];
 
         if (is_file($cacheFile)) {
@@ -51,8 +55,10 @@ final class AppBootstrapper
         $appConfig = array_replace_recursive(AppConfig::defaults(), $this->config->getArray(AppConfig::KEY, []));
 
         $this->providerBootstrapper->bootstrap($appConfig['providers']);
+        $this->app->dispatch(new ProvidersBootstrapped(providers: $appConfig['providers']));
         $this->errorHandlerBootstrapper->bootstrap();
         $this->moduleBootstrapper->bootstrap();
+        $this->app->boot();
         $this->appConfig = $appConfig;
 
         return $this->appConfig;

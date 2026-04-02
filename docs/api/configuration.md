@@ -53,15 +53,31 @@ Example:
 ```php
 return [
     'listeners' => [
-        App\Events\UserRegistered::class => [
-            [App\Listeners\SendWelcomeEmail::class, 'handle'],
+        Marwa\Framework\Adapters\Event\AppBooted::class => [
+            [App\Listeners\LogApplicationBoot::class, 'handle'],
+        ],
+        Marwa\Framework\Adapters\Event\RequestHandled::class => [
+            [App\Listeners\LogRequestHandled::class, 'handle'],
         ],
     ],
     'subscribers' => [
-        App\Listeners\UserSubscriber::class,
+        App\Listeners\RuntimeSubscriber::class,
     ],
 ];
 ```
+
+Lifecycle events available out of the box:
+
+- `ApplicationStarted`
+- `ApplicationBootstrapping`
+- `ProvidersBootstrapped`
+- `ErrorHandlerBootstrapped`
+- `ModulesBootstrapped`
+- `AppBooted`
+- `RequestHandlingStarted`
+- `RequestHandled`
+- `AppTerminated`
+- `ConsoleBootstrapped`
 
 ## `config/logger.php`
 

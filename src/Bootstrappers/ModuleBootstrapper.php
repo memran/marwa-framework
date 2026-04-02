@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
+use Marwa\Framework\Adapters\Event\ModulesBootstrapped;
 use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\BootstrapConfig;
@@ -65,6 +66,7 @@ final class ModuleBootstrapper
         $this->app->bootModuleServiceProviders();
         $this->registerModuleViews($this->registry);
         $this->loadModuleRoutes($this->registry);
+        $this->app->dispatch(new ModulesBootstrapped(modules: array_keys($this->registry->all())));
 
         $this->booted = true;
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Console;
 
+use Marwa\Framework\Adapters\Event\ConsoleBootstrapped;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\ModuleBootstrapper;
@@ -73,6 +74,11 @@ final class ConsoleKernel
             $consoleConfig['version'],
             $this->registry->resolve()
         );
+        $this->app->dispatch(new ConsoleBootstrapped(
+            consoleName: $consoleConfig['name'],
+            version: $consoleConfig['version'],
+            commandCount: count($this->console->all())
+        ));
 
         $this->booted = true;
     }

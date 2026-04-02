@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework;
 
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Marwa\Framework\Adapters\Event\{AppBooted, AppTerminated};
+use Marwa\Framework\Adapters\Event\{AppTerminated, RequestHandled, RequestHandlingStarted};
 use Marwa\Framework\Adapters\Http\RelayPipelineAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
@@ -92,13 +92,19 @@ final class HttpKernel
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         debugger()?->mark('handle');
-
-        $this->events->dispatch(new AppBooted(
-            environment: (string) env('APP_ENV', 'production'),
-            basePath: $this->app->basePath()
+        $this->app->dispatch(new RequestHandlingStarted(
+            method: $request->getMethod(),
+            path: $request->getUri()->getPath()
         ));
 
-        return $this->pipeline->handle($request);
+        $response = $this->pipeline->handle($request);
+        $this->app->dispatch(new RequestHandled(
+            method: $request->getMethod(),
+            path: $request->getUri()->getPath(),
+            statusCode: $response->getStatusCode()
+        ));
+
+        return $response;
     }
 
     public function terminate(ResponseInterface $response): void

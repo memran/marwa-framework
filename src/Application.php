@@ -7,6 +7,7 @@ namespace Marwa\Framework;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
 use League\Container\ServiceProvider\ServiceProviderInterface;
+use Marwa\Framework\Adapters\Event\ApplicationStarted;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Bootstrappers\CoreBindingsBootstrapper;
 use Marwa\Framework\Console\CommandRegistry;
@@ -71,6 +72,10 @@ final class Application
     private function bindAppSingletons(): void
     {
         (new CoreBindingsBootstrapper())->bootstrap($this, $this->container);
+        $this->dispatch(new ApplicationStarted(
+            environment: (string) env('APP_ENV', 'production'),
+            basePath: $this->basePath
+        ));
     }
 
     // ---------------------------------------------------------------------
@@ -81,11 +86,16 @@ final class Application
         if ($this->booted) {
             return;
         }
-        $this->container->get(EventDispatcherAdapter::class)->dispatch(new \Marwa\Framework\Adapters\Event\AppBooted(
+        $this->dispatch(new \Marwa\Framework\Adapters\Event\AppBooted(
             environment: env('APP_ENV', 'production'),
             basePath: $this->basePath
         ));
         $this->booted = true;
+    }
+
+    public function dispatch(object $event): object
+    {
+        return $this->container->get(EventDispatcherAdapter::class)->dispatch($event);
     }
 
     // ---------------------------------------------------------------------

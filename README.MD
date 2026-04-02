@@ -35,6 +35,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Documentation Index](docs/README.md)
 - [Quick Start Tutorial](docs/tutorials/quick-start.md)
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
+- [Events Tutorial](docs/tutorials/events.md)
 - [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
@@ -143,6 +144,28 @@ use Marwa\Router\Response;
 
 Router::get('/health', fn () => Response::json(['ok' => true]))->register();
 ```
+
+## Events
+
+Framework and application events are configured in `config/event.php`.
+
+```php
+<?php
+
+use App\Listeners\LogRequestHandled;
+use Marwa\Framework\Adapters\Event\RequestHandled;
+
+return [
+    'listeners' => [
+        RequestHandled::class => [
+            [LogRequestHandled::class, 'handle'],
+        ],
+    ],
+    'subscribers' => [],
+];
+```
+
+Lifecycle events include `ApplicationStarted`, `AppBooted`, `RequestHandlingStarted`, `RequestHandled`, `AppTerminated`, and `ConsoleBootstrapped`. See [docs/tutorials/events.md](/Users/memran/projects/php-projects/marwa-framework/docs/tutorials/events.md) for full examples.
 
 ## Lifecycle
 

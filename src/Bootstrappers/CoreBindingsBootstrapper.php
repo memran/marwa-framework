@@ -52,6 +52,7 @@ final class CoreBindingsBootstrapper
             ->addArgument($container->get(LoggerInterface::class));
 
         $container->addShared(ErrorHandlerBootstrapper::class)
+            ->addArgument($app)
             ->addArgument($container->get(ErrorHandlerAdapter::class));
 
         $container->addShared(AppBootstrapper::class)
