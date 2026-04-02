@@ -10,6 +10,7 @@ use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
@@ -118,6 +119,18 @@ function view_path(string $path = ''): string
 function config(string $key, mixed $default = null): mixed
 {
     return app()->make(Config::class)->get($key, $default);
+}
+
+function cache(?string $key = null, mixed $default = null): mixed
+{
+    /** @var CacheInterface $cache */
+    $cache = app(CacheInterface::class);
+
+    if ($key !== null) {
+        return $cache->get($key, $default);
+    }
+
+    return $cache;
 }
 
 /** Get environment variable with default. */

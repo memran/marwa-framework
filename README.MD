@@ -25,6 +25,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Secure encrypted session support with hardened cookie defaults and lazy HTTP session startup
 - Path-bound file utility for atomic writes, JSON serialization, copy, move, and deletion workflows
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
+- Scrapbook-backed cache service with SQLite or memory drivers, buffering, collections, and optional stampede protection
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - Lightweight scheduler and file-backed queue services for cron-driven recurring work and deferred jobs
@@ -187,6 +188,21 @@ return [
     'encrypt' => true,
 ];
 ```
+
+## Cache
+
+The framework exposes a Scrapbook-backed cache service through the container, helper, and facade.
+
+```php
+cache()->put('settings.theme', 'light', 300);
+$theme = cache('settings.theme', 'dark');
+
+cache()->remember('stats', 60, function (): array {
+    return ['users' => 120];
+});
+```
+
+By default the cache uses SQLite at `storage/cache/framework.sqlite` when `pdo_sqlite` is available, and falls back to an in-memory store otherwise.
 
 ## File Support
 

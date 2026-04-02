@@ -91,6 +91,43 @@ Supported keys:
 - `storage.path`: log output directory
 - `storage.prefix`: file name prefix
 
+## `config/cache.php`
+
+Defined by `Marwa\Framework\Config\CacheConfig`.
+
+Supported keys:
+
+- `enabled`: enable the framework cache service
+- `driver`: `sqlite`, `memory`, or `apcu`
+- `namespace`: collection/prefix namespace for application keys
+- `buffered`: enable Scrapbook local buffering
+- `transactional`: wrap the store in Scrapbook transactions
+- `stampede.enabled`: enable Scrapbook stampede protection
+- `stampede.sla`: protection window in milliseconds
+- `sqlite.path`: SQLite cache database path
+- `sqlite.table`: cache table name
+- `memory.limit`: optional in-memory store limit
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'driver' => 'sqlite',
+    'namespace' => 'app',
+    'buffered' => true,
+    'transactional' => false,
+    'stampede' => [
+        'enabled' => true,
+        'sla' => 1000,
+    ],
+    'sqlite' => [
+        'path' => storage_path('cache/framework.sqlite'),
+        'table' => 'framework_cache',
+    ],
+];
+```
+
 ## `config/error.php`
 
 Defined by `Marwa\Framework\Config\ErrorConfig`.

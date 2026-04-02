@@ -7,6 +7,7 @@ namespace Marwa\Framework\Tests;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;
+use Marwa\Framework\Config\CacheConfig;
 use Marwa\Framework\Config\DatabaseConfig;
 use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
@@ -56,6 +57,7 @@ final class ConfigContractsTest extends TestCase
 
         self::assertSame($this->basePath . '/resources/views', ViewConfig::defaults($app)['viewsPath']);
         self::assertSame($this->basePath . '/storage/cache/views', ViewConfig::defaults($app)['cachePath']);
+        self::assertSame($this->basePath . '/storage/cache/framework.sqlite', CacheConfig::defaults($app)['sqlite']['path']);
         self::assertSame($this->basePath . '/storage/logs', LoggerConfig::defaults($app)['storage']['path']);
     }
 

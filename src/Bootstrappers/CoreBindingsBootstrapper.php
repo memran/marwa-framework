@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
+use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
@@ -14,6 +15,7 @@ use Marwa\Framework\Console\CommandDiscovery;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
 use Marwa\Framework\Console\ConsoleKernel;
+use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Queue\FileQueue;
@@ -48,6 +50,14 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(EventDispatcherInterface::class, function () use ($container) {
             return $container->get(EventDispatcherAdapter::class);
+        });
+
+        $container->addShared(ScrapbookCacheAdapter::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class));
+
+        $container->addShared(CacheInterface::class, function () use ($container) {
+            return $container->get(ScrapbookCacheAdapter::class);
         });
 
         $container->addShared(EncryptedSession::class)

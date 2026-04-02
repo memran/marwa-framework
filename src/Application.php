@@ -12,6 +12,7 @@ use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Bootstrappers\CoreBindingsBootstrapper;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleKernel;
+use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Task;
@@ -200,6 +201,11 @@ final class Application
     public function queue(): FileQueue
     {
         return $this->container->get(FileQueue::class);
+    }
+
+    public function cache(): CacheInterface
+    {
+        return $this->container->get(CacheInterface::class);
     }
 
     public function add(string $id, mixed $value): void

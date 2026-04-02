@@ -52,6 +52,15 @@ $debug = env('APP_DEBUG', false);
 
 Reads environment values with basic type normalization for booleans, numbers, `null`, and empty strings.
 
+### `cache(?string $key = null, mixed $default = null): mixed`
+
+```php
+cache()->put('settings.theme', 'light', 300);
+$theme = cache('settings.theme', 'dark');
+```
+
+Returns the shared cache service or reads one cached value.
+
 ## HTTP and Rendering
 
 ### `response(string $body = '', int $status = 200): ResponseInterface`

@@ -48,7 +48,8 @@
     "memran/marwa-support": "^1.2",
     "memran/marwa-module": "^1.0.1",
     "memran/marwa-entity": "^1.0",
-    "memran/marwa-db": "^1.2"
+    "memran/marwa-db": "^1.2",
+    "matthiasmullie/scrapbook": "^1.5"
   },
   "autoload": {
     "psr-4": {
