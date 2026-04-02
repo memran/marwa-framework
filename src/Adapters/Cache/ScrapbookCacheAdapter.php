@@ -198,7 +198,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
 
         $store = match ($config['driver']) {
             'apcu', 'apc' => $this->buildApcStore(),
-            'memory', 'array' => new MemoryStore($config['memory']['limit']),
+            'memory', 'array' => new MemoryStore($this->resolveMemoryLimit($config['memory']['limit'])),
             'sqlite' => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
             default => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
         };
@@ -241,7 +241,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
     private function buildApcStore(): KeyValueStore
     {
         if (!extension_loaded('apcu')) {
-            return new MemoryStore();
+            return new MemoryStore($this->resolveMemoryLimit(null));
         }
 
         return new Apc();
@@ -250,7 +250,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
     private function buildSqliteStore(string $path, string $table): KeyValueStore
     {
         if (!extension_loaded('pdo_sqlite')) {
-            return new MemoryStore();
+            return new MemoryStore($this->resolveMemoryLimit(null));
         }
 
         $directory = dirname($path);
@@ -278,5 +278,47 @@ final class ScrapbookCacheAdapter implements CacheInterface
         }
 
         return $base . ':' . $suffix;
+    }
+
+    private function resolveMemoryLimit(int|string|null $limit): int
+    {
+        if (is_int($limit)) {
+            return $limit;
+        }
+
+        if (is_string($limit) && $limit !== '') {
+            return $this->shorthandToBytes($limit);
+        }
+
+        $configured = ini_get('memory_limit');
+
+        if ($configured === '' || $configured === '-1') {
+            return PHP_INT_MAX;
+        }
+
+        return (int) floor($this->shorthandToBytes($configured) / 10);
+    }
+
+    private function shorthandToBytes(string $value): int
+    {
+        $normalized = strtoupper(trim($value));
+
+        if ($normalized === '' || $normalized === '-1') {
+            return PHP_INT_MAX;
+        }
+
+        if (is_numeric($normalized)) {
+            return (int) $normalized;
+        }
+
+        $unit = substr($normalized, -1);
+        $amount = (int) substr($normalized, 0, -1);
+
+        return match ($unit) {
+            'G' => $amount * 1024 * 1024 * 1024,
+            'M' => $amount * 1024 * 1024,
+            'K' => $amount * 1024,
+            default => (int) $normalized,
+        };
     }
 }
