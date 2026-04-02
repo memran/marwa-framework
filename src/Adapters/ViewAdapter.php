@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters;
 
-use Marwa\Framework\Facades\Config;
+use Marwa\Framework\Application;
+use Marwa\Framework\Config\ViewConfig as ViewConfigContract;
+use Marwa\Framework\Supports\Config;
 use Marwa\Router\Response;
 use Marwa\View\Theme\{ThemeBootstrap, ThemeBuilder};
 use Marwa\View\View;
@@ -15,16 +17,18 @@ final class ViewAdapter
 {
     protected View $engine;
 
-    public function __construct()
+    public function __construct(private Application $app, private Config $config)
     {
-        Config::loadIfExists('view.php');
-        $cachePath = Config::getString('view.cachePath', storage_path('cache/views'));
+        $this->config->loadIfExists(ViewConfigContract::KEY . '.php');
+        $defaults = ViewConfigContract::defaults($this->app);
+
+        $cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
         $this->ensureDirectory($cachePath);
 
         $config = new ViewConfig(
-            viewsPath: Config::getString('view.viewsPath', resources_path('views')),
+            viewsPath: $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']),
             cachePath: $cachePath,
-            debug: Config::getBool('view.debug', (bool) env('APP_DEBUG', false)),
+            debug: $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']),
         );
 
         $this->createViewEngine($config);
@@ -53,13 +57,14 @@ final class ViewAdapter
 
     protected function getThemeBuilder(): ThemeBuilder
     {
-        $viewsPath = Config::getString('view.viewsPath', resources_path('views'));
+        $defaults = ViewConfigContract::defaults($this->app);
+        $viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
         $themesBaseDir = $viewsPath . DIRECTORY_SEPARATOR . 'themes';
         $this->ensureDirectory($themesBaseDir);
 
         $themeBuilder = ThemeBootstrap::initFromDirectory(
             themesBaseDir: $themesBaseDir,
-            defaultTheme: Config::getString('view.defaultTheme', 'default')
+            defaultTheme: $this->config->getString(ViewConfigContract::KEY . '.defaultTheme', $defaults['defaultTheme'])
         );
         return $themeBuilder;
     }

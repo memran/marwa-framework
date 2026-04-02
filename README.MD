@@ -5,8 +5,16 @@
 [![CI](https://github.com/memran/marwa-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/memran/marwa-framework/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/memran/marwa-framework.svg?style=flat-square)](https://packagist.org/packages/memran/marwa-framework)
 [![PHP Version](https://img.shields.io/packagist/php-v/memran/marwa-framework.svg?style=flat-square)](https://php.net)
+[![PHPStan](https://img.shields.io/badge/PHPStan-Level%206-brightgreen?style=flat-square)](https://phpstan.org/)
+[![PHPUnit](https://img.shields.io/badge/PHPUnit-11.5-blue?style=flat-square)](https://phpunit.de/)
 
 Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applications that want a lightweight bootstrap layer without giving up routing, middleware, events, console support, or modern developer ergonomics. It is designed as a library-first foundation that stays simple to extend in host applications.
+
+## Package
+
+- Package name: `memran/marwa-framework`
+- Package type: Composer library
+- Install command: `composer require memran/marwa-framework`
 
 ## Features
 
@@ -24,6 +32,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Documentation Index](docs/README.md)
 - [Quick Start Tutorial](docs/tutorials/quick-start.md)
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
+- [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
 
 ## Requirements
@@ -32,7 +41,13 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Composer
 - Extensions required by installed dependencies
 
-## Quick Start
+## Installation
+
+```bash
+composer require memran/marwa-framework
+```
+
+For repository development:
 
 ```bash
 git clone https://github.com/memran/marwa-framework.git
@@ -65,6 +80,27 @@ composer lint          # Check code style with PHP-CS-Fixer
 composer fix           # Apply code style fixes
 composer ci            # Run analyse + lint + tests
 ```
+
+## PHPUnit
+
+PHPUnit is used for framework behavior and regression testing.
+
+```bash
+composer test
+composer test:coverage
+```
+
+The current repository test suite lives in `tests/` and covers configuration loading, application environment behavior, event lifecycle defaults, and request ID middleware behavior.
+
+## PHPStan
+
+PHPStan is configured at level 6 in `phpstan.neon` and runs against `src/` and `tests/`.
+
+```bash
+composer analyse
+```
+
+Use PHPStan before opening a pull request to catch contract mismatches, invalid docblocks, missing iterable types, and facade/static API drift.
 
 ## Configuration
 

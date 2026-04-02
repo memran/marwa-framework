@@ -9,8 +9,8 @@ use Marwa\Event\Contracts\Subscriber;
 use Marwa\Event\Core\EventDispatcher;
 use Marwa\Event\Core\ListenerProvider;
 use Marwa\Event\Resolver\ListenerResolver;
-use Marwa\Framework\Facades\Config;
-//use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Config\EventConfig;
+use Marwa\Framework\Supports\Config;
 use Psr\Container\ContainerInterface;
 
 class EventDispatcherAdapter
@@ -38,7 +38,7 @@ class EventDispatcherAdapter
      */
     protected EventBus $bus;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, private Config $config)
     {
         $this->container = $container;
         $this->init();
@@ -87,10 +87,10 @@ class EventDispatcherAdapter
 
     public function loadFromArray(): void
     {
-        Config::loadIfExists('event.php');
+        $this->config->loadIfExists(EventConfig::KEY . '.php');
 
         /** @var array<string, list<callable|array<int|string, mixed>|string>> $listenersByEvent */
-        $listenersByEvent = Config::getArray('event.listeners', []);
+        $listenersByEvent = $this->config->getArray(EventConfig::KEY . '.listeners', EventConfig::defaults()['listeners']);
 
         foreach ($listenersByEvent as $event => $listeners) {
             foreach ($listeners as $listener) {
@@ -99,7 +99,7 @@ class EventDispatcherAdapter
         }
 
         /** @var list<Subscriber|string> $subscribers */
-        $subscribers = Config::getArray('event.subscribers', []);
+        $subscribers = $this->config->getArray(EventConfig::KEY . '.subscribers', EventConfig::defaults()['subscribers']);
 
         foreach ($subscribers as $subscriber) {
             $this->bus->subscribe($subscriber);

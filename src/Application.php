@@ -8,7 +8,9 @@ use League\Container\Container;
 use League\Container\ReflectionContainer;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
+use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Supports\Config;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Dotenv\Dotenv;
 
 /**
@@ -56,16 +58,27 @@ final class Application
     {
         date_default_timezone_set(env('TIMEZONE', 'Asia/Dhaka'));
 
+        $this->container->addShared(self::class, $this);
+
         // Bind config repository (lazy loader)
         $this->container->addShared(Config::class)
-            ->addArgument(config_path());
+            ->addArgument($this->basePath('config'));
 
         $this->container->addShared(LoggerAdapter::class, function () {
-            return (new LoggerAdapter())->getLogger();
+            return (new LoggerAdapter($this, $this->container->get(Config::class)))->getLogger();
+        });
+
+        $this->container->addShared(LoggerInterface::class, function () {
+            return $this->container->get(LoggerAdapter::class);
         });
 
         $this->container->addShared(EventDispatcherAdapter::class)
-            ->addArgument($this->container());
+            ->addArgument($this->container())
+            ->addArgument($this->container->get(Config::class));
+
+        $this->container->addShared(EventDispatcherInterface::class, function () {
+            return $this->container->get(EventDispatcherAdapter::class);
+        });
     }
 
     // ---------------------------------------------------------------------

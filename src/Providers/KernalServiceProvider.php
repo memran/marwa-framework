@@ -7,8 +7,10 @@ namespace Marwa\Framework\Providers;
 use Marwa\Framework\Adapters\DebugbarAdapter;
 use Marwa\Framework\Adapters\{RouterAdapter, ViewAdapter};
 use Marwa\Framework\Adapters\ServiceProviderAdapter;
+use Marwa\Framework\Application;
+use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Contracts\BootServiceProviderInterface;
-use Marwa\Framework\Facades\Config;
+use Marwa\Framework\Supports\Config;
 
 final class KernalServiceProvider extends ServiceProviderAdapter implements BootServiceProviderInterface
 {
@@ -24,34 +26,33 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
     }
     public function register(): void
     {
-        /**
-         * Register Debug Collector
-         */
-        if (Config::getBool('app.debugbar')) {
+        /** @var Config $config */
+        $config = $this->getContainer()->get(Config::class);
+        $defaults = AppConfig::defaults();
+
+        if ($config->getBool(AppConfig::KEY . '.debugbar', $defaults['debugbar'])) {
             $this->getContainer()->addShared('debugbar', function () {
-                $bar = new DebugbarAdapter(Config::getArray('app.collectors'));
+                /** @var Config $config */
+                $config = $this->getContainer()->get(Config::class);
+                $collectors = $config->getArray(AppConfig::KEY . '.collectors', AppConfig::defaults()['collectors']);
+                $bar = new DebugbarAdapter($collectors);
                 $bar->registerCollectors();
                 return $bar->getDebugger();
             });
         }
 
-
-        /**
-         * Add View Engine
-         */
         $this->getContainer()->addShared(ViewAdapter::class);
     }
 
     public function boot(): void
     {
-        /**
-         * Boot Router
-         */
         $this->getContainer()->addShared(RouterAdapter::class)
             ->addArgument($this->getContainer());
 
-        $web = routes_path('web.php');
-        $api = routes_path('api.php');
+        /** @var Application $app */
+        $app = $this->getContainer()->get(Application::class);
+        $web = $app->basePath('routes/web.php');
+        $api = $app->basePath('routes/api.php');
 
         if (\is_file($web)) {
             require $web;

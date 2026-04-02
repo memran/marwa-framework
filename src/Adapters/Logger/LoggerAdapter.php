@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters\Logger;
 
-use Marwa\Framework\Facades\Config;
+use Marwa\Framework\Application;
+use Marwa\Framework\Config\LoggerConfig;
+use Marwa\Framework\Supports\Config;
 use Marwa\Logger\Contracts\SinkInterface;
 use Marwa\Logger\SimpleLogger;
 use Marwa\Logger\Storage\StorageFactory;
@@ -19,9 +21,9 @@ final class LoggerAdapter
     protected SensitiveDataFilter $filter;
     protected SinkInterface $sink;
 
-    public function __construct()
+    public function __construct(private Application $app, private Config $config)
     {
-        Config::loadIfExists('logger.php');
+        $this->config->loadIfExists(LoggerConfig::KEY . '.php');
         $this->boot();
     }
 
@@ -30,19 +32,22 @@ final class LoggerAdapter
      */
     private function boot(): void
     {
-        $this->setFilter(Config::getArray('logger.filter', []));
-        $this->setStorage(Config::getArray('logger.storage', [
-            'driver' => env('LOG_CHANNEL', 'file'),
-            'path' => storage_path('logs'),
-            'prefix' => 'marwa',
-        ]));
+        $defaults = LoggerConfig::defaults($this->app);
+
+        /** @var list<string> $filter */
+        $filter = $this->config->getArray(LoggerConfig::KEY . '.filter', $defaults['filter']);
+        $this->setFilter($filter);
+
+        /** @var array<string, mixed> $storage */
+        $storage = $this->config->getArray(LoggerConfig::KEY . '.storage', $defaults['storage']);
+        $this->setStorage($storage);
 
         $this->logger = new SimpleLogger(
             appName: env('APP_NAME', 'MarwaPHP'),
             env: env('APP_ENV', 'production'),
             sink: $this->sink,
             filter: $this->filter,
-            logging: Config::getBool('logger.enable', (bool) env('LOG_ENABLE', true))
+            logging: $this->config->getBool(LoggerConfig::KEY . '.enable', $defaults['enable'])
         );
     }
 
