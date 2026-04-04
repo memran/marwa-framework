@@ -39,6 +39,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
 - Twig-powered view service with optional theme management and cache directory bootstrapping
 - Shared error handling through `marwa-error-handler` for HTTP and console with logger/debug reporter integration
+- Request validation DX through helper-driven validation, reusable FormRequest classes, and flashed old input
 - Debug and maintenance middleware for local development and operational controls
 - Production-ready quality tooling with PHPUnit, PHPStan, PHP-CS-Fixer, and GitHub Actions CI
 
@@ -55,6 +56,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Mail Tutorial](docs/tutorials/mail.md)
 - [Notifications Tutorial](docs/tutorials/notifications.md)
 - [Models Tutorial](docs/tutorials/models.md)
+- [Validation Tutorial](docs/tutorials/validation.md)
 - [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
@@ -233,6 +235,19 @@ return [
     'encrypt' => true,
 ];
 ```
+
+## Validation
+
+Use `validate_request()` for quick checks and `Marwa\Framework\Validation\FormRequest` for reusable request objects.
+
+```php
+$data = validate_request([
+    'title' => 'trim|required|string|min:3',
+    'published' => 'boolean',
+]);
+```
+
+Validation failures flash `_old_input` and `errors` to the session and are turned into JSON `422` responses or redirects by the router middleware.
 
 ## Cache
 

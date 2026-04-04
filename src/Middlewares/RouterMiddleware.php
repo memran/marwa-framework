@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Middlewares;
 
 use League\Route\Http\Exception\{MethodNotAllowedException, NotFoundException};
+use Marwa\Entity\Http\ValidationException as EntityValidationException;
+use Marwa\Framework\Validation\ValidationException;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,6 +25,10 @@ final class RouterMiddleware implements MiddlewareInterface
             $response = router()?->dispatch($request);
             debugger()?->mark('end');
             return $response;
+        } catch (ValidationException $exception) {
+            return $exception->toResponse($request);
+        } catch (EntityValidationException $exception) {
+            return $this->renderEntityValidation($request, $exception);
         } catch (NotFoundException $ex) {
             return $this->render404($request);
         } catch (MethodNotAllowedException $e) {
@@ -102,5 +108,33 @@ final class RouterMiddleware implements MiddlewareInterface
 </body>
 </html>
 HTML;
+    }
+
+    private function renderEntityValidation(ServerRequestInterface $request, EntityValidationException $exception): ResponseInterface
+    {
+        $session = session();
+        if ($session !== null) {
+            $session->flash(ValidationException::ERROR_BAG_KEY, $exception->errors()->all());
+            $parsedBody = $request->getParsedBody();
+
+            $session->flash(ValidationException::OLD_INPUT_KEY, array_merge(
+                $request->getQueryParams(),
+                is_array($parsedBody) ? $parsedBody : []
+            ));
+        }
+
+        if (stripos($request->getHeaderLine('Accept'), 'application/json') !== false) {
+            return Response::json([
+                'message' => $exception->getMessage(),
+                'errors' => $exception->errors()->all(),
+            ], 422);
+        }
+
+        $target = $request->getHeaderLine('Referer');
+        if (trim($target) === '') {
+            $target = (string) $request->getUri();
+        }
+
+        return Response::redirect($target !== '' ? $target : '/', 302);
     }
 }

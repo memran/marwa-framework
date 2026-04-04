@@ -132,6 +132,34 @@ $userId = session('user_id');
 
 Returns the encrypted session service or reads one session value.
 
+### `request(?string $key = null, mixed $default = null): mixed`
+
+```php
+$request = request();
+$title = request('title');
+```
+
+Returns the current PSR-7 request when called without a key, or the current input value when a key is provided.
+
+### `validate_request(array $rules, array $messages = [], array $attributes = [], ?ServerRequestInterface $request = null): array`
+
+```php
+$data = validate_request([
+    'title' => 'required|string|min:3',
+    'published' => 'boolean',
+]);
+```
+
+Validates the current request or the request you pass explicitly and returns normalized data.
+
+### `old(?string $key = null, mixed $default = null): mixed`
+
+```php
+$title = old('title', '');
+```
+
+Reads flashed validation input from the session after a failed validation response.
+
 ### `image(?string $path = null): \Marwa\Framework\Supports\Image`
 
 ```php

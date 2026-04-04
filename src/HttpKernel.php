@@ -18,6 +18,7 @@ use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
 use Marwa\Framework\Middlewares\SecurityMiddleware;
 use Marwa\Framework\Middlewares\SessionMiddleware;
+use Marwa\Router\Http\Input;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -95,6 +96,10 @@ final class HttpKernel
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $this->app->add(ServerRequestInterface::class, $request);
+        $this->app->add('request', $request);
+        Input::setRequest($request);
+
         debugger()?->mark('handle');
         $this->app->dispatch(new RequestHandlingStarted(
             method: $request->getMethod(),

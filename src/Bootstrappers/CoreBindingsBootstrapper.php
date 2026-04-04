@@ -31,7 +31,9 @@ use Marwa\Framework\Supports\EncryptedSession;
 use Marwa\Framework\Supports\Http;
 use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Storage;
+use Marwa\Framework\Validation\RequestValidator;
 use Marwa\Framework\Views\View as FrameworkView;
+use Marwa\Router\Contract\ValidatorInterface as RouterValidatorInterface;
 use Psr\Log\LoggerInterface;
 
 final class CoreBindingsBootstrapper
@@ -104,6 +106,12 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(SessionInterface::class, function () use ($container) {
             return $container->get(EncryptedSession::class);
+        });
+
+        $container->addShared(RequestValidator::class);
+
+        $container->addShared(RouterValidatorInterface::class, function () use ($container) {
+            return $container->get(RequestValidator::class);
         });
 
         $container->addShared(Security::class)

@@ -14,6 +14,7 @@ This directory contains focused documentation for using and extending the framew
 - [Mail](./tutorials/mail.md)
 - [Notifications](./tutorials/notifications.md)
 - [Models](./tutorials/models.md)
+- [Validation](./tutorials/validation.md)
 - [Architecture](./architecture.md)
 
 ## API Reference
@@ -28,6 +29,7 @@ This directory contains focused documentation for using and extending the framew
 - [Facade API](./api/facades.md)
 - [Configuration Contracts](./api/configuration.md)
 - [Security API](./api/security.md)
+- [Validation API](./api/validation.md)
 - [Helper Functions](./api/helpers.md)
 
 ## Developer Guides
@@ -48,5 +50,6 @@ If you are new to the project, start with:
 7. [Mail](./tutorials/mail.md)
 8. [Notifications](./tutorials/notifications.md)
 9. [Models](./tutorials/models.md)
-10. [Console Flow](./tutorials/console.md)
-11. [Configuration Contracts](./api/configuration.md)
+10. [Validation](./tutorials/validation.md)
+11. [Console Flow](./tutorials/console.md)
+12. [Configuration Contracts](./api/configuration.md)

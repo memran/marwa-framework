@@ -21,10 +21,14 @@ use Marwa\Framework\Supports\Image as ImageSupport;
 use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Supports\Storage as StorageSupport;
+use Marwa\Framework\Validation\RequestValidator;
+use Marwa\Framework\Validation\ValidationException;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\ModuleHandle;
+use Marwa\Router\Http\Input;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -323,6 +327,67 @@ function session(?string $key = null, mixed $default = null): mixed
     }
 
     return $session;
+}
+
+function request(?string $key = null, mixed $default = null): mixed
+{
+    /** @var ServerRequestInterface $request */
+    $request = app(ServerRequestInterface::class);
+
+    if ($key === null) {
+        return $request;
+    }
+
+    return Input::get($key, $default);
+}
+
+/**
+ * @param array<string, mixed> $rules
+ * @param array<string, mixed> $messages
+ * @param array<string, string> $attributes
+ * @return array<string, mixed>
+ */
+function validate_request(
+    array $rules,
+    array $messages = [],
+    array $attributes = [],
+    ?ServerRequestInterface $request = null
+): array {
+    /** @var RequestValidator $validator */
+    $validator = app(RequestValidator::class);
+
+    return $validator->validateRequest($request ?? request(), $rules, $messages, $attributes);
+}
+
+/**
+ * @param array<string, mixed>|null $default
+ */
+function old(?string $key = null, mixed $default = null): mixed
+{
+    $data = session(ValidationException::OLD_INPUT_KEY, []);
+
+    if (!is_array($data)) {
+        $data = [];
+    }
+
+    if ($key === null) {
+        return $data;
+    }
+
+    if (array_key_exists($key, $data)) {
+        return $data[$key];
+    }
+
+    $current = $data;
+    foreach (explode('.', $key) as $segment) {
+        if (!is_array($current) || !array_key_exists($segment, $current)) {
+            return $default;
+        }
+
+        $current = $current[$segment];
+    }
+
+    return $current;
 }
 
 function image(?string $path = null): ImageSupport
