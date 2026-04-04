@@ -19,11 +19,13 @@ use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
+use Marwa\Framework\Security\Security;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
 use Marwa\Framework\Supports\Http;
@@ -97,6 +99,16 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(SessionInterface::class, function () use ($container) {
             return $container->get(EncryptedSession::class);
+        });
+
+        $container->addShared(Security::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class))
+            ->addArgument($container->get(CacheInterface::class))
+            ->addArgument($container->get(SessionInterface::class));
+
+        $container->addShared(SecurityInterface::class, function () use ($container) {
+            return $container->get(Security::class);
         });
 
         $container->addShared(ErrorHandlerAdapter::class)

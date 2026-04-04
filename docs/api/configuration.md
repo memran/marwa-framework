@@ -280,6 +280,46 @@ return [
 ];
 ```
 
+## `config/security.php`
+
+Defined by `Marwa\Framework\Config\SecurityConfig`.
+
+Supported keys:
+
+- `enabled`: master toggle for the security layer
+- `csrf.enabled`: enable CSRF validation for unsafe HTTP methods
+- `csrf.field`: hidden form field name used by `csrf_field()`
+- `csrf.header`: header name checked by the middleware
+- `csrf.token`: session key used to store the CSRF token
+- `csrf.methods`: HTTP methods subject to CSRF checks
+- `csrf.except`: list of path patterns exempt from CSRF
+- `trustedHosts`: list of trusted hostnames or wildcard patterns
+- `trustedOrigins`: list of trusted origin URLs or wildcard patterns
+- `throttle.enabled`: enable cache-backed request throttling
+- `throttle.prefix`: cache key prefix for throttle counters
+- `throttle.limit`: request limit per window
+- `throttle.window`: throttle window in seconds
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'csrf' => [
+        'enabled' => true,
+        'except' => ['webhook/*'],
+    ],
+    'trustedHosts' => ['example.com'],
+    'trustedOrigins' => ['https://example.com'],
+    'throttle' => [
+        'enabled' => true,
+        'prefix' => 'security',
+        'limit' => 60,
+        'window' => 60,
+    ],
+];
+```
+
 ## `config/database.php`
 
 Defined by `Marwa\Framework\Config\DatabaseConfig`.

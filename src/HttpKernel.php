@@ -16,6 +16,7 @@ use Marwa\Framework\Middlewares\DebugbarMiddleware;
 use Marwa\Framework\Middlewares\MaintenanceMiddleware;
 use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
+use Marwa\Framework\Middlewares\SecurityMiddleware;
 use Marwa\Framework\Middlewares\SessionMiddleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -86,6 +87,7 @@ final class HttpKernel
             RequestIdMiddleware::class,
             SessionMiddleware::class,
             MaintenanceMiddleware::class,
+            SecurityMiddleware::class,
             RouterMiddleware::class,
             DebugbarMiddleware::class,
         ];

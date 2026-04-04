@@ -151,6 +151,30 @@ $public = storage('public');
 
 Returns the shared Flysystem-backed storage manager, optionally scoped to a configured disk.
 
+### `security(): \Marwa\Framework\Contracts\SecurityInterface`
+
+```php
+$token = security()->csrfToken();
+```
+
+Returns the shared security service.
+
+### `csrf_token(): string`
+### `csrf_field(): string`
+### `validate_csrf_token(string $token): bool`
+### `is_trusted_host(string $host): bool`
+### `is_trusted_origin(string $origin): bool`
+### `throttle(string $key, ?int $limit = null, ?int $window = null): bool`
+### `sanitize_filename(string $name): string`
+### `safe_path(string $path, string $basePath): string`
+
+```php
+csrf_field();
+validate_csrf_token($request->getHeaderLine('X-CSRF-TOKEN'));
+```
+
+Helpers for CSRF, trust checks, rate limiting, and safe filesystem access.
+
 ### `view(string $tplName = '', array $params = []): mixed`
 
 ```php

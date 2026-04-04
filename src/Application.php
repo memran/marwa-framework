@@ -15,6 +15,7 @@ use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
@@ -225,6 +226,11 @@ final class Application
     public function mailer(): MailerInterface
     {
         return $this->container->get(MailerInterface::class);
+    }
+
+    public function security(): SecurityInterface
+    {
+        return $this->container->get(SecurityInterface::class);
     }
 
     public function storage(): Storage

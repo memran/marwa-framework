@@ -8,6 +8,7 @@ use Marwa\Framework\Middlewares\DebugbarMiddleware;
 use Marwa\Framework\Middlewares\MaintenanceMiddleware;
 use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
+use Marwa\Framework\Middlewares\SecurityMiddleware;
 use Marwa\Framework\Middlewares\SessionMiddleware;
 use Marwa\Framework\Providers\KernalServiceProvider;
 
@@ -33,6 +34,7 @@ final class AppConfig
                 RequestIdMiddleware::class,
                 SessionMiddleware::class,
                 MaintenanceMiddleware::class,
+                SecurityMiddleware::class,
                 RouterMiddleware::class,
                 DebugbarMiddleware::class,
             ],

@@ -18,6 +18,7 @@ use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Config\NotificationConfig;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Config\ScheduleConfig;
+use Marwa\Framework\Config\SecurityConfig;
 use Marwa\Framework\Config\SessionConfig;
 use Marwa\Framework\Config\StorageConfig;
 use Marwa\Framework\Config\ViewConfig;
@@ -53,6 +54,13 @@ final class ConfigContractsTest extends TestCase
         self::assertArrayHasKey('debugbar', $defaults);
         self::assertArrayHasKey('collectors', $defaults);
         self::assertContains(SessionMiddleware::class, $defaults['middlewares']);
+    }
+
+    public function testSecurityMiddlewareIsPresentInTheDefaultStack(): void
+    {
+        $defaults = AppConfig::defaults();
+
+        self::assertContains(\Marwa\Framework\Middlewares\SecurityMiddleware::class, $defaults['middlewares']);
     }
 
     public function testViewAndLoggerContractsBuildPathsFromApplicationBasePath(): void
@@ -122,6 +130,21 @@ final class ConfigContractsTest extends TestCase
         self::assertTrue($defaults['httpOnly']);
         self::assertSame('Lax', $defaults['sameSite']);
         self::assertTrue($defaults['encrypt']);
+    }
+
+    public function testSecurityConfigExposesExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = SecurityConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertFalse($defaults['csrf']['enabled']);
+        self::assertSame('X-CSRF-TOKEN', $defaults['csrf']['header']);
+        self::assertSame('__marwa_csrf_token', $defaults['csrf']['token']);
+        self::assertSame(['POST', 'PUT', 'PATCH', 'DELETE'], $defaults['csrf']['methods']);
+        self::assertSame([], $defaults['trustedHosts']);
+        self::assertSame([], $defaults['trustedOrigins']);
+        self::assertFalse($defaults['throttle']['enabled']);
     }
 
     public function testQueueAndScheduleConfigsExposeExpectedDefaults(): void

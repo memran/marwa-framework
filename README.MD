@@ -23,6 +23,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - HTTP kernel with middleware pipeline, route dispatching, and router-backed not-found handling
 - Environment and configuration bootstrapping with safe fallback behavior when consumer config files are missing
 - Secure encrypted session support with hardened cookie defaults and lazy HTTP session startup
+- Security service with CSRF tokens, trusted host/origin checks, throttling, and safe path/file helpers
 - Path-bound file utility for atomic writes, JSON serialization, copy, move, and deletion workflows
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Scrapbook-backed cache service with SQLite or memory drivers, buffering, collections, and optional stampede protection
@@ -49,6 +50,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
 - [HTTP Client Tutorial](docs/tutorials/http-client.md)
 - [Events Tutorial](docs/tutorials/events.md)
+- [Security Tutorial](docs/tutorials/security.md)
 - [Mail Tutorial](docs/tutorials/mail.md)
 - [Notifications Tutorial](docs/tutorials/notifications.md)
 - [Models Tutorial](docs/tutorials/models.md)
@@ -177,6 +179,20 @@ TIMEZONE=Asia/Dhaka
 ```
 
 Use `APP_DEBUG=false` and `DEBUGBAR_ENABLED=false` in production. The framework now generates cryptographically secure request IDs, avoids loading missing config files as hard failures, and registers shared PHP error, exception, and shutdown handlers for both HTTP and console runtimes.
+
+## Security
+
+The security service is available through `security()` and `Marwa\Framework\Contracts\SecurityInterface`.
+
+```php
+csrf_field();
+csrf_token();
+validate_csrf_token($request->getHeaderLine('X-CSRF-TOKEN'));
+is_trusted_host($request->getUri()->getHost());
+throttle('login:' . $request->getUri()->getPath());
+```
+
+Enable or tune CSRF, host/origin checks, and throttling in `config/security.php`.
 
 ## Sessions
 

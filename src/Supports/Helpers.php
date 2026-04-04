@@ -14,6 +14,7 @@ use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\NotificationInterface;
+use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Supports\Config;
@@ -239,9 +240,54 @@ function mailer(): MailerInterface
     return app(Mailer::class);
 }
 
+function security(): SecurityInterface
+{
+    return app(SecurityInterface::class);
+}
+
 function notification(): NotificationManager
 {
     return app(NotificationManager::class);
+}
+
+function csrf_token(): string
+{
+    return security()->csrfToken();
+}
+
+function csrf_field(): string
+{
+    return security()->csrfField();
+}
+
+function validate_csrf_token(string $token): bool
+{
+    return security()->validateCsrfToken($token);
+}
+
+function is_trusted_host(string $host): bool
+{
+    return security()->isTrustedHost($host);
+}
+
+function is_trusted_origin(string $origin): bool
+{
+    return security()->isTrustedOrigin($origin);
+}
+
+function throttle(string $key, ?int $limit = null, ?int $window = null): bool
+{
+    return security()->throttle($key, $limit, $window);
+}
+
+function sanitize_filename(string $name): string
+{
+    return security()->sanitizeFilename($name);
+}
+
+function safe_path(string $path, string $basePath): string
+{
+    return security()->safePath($path, $basePath);
 }
 
 function router(): mixed
