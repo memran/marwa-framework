@@ -199,6 +199,7 @@ final class ConfigContractsTest extends TestCase
         self::assertArrayHasKey('database', $defaults['channels']);
         self::assertArrayHasKey('http', $defaults['channels']);
         self::assertArrayHasKey('sms', $defaults['channels']);
+        self::assertArrayHasKey('kafka', $defaults['channels']);
         self::assertArrayHasKey('broadcast', $defaults['channels']);
     }
 

@@ -10,6 +10,7 @@ use Marwa\Framework\Contracts\NotificationInterface;
 use Marwa\Framework\Notifications\Channels\BroadcastChannel;
 use Marwa\Framework\Notifications\Channels\DatabaseChannel;
 use Marwa\Framework\Notifications\Channels\HttpChannel;
+use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\Channels\MailChannel;
 use Marwa\Framework\Notifications\Channels\SmsChannel;
 use Marwa\Framework\Supports\Config;
@@ -84,6 +85,7 @@ final class NotificationManager
             'database' => $this->app->make(DatabaseChannel::class)->send($notification, $notifiable, $config),
             'http' => $this->app->make(HttpChannel::class)->send($notification, $notifiable, $config),
             'sms' => $this->app->make(SmsChannel::class)->send($notification, $notifiable, $config),
+            'kafka' => $this->app->make(KafkaChannel::class)->send($notification, $notifiable, $config),
             'broadcast' => $this->app->make(BroadcastChannel::class)->send($notification, $notifiable, $config),
             default => throw new \InvalidArgumentException(sprintf('Notification channel [%s] is not supported.', $channel)),
         };

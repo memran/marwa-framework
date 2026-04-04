@@ -33,6 +33,11 @@ abstract class Notification implements NotificationInterface
         return [];
     }
 
+    public function toKafka(?object $notifiable = null): array
+    {
+        return [];
+    }
+
     public function toBroadcast(?object $notifiable = null): array
     {
         return [];

@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Response;
 use Marwa\Framework\Adapters\Event\NamedEvent;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
+use Marwa\Framework\Contracts\KafkaPublisherInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\NotificationChannelInterface;
 use Marwa\Framework\Contracts\NotificationInterface;
@@ -434,6 +435,25 @@ final class RecordingBroadcastNotificationChannel implements NotificationChannel
     }
 }
 
+final class RecordingKafkaPublisher implements KafkaPublisherInterface
+{
+    /**
+     * @var list<array{topic: string, message: array<string, mixed>, options: array<string, mixed>}>
+     */
+    public array $messages = [];
+
+    public function publish(string $topic, array $message, array $options = []): mixed
+    {
+        $this->messages[] = compact('topic', 'message', 'options');
+
+        return [
+            'topic' => $topic,
+            'message' => $message,
+            'options' => $options,
+        ];
+    }
+}
+
 final class RecordingEventDispatcher implements EventDispatcherInterface
 {
     /**
@@ -538,6 +558,20 @@ final class DemoNotification extends Notification
             'url' => 'https://example.test/sms',
             'to' => $notifiable instanceof DemoNotifiable ? $notifiable->phone : '+100000000',
             'message' => 'sms message',
+        ];
+    }
+
+    public function toKafka(?object $notifiable = null): array
+    {
+        return [
+            'topic' => 'notifications.orders',
+            'key' => 'order-1001',
+            'headers' => [
+                'x-channel' => 'kafka',
+            ],
+            'payload' => [
+                'message' => 'kafka message',
+            ],
         ];
     }
 

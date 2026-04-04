@@ -210,6 +210,12 @@ Supported keys:
 - `channels.sms.client`: HTTP client profile name used by the SMS gateway
 - `channels.sms.method`: HTTP method for the SMS gateway
 - `channels.sms.url`: SMS gateway URL
+- `channels.kafka.enabled`: enable Kafka publishing
+- `channels.kafka.publisher`: service id implementing `Marwa\Framework\Contracts\KafkaPublisherInterface`
+- `channels.kafka.topic`: default Kafka topic
+- `channels.kafka.key`: optional Kafka message key
+- `channels.kafka.headers`: Kafka record headers
+- `channels.kafka.options`: extra publisher options
 - `channels.broadcast.enabled`: enable event broadcast dispatching
 - `channels.broadcast.event`: broadcast event class name
 
@@ -223,6 +229,11 @@ return [
         'http' => [
             'enabled' => true,
             'url' => 'https://hooks.example.test/notify',
+        ],
+        'kafka' => [
+            'enabled' => true,
+            'publisher' => App\Kafka\MarwaKafkaPublisher::class,
+            'topic' => 'notifications',
         ],
         'sms' => [
             'enabled' => true,

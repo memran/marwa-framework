@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Config;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\KafkaPublisherInterface;
 
 final class NotificationConfig
 {
@@ -44,6 +45,14 @@ final class NotificationConfig
                     'method' => 'POST',
                     'url' => null,
                     'headers' => [],
+                ],
+                'kafka' => [
+                    'enabled' => false,
+                    'publisher' => KafkaPublisherInterface::class,
+                    'topic' => 'notifications',
+                    'key' => null,
+                    'headers' => [],
+                    'options' => [],
                 ],
                 'broadcast' => [
                     'enabled' => true,

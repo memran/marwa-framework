@@ -34,5 +34,10 @@ interface NotificationInterface
     /**
      * @return array<string, mixed>
      */
+    public function toKafka(?object $notifiable = null): array;
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toBroadcast(?object $notifiable = null): array;
 }
