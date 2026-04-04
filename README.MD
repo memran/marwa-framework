@@ -30,6 +30,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Flysystem-backed storage service with local disks, helper/facade access, and disk switching
 - SwiftMailer-compatible mailer service with SMTP, sendmail, queueable mailable support, and native mail transport configuration
 - Notification manager with mail, database, HTTP, SMS, and broadcast channels
+- Framework model base on top of `marwa-db` with CRUD helpers, casts, and pagination
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - Lightweight scheduler with configurable file or database state storage, plus a file-backed queue for cron-driven recurring work and deferred jobs
@@ -50,6 +51,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Events Tutorial](docs/tutorials/events.md)
 - [Mail Tutorial](docs/tutorials/mail.md)
 - [Notifications Tutorial](docs/tutorials/notifications.md)
+- [Models Tutorial](docs/tutorials/models.md)
 - [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
@@ -92,6 +94,7 @@ The framework is aligned around the MarwaPHP package set:
 - `memran/marwa-event` for PSR-14 event dispatching with listener priorities
 - `memran/marwa-module` for runtime module discovery, provider boot, routes, views, and console command discovery
 - `memran/marwa-db` for shared database bootstrap, ORM/schema wiring, and migration/seeder console commands
+- `Marwa\Framework\Database\Model` for application-friendly CRUD helpers on top of `marwa-db`
 - `guzzlehttp/guzzle` for the outbound HTTP client wrapper and fluent request API
 - `swiftmailer/swiftmailer` for SwiftMailer-compatible mail transport when installed
 - notification channels for mail, database, HTTP, SMS, and broadcast delivery

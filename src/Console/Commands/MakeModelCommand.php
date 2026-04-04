@@ -13,7 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'make:model', description: 'Generate a marwa-db model class for the application.')]
+#[AsCommand(name: 'make:model', description: 'Generate a framework model class for the application.')]
 final class MakeModelCommand extends AbstractCommand
 {
     protected function configure(): void
