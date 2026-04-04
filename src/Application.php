@@ -13,6 +13,7 @@ use Marwa\Framework\Bootstrappers\CoreBindingsBootstrapper;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\CacheInterface;
+use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Task;
@@ -207,6 +208,11 @@ final class Application
     public function cache(): CacheInterface
     {
         return $this->container->get(CacheInterface::class);
+    }
+
+    public function mailer(): MailerInterface
+    {
+        return $this->container->get(MailerInterface::class);
     }
 
     public function storage(): Storage

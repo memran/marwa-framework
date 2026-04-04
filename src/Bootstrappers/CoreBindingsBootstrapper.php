@@ -17,12 +17,14 @@ use Marwa\Framework\Console\ConsoleApplication;
 use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
+use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Storage;
 use Psr\Log\LoggerInterface;
 
@@ -64,6 +66,14 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(CacheInterface::class, function () use ($container) {
             return $container->get(ScrapbookCacheAdapter::class);
+        });
+
+        $container->addShared(Mailer::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class));
+
+        $container->addShared(MailerInterface::class, function () use ($container) {
+            return $container->get(Mailer::class);
         });
 
         $container->addShared(EncryptedSession::class)

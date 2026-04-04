@@ -91,6 +91,52 @@ Supported keys:
 - `storage.path`: log output directory
 - `storage.prefix`: file name prefix
 
+## `config/mail.php`
+
+Defined by `Marwa\Framework\Config\MailConfig`.
+
+Supported keys:
+
+- `enabled`: enable the mail service
+- `driver`: `smtp`, `sendmail`, or `mail`
+- `charset`: message charset
+- `from.address`: default sender email address
+- `from.name`: default sender display name
+- `smtp.host`: SMTP host
+- `smtp.port`: SMTP port
+- `smtp.encryption`: optional SMTP encryption mode such as `tls`
+- `smtp.username`: SMTP username
+- `smtp.password`: SMTP password
+- `smtp.authMode`: optional authentication mode
+- `smtp.timeout`: SMTP timeout in seconds
+- `sendmail.path`: sendmail executable path
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'driver' => 'smtp',
+    'charset' => 'UTF-8',
+    'from' => [
+        'address' => 'no-reply@example.com',
+        'name' => 'MarwaPHP',
+    ],
+    'smtp' => [
+        'host' => '127.0.0.1',
+        'port' => 1025,
+        'encryption' => null,
+        'username' => null,
+        'password' => null,
+        'authMode' => null,
+        'timeout' => 30,
+    ],
+    'sendmail' => [
+        'path' => '/usr/sbin/sendmail -bs',
+    ],
+];
+```
+
 ## `config/cache.php`
 
 Defined by `Marwa\Framework\Config\CacheConfig`.

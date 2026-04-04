@@ -61,6 +61,24 @@ $theme = cache('settings.theme', 'dark');
 
 Returns the shared cache service or reads one cached value.
 
+### `mailer(): \Marwa\Framework\Contracts\MailerInterface`
+
+```php
+mailer()
+    ->to('user@example.com', 'User')
+    ->subject('Welcome')
+    ->html('<p>Hello</p>')
+    ->send();
+```
+
+Returns the shared SwiftMailer-compatible mail service.
+
+Queue mail with a mailable class:
+
+```php
+mailer()->queue(new App\Mail\WelcomeMail(['subject' => 'Welcome']));
+```
+
 ## HTTP and Rendering
 
 ### `response(string $body = '', int $status = 200): ResponseInterface`

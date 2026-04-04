@@ -12,6 +12,7 @@ use Marwa\Framework\Console\Commands\GenerateKeyCommand;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
+use Marwa\Framework\Console\Commands\MakeMailCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
@@ -112,6 +113,7 @@ PHP
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('make:command'));
         self::assertTrue($console->has('make:controller'));
+        self::assertTrue($console->has('make:mail'));
         self::assertTrue($console->has('make:model'));
         self::assertTrue($console->has('make:module'));
         self::assertTrue($console->has('make:theme'));
@@ -140,6 +142,7 @@ PHP
         self::assertContains(ScheduleRunCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(ScheduleTableCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeControllerCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(MakeMailCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModelCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeThemeCommand::class, ConsoleConfig::defaults($app)['commands']);
@@ -370,6 +373,29 @@ PHP
 
         self::assertIsArray($migrations);
         self::assertCount(1, $migrations);
+    }
+
+    public function testMakeMailCommandCreatesMailableClass(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:mail');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'Billing/Welcome',
+        ]);
+
+        self::assertSame(0, $status);
+
+        $mailPath = $this->basePath . '/app/Mail/Billing/WelcomeMail.php';
+        self::assertFileExists($mailPath);
+
+        $contents = (string) file_get_contents($mailPath);
+        self::assertStringContainsString('namespace App\\Mail\\Billing;', $contents);
+        self::assertStringContainsString('final class WelcomeMail extends Mailable', $contents);
+        self::assertStringContainsString('public function build(MailerInterface $mailer): MailerInterface', $contents);
     }
 
     public function testMakeModuleCommandCreatesModuleScaffoldInConfiguredModulesPath(): void

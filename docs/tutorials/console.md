@@ -58,6 +58,7 @@ php bin/console route:cache
 php bin/console module:cache
 php bin/console make:command CleanupCommand
 php bin/console make:controller Admin/PostController --resource
+php bin/console make:mail WelcomeMail
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
@@ -66,6 +67,8 @@ php bin/console schedule:table
 ```
 
 `make:controller` generates controllers in `app/Http/Controllers`. Use `--resource` to scaffold CRUD-style methods.
+
+`make:mail` generates `App\Mail\...` classes that extend the framework `Mailable` base and show how to build a SwiftMailer-compatible message.
 
 `make:model` generates `marwa-db` model classes in `app/Models`. Use `--migration` to call the registered `make:migration` command and create a matching table migration in `database/migrations`.
 

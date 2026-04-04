@@ -13,6 +13,7 @@ use Marwa\Framework\Console\Commands\GenerateKeyCommand;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
+use Marwa\Framework\Console\Commands\MakeMailCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
@@ -59,6 +60,7 @@ final class ConsoleConfig
                 ModuleClearCommand::class,
                 MakeCommandCommand::class,
                 MakeControllerCommand::class,
+                MakeMailCommand::class,
                 MakeModelCommand::class,
                 MakeModuleCommand::class,
                 MakeThemeCommand::class,

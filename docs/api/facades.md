@@ -48,6 +48,20 @@ Log::info('Application started.');
 Short description:
 Writes structured logs through the framework logger adapter.
 
+## `Mailer`
+
+```php
+use Marwa\Framework\Facades\Mailer;
+
+Mailer::to('user@example.com')
+    ->subject('Welcome')
+    ->text('Hello from MarwaPHP.')
+    ->send();
+```
+
+Short description:
+Builds and sends messages through the shared SwiftMailer-compatible mail service.
+
 ## `View`
 
 ```php

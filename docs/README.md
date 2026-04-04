@@ -8,6 +8,7 @@ This directory contains focused documentation for using and extending the framew
 - [HTTP Kernel Flow](./tutorials/http-kernel.md)
 - [Console Flow](./tutorials/console.md)
 - [Events](./tutorials/events.md)
+- [Mail](./tutorials/mail.md)
 - [Architecture](./architecture.md)
 
 ## API Reference
@@ -31,5 +32,6 @@ If you are new to the project, start with:
 1. [Quick Start](./tutorials/quick-start.md)
 2. [HTTP Kernel Flow](./tutorials/http-kernel.md)
 3. [Events](./tutorials/events.md)
-4. [Console Flow](./tutorials/console.md)
-5. [Configuration Contracts](./api/configuration.md)
+4. [Mail](./tutorials/mail.md)
+5. [Console Flow](./tutorials/console.md)
+6. [Configuration Contracts](./api/configuration.md)

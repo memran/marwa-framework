@@ -27,6 +27,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Scrapbook-backed cache service with SQLite or memory drivers, buffering, collections, and optional stampede protection
 - Flysystem-backed storage service with local disks, helper/facade access, and disk switching
+- SwiftMailer-compatible mailer service with SMTP, sendmail, queueable mailable support, and native mail transport configuration
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
 - Lightweight scheduler with configurable file or database state storage, plus a file-backed queue for cron-driven recurring work and deferred jobs
@@ -44,6 +45,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Quick Start Tutorial](docs/tutorials/quick-start.md)
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
 - [Events Tutorial](docs/tutorials/events.md)
+- [Mail Tutorial](docs/tutorials/mail.md)
 - [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
@@ -69,7 +71,7 @@ composer install
 cp .env.example .env
 ```
 
-The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, or `config/database.php`, those settings override the built-in defaults.
+The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, `config/database.php`, or `config/mail.php`, those settings override the built-in defaults.
 
 Encrypted sessions require `APP_KEY` in `.env`. Generate one with:
 
@@ -86,6 +88,7 @@ The framework is aligned around the MarwaPHP package set:
 - `memran/marwa-event` for PSR-14 event dispatching with listener priorities
 - `memran/marwa-module` for runtime module discovery, provider boot, routes, views, and console command discovery
 - `memran/marwa-db` for shared database bootstrap, ORM/schema wiring, and migration/seeder console commands
+- `swiftmailer/swiftmailer` for SwiftMailer-compatible mail transport when installed
 - `memran/marwa-error-handler`, `memran/marwa-debugbar`, and `memran/marwa-logger` for runtime diagnostics
 - optional `memran/marwa-module`, `memran/marwa-entity`, and `memran/marwa-support` integrations in consuming apps
 
@@ -122,6 +125,7 @@ Useful scaffolding commands:
 php bin/console make:command CleanupCommand
 php bin/console key:generate --show-env
 php bin/console make:controller Admin/PostController --resource
+php bin/console make:mail WelcomeMail
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default

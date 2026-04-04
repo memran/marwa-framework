@@ -64,6 +64,15 @@ $app->registerCommand(App\Console\Commands\CleanupCommand::class);
 Short description:
 Registers a Symfony Console command for the shared console kernel.
 
+### `mailer(): MailerInterface`
+
+```php
+$mailer = $app->mailer();
+```
+
+Short description:
+Returns the shared SwiftMailer-compatible mail service.
+
 ### `console(): ConsoleKernel`
 
 ```php

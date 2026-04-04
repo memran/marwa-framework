@@ -72,6 +72,7 @@
     }
   },
   "suggest": {
+    "swiftmailer/swiftmailer": "Optional SwiftMailer-compatible transport for the Mailer service.",
     "memran/marwa-db": "Optional database toolkit integration; console commands auto-register when available.",
     "memran/marwa-entity": "Optional entity builder and validation layer for domain models.",
     "memran/marwa-module": "Optional module management for modular application structure.",

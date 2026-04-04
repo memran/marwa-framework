@@ -12,6 +12,7 @@ use Marwa\Framework\Config\DatabaseConfig;
 use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
 use Marwa\Framework\Config\LoggerConfig;
+use Marwa\Framework\Config\MailConfig;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Config\ScheduleConfig;
@@ -139,5 +140,20 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('schedule_jobs', ScheduleConfig::defaults($app)['database']['table']);
         self::assertSame(1, ScheduleConfig::defaults($app)['defaultLoopSeconds']);
         self::assertSame(1, ScheduleConfig::defaults($app)['defaultSleepSeconds']);
+    }
+
+    public function testMailConfigExposesExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = MailConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertSame('smtp', $defaults['driver']);
+        self::assertSame('UTF-8', $defaults['charset']);
+        self::assertSame('no-reply@example.com', $defaults['from']['address']);
+        self::assertSame('MarwaPHP', $defaults['from']['name']);
+        self::assertSame('127.0.0.1', $defaults['smtp']['host']);
+        self::assertSame(1025, $defaults['smtp']['port']);
+        self::assertSame('/usr/sbin/sendmail -bs', $defaults['sendmail']['path']);
     }
 }

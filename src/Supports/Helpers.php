@@ -12,9 +12,11 @@ use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Image as ImageSupport;
+use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Supports\Storage as StorageSupport;
 use Marwa\Module\ModuleHandle;
@@ -221,6 +223,12 @@ function logger(): LoggerInterface
 {
     return app(LoggerAdapter::class);
 }
+
+function mailer(): MailerInterface
+{
+    return app(Mailer::class);
+}
+
 function router(): mixed
 {
     return app(RouterAdapter::class);
