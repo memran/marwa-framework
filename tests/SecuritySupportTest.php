@@ -9,6 +9,7 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Config\SecurityConfig;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Middlewares\SecurityMiddleware;
+use Marwa\Framework\Security\RiskAnalyzer;
 use Marwa\Framework\Security\Security;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Tests\Fixtures\Security\ArrayCache;
@@ -20,16 +21,18 @@ use Psr\Http\Server\RequestHandlerInterface;
 final class SecuritySupportTest extends TestCase
 {
     private string $basePath;
+    private string $riskLog;
 
     protected function setUp(): void
     {
         $this->basePath = sys_get_temp_dir() . '/marwa-security-' . bin2hex(random_bytes(6));
+        $this->riskLog = $this->basePath . '/storage/security/risk.jsonl';
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
         file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
         file_put_contents(
             $this->basePath . '/config/security.php',
-            <<<'PHP'
+            <<<PHP
 <?php
 
 return [
@@ -46,6 +49,12 @@ return [
         'limit' => 2,
         'window' => 60,
     ],
+    'risk' => [
+        'enabled' => true,
+        'logPath' => '{$this->riskLog}',
+        'pruneAfterDays' => 30,
+        'topCount' => 5,
+    ],
 ];
 PHP
         );
@@ -55,7 +64,10 @@ PHP
     {
         @unlink($this->basePath . '/config/security.php');
         @unlink($this->basePath . '/.env');
+        @unlink($this->riskLog);
         @rmdir($this->basePath . '/config');
+        @rmdir($this->basePath . '/storage/security');
+        @rmdir($this->basePath . '/storage');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
     }
@@ -74,6 +86,9 @@ PHP
         self::assertSame([], $defaults['trustedHosts']);
         self::assertSame([], $defaults['trustedOrigins']);
         self::assertFalse($defaults['throttle']['enabled']);
+        self::assertTrue($defaults['risk']['enabled']);
+        self::assertSame($this->riskLog, $defaults['risk']['logPath']);
+        self::assertSame(30, $defaults['risk']['pruneAfterDays']);
     }
 
     public function testSecurityServiceGeneratesTokensAndValidatesState(): void
@@ -97,6 +112,31 @@ PHP
         self::assertFalse($security->isCsrfProtected('POST', '/webhook/ping'));
         self::assertSame('invoice-2026.pdf', $security->sanitizeFilename('../invoice 2026.pdf'));
         self::assertSame($this->basePath . '/storage/app/uploads/avatar.png', $security->safePath('uploads/avatar.png', $this->basePath . '/storage/app'));
+    }
+
+    public function testSecurityMiddlewareRecordsRiskSignals(): void
+    {
+        $app = new Application($this->basePath);
+        $riskAnalyzer = new RiskAnalyzer($app, new Config($this->basePath . '/config'), new \Psr\Log\NullLogger());
+        $request = new ServerRequest(
+            serverParams: ['REMOTE_ADDR' => '127.0.0.1'],
+            uri: 'https://evil.test/account',
+            method: 'POST',
+            parsedBody: ['_token' => 'token-123']
+        );
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $security = $this->createMock(SecurityInterface::class);
+
+        $security->method('isEnabled')->willReturn(true);
+        $security->expects(self::once())->method('isTrustedHost')->with('evil.test')->willReturn(false);
+
+        $handler->expects(self::never())->method('handle');
+
+        $middleware = new SecurityMiddleware($security, $riskAnalyzer);
+
+        self::assertSame(403, $middleware->process($request, $handler)->getStatusCode());
+        self::assertFileExists($this->riskLog);
+        self::assertStringContainsString('trusted-host', (string) file_get_contents($this->riskLog));
     }
 
     public function testSecurityMiddlewareBlocksAndAllowsRequests(): void

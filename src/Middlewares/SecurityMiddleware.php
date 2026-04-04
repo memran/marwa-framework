@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Middlewares;
 
 use Marwa\Framework\Contracts\SecurityInterface;
+use Marwa\Framework\Security\RiskAnalyzer;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,7 +14,10 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 final class SecurityMiddleware implements MiddlewareInterface
 {
-    public function __construct(private SecurityInterface $security) {}
+    public function __construct(
+        private SecurityInterface $security,
+        private ?RiskAnalyzer $riskAnalyzer = null
+    ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -26,12 +30,16 @@ final class SecurityMiddleware implements MiddlewareInterface
         $host = $request->getUri()->getHost();
 
         if ($host !== '' && !$this->security->isTrustedHost($host)) {
+            $this->recordRisk($request, 'trusted-host', 'Rejected request with an untrusted host.');
             return Response::forbidden('Forbidden');
         }
 
         $origin = $this->extractOrigin($request);
 
         if ($origin !== '' && !$this->security->isTrustedOrigin($origin)) {
+            $this->recordRisk($request, 'trusted-origin', 'Rejected request with an untrusted origin.', [
+                'origin' => $origin,
+            ]);
             return Response::forbidden('Forbidden');
         }
 
@@ -42,11 +50,13 @@ final class SecurityMiddleware implements MiddlewareInterface
             $token = $this->extractCsrfToken($request, $config);
 
             if (!$this->security->validateCsrfToken($token)) {
+                $this->recordRisk($request, 'csrf', 'Rejected request with an invalid CSRF token.');
                 return Response::error('CSRF token mismatch', 419);
             }
         }
 
         if (!$this->security->throttle($this->throttleKey($request))) {
+            $this->recordRisk($request, 'throttle', 'Rejected request after exceeding the throttling limit.');
             return Response::json([
                 'success' => false,
                 'message' => 'Too Many Requests',
@@ -58,6 +68,18 @@ final class SecurityMiddleware implements MiddlewareInterface
         }
 
         return $handler->handle($request);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function recordRisk(ServerRequestInterface $request, string $category, string $message, array $context = []): void
+    {
+        if (!$this->riskAnalyzer instanceof RiskAnalyzer) {
+            return;
+        }
+
+        $this->riskAnalyzer->recordRequest($request, $category, $message, $context, 80);
     }
 
     /**

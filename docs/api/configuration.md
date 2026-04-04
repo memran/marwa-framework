@@ -314,6 +314,10 @@ Supported keys:
 - `throttle.prefix`: cache key prefix for throttle counters
 - `throttle.limit`: request limit per window
 - `throttle.window`: throttle window in seconds
+- `risk.enabled`: enable security risk journaling
+- `risk.logPath`: JSONL journal file for risk signals
+- `risk.pruneAfterDays`: default retention window in days
+- `risk.topCount`: number of latest signals shown in reports
 
 Example:
 
@@ -331,6 +335,12 @@ return [
         'prefix' => 'security',
         'limit' => 60,
         'window' => 60,
+    ],
+    'risk' => [
+        'enabled' => true,
+        'logPath' => storage_path('security/risk.jsonl'),
+        'pruneAfterDays' => 30,
+        'topCount' => 10,
     ],
 ];
 ```

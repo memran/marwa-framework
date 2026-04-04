@@ -27,6 +27,7 @@ use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
+use Marwa\Framework\Security\RiskAnalyzer;
 use Marwa\Framework\Security\Security;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\EncryptedSession;
@@ -125,6 +126,11 @@ final class CoreBindingsBootstrapper
         $container->addShared(SecurityInterface::class, function () use ($container) {
             return $container->get(Security::class);
         });
+
+        $container->addShared(RiskAnalyzer::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class))
+            ->addArgument($container->get(LoggerInterface::class));
 
         $container->addShared(ErrorHandlerAdapter::class)
             ->addArgument($app)

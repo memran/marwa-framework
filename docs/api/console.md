@@ -41,4 +41,5 @@ Supported keys:
 - `make:module` generates a `marwa-module` folder scaffold in the first configured module path
 - `make:theme` generates a `marwa-view` theme under `resources/views/themes/<name>`
 - `shell` opens an interactive PsySH session when `psy/psysh` is installed; otherwise it prints installation instructions and exits cleanly
+- `security:report` summarizes the security risk journal and can prune old entries for cron-driven reporting
 - `db:seed` runs application seeders through the configured database seeder path

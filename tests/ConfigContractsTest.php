@@ -148,6 +148,9 @@ final class ConfigContractsTest extends TestCase
         self::assertSame([], $defaults['trustedHosts']);
         self::assertSame([], $defaults['trustedOrigins']);
         self::assertFalse($defaults['throttle']['enabled']);
+        self::assertTrue($defaults['risk']['enabled']);
+        self::assertSame($this->basePath . '/storage/security/risk.jsonl', $defaults['risk']['logPath']);
+        self::assertSame(30, $defaults['risk']['pruneAfterDays']);
     }
 
     public function testQueueAndScheduleConfigsExposeExpectedDefaults(): void

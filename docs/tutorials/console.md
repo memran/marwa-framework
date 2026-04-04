@@ -65,6 +65,7 @@ php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
 php bin/console make:ai-helper SupportAgent --with-command
 php bin/console shell
+php bin/console security:report --since-hours=24 --prune-days=30
 php bin/console schedule:table
 ```
 
@@ -83,6 +84,8 @@ For the generated provider to autoload in a host application, map `App\\Modules\
 `make:theme` generates `resources/views/themes/<name>` with a valid `marwa-view` `manifest.php`, starter Twig templates, and an `assets/css/app.css` file. Use `--parent` to scaffold theme inheritance.
 
 `shell` opens an interactive PsySH session when the optional `psy/psysh` package is installed. It exposes `$app`, `$container`, `$config`, and `$logger` for live debugging. If PsySH is not installed, the command prints install instructions and exits with a failure code.
+
+`security:report` summarizes the security risk journal written by the request-time analyzer and can optionally prune old entries. This command is intended for cron jobs so you can roll up suspicious requests without slowing the hot path.
 
 `key:generate` prints a cryptographically secure random key using the shared helper implementation. Use `--show-env` for `APP_KEY=...` output, `--length` to control byte length, and `--raw` if you do not want hex encoding.
 

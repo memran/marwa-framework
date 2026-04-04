@@ -28,6 +28,12 @@ final class SecurityConfig
      *         prefix: string,
      *         limit: int,
      *         window: int
+     *     },
+     *     risk: array{
+     *         enabled: bool,
+     *         logPath: string,
+     *         pruneAfterDays: int,
+     *         topCount: int
      *     }
      * }
      */
@@ -50,6 +56,12 @@ final class SecurityConfig
                 'prefix' => 'security',
                 'limit' => 60,
                 'window' => 60,
+            ],
+            'risk' => [
+                'enabled' => true,
+                'logPath' => storage_path('security/risk.jsonl'),
+                'pruneAfterDays' => 30,
+                'topCount' => 10,
             ],
         ];
     }
