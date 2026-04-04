@@ -73,6 +73,15 @@ $mailer = $app->mailer();
 Short description:
 Returns the shared SwiftMailer-compatible mail service.
 
+### `http(): HttpClientInterface`
+
+```php
+$http = $app->http();
+```
+
+Short description:
+Returns the shared Guzzle-backed HTTP client wrapper.
+
 ### `console(): ConsoleKernel`
 
 ```php

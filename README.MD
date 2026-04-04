@@ -26,6 +26,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Path-bound file utility for atomic writes, JSON serialization, copy, move, and deletion workflows
 - GD-backed image utility for loading, resizing, cropping, fitting, and saving common web image formats
 - Scrapbook-backed cache service with SQLite or memory drivers, buffering, collections, and optional stampede protection
+- Guzzle-backed HTTP client service with named clients, fluent request builders, and PSR-7 response access
 - Flysystem-backed storage service with local disks, helper/facade access, and disk switching
 - SwiftMailer-compatible mailer service with SMTP, sendmail, queueable mailable support, and native mail transport configuration
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
@@ -44,6 +45,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Documentation Index](docs/README.md)
 - [Quick Start Tutorial](docs/tutorials/quick-start.md)
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
+- [HTTP Client Tutorial](docs/tutorials/http-client.md)
 - [Events Tutorial](docs/tutorials/events.md)
 - [Mail Tutorial](docs/tutorials/mail.md)
 - [Console Tutorial](docs/tutorials/console.md)
@@ -71,7 +73,7 @@ composer install
 cp .env.example .env
 ```
 
-The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, `config/database.php`, or `config/mail.php`, those settings override the built-in defaults.
+The repository ships sample routes in `routes/web.php` and demo templates in `resources/views/`. The framework will boot without consumer config files; if a host app provides `config/app.php`, `config/event.php`, `config/view.php`, `config/error.php`, `config/database.php`, `config/http.php`, or `config/mail.php`, those settings override the built-in defaults.
 
 Encrypted sessions require `APP_KEY` in `.env`. Generate one with:
 
@@ -88,6 +90,7 @@ The framework is aligned around the MarwaPHP package set:
 - `memran/marwa-event` for PSR-14 event dispatching with listener priorities
 - `memran/marwa-module` for runtime module discovery, provider boot, routes, views, and console command discovery
 - `memran/marwa-db` for shared database bootstrap, ORM/schema wiring, and migration/seeder console commands
+- `guzzlehttp/guzzle` for the outbound HTTP client wrapper and fluent request API
 - `swiftmailer/swiftmailer` for SwiftMailer-compatible mail transport when installed
 - `memran/marwa-error-handler`, `memran/marwa-debugbar`, and `memran/marwa-logger` for runtime diagnostics
 - optional `memran/marwa-module`, `memran/marwa-entity`, and `memran/marwa-support` integrations in consuming apps
@@ -209,6 +212,21 @@ cache()->remember('stats', 60, function (): array {
 ```
 
 By default the cache uses SQLite at `storage/cache/framework.sqlite` when `pdo_sqlite` is available, and falls back to an in-memory store otherwise.
+
+## HTTP Client
+
+The framework exposes a Guzzle-backed HTTP client through the container, helper, and facade.
+
+```php
+http()
+    ->withClient('github')
+    ->withHeaders(['Accept' => 'application/vnd.github+json'])
+    ->get('/repos/memran/marwa-framework');
+
+http()->json('POST', '/api/users', ['name' => 'Marwa']);
+```
+
+The default configuration supports named clients under `config/http.php`, so host apps can declare one or more API profiles with base URIs, headers, timeouts, and TLS settings.
 
 ## Storage
 

@@ -137,6 +137,43 @@ return [
 ];
 ```
 
+## `config/http.php`
+
+Defined by `Marwa\Framework\Config\HttpConfig`.
+
+Supported keys:
+
+- `enabled`: enable the shared HTTP client wrapper
+- `default`: default client profile name
+- `clients`: named client profiles keyed by profile name
+- `clients.*.base_uri`: base URI for that client profile
+- `clients.*.timeout`: request timeout in seconds
+- `clients.*.connect_timeout`: connection timeout in seconds
+- `clients.*.http_errors`: let Guzzle throw on 4xx/5xx responses
+- `clients.*.verify`: TLS verification flag or CA path
+- `clients.*.headers`: default request headers for that profile
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'default' => 'github',
+    'clients' => [
+        'github' => [
+            'base_uri' => 'https://api.github.com',
+            'timeout' => 15,
+            'connect_timeout' => 5,
+            'http_errors' => false,
+            'verify' => true,
+            'headers' => [
+                'Accept' => 'application/vnd.github+json',
+            ],
+        ],
+    ],
+];
+```
+
 ## `config/cache.php`
 
 Defined by `Marwa\Framework\Config\CacheConfig`.

@@ -12,6 +12,7 @@ use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
+use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Supports\Config;
@@ -134,6 +135,14 @@ function cache(?string $key = null, mixed $default = null): mixed
     }
 
     return $cache;
+}
+
+function http(): HttpClientInterface
+{
+    /** @var HttpClientInterface $http */
+    $http = app(HttpClientInterface::class);
+
+    return $http;
 }
 
 function storage(?string $disk = null): StorageSupport

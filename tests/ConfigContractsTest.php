@@ -11,6 +11,7 @@ use Marwa\Framework\Config\CacheConfig;
 use Marwa\Framework\Config\DatabaseConfig;
 use Marwa\Framework\Config\ErrorConfig;
 use Marwa\Framework\Config\EventConfig;
+use Marwa\Framework\Config\HttpConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Config\MailConfig;
 use Marwa\Framework\Config\ModuleConfig;
@@ -155,5 +156,19 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('127.0.0.1', $defaults['smtp']['host']);
         self::assertSame(1025, $defaults['smtp']['port']);
         self::assertSame('/usr/sbin/sendmail -bs', $defaults['sendmail']['path']);
+    }
+
+    public function testHttpConfigExposesExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = HttpConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertSame('default', $defaults['default']);
+        self::assertArrayHasKey('default', $defaults['clients']);
+        self::assertSame(30.0, $defaults['clients']['default']['timeout']);
+        self::assertSame(10.0, $defaults['clients']['default']['connect_timeout']);
+        self::assertFalse($defaults['clients']['default']['http_errors']);
+        self::assertTrue($defaults['clients']['default']['verify']);
     }
 }

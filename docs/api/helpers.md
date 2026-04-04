@@ -61,6 +61,14 @@ $theme = cache('settings.theme', 'dark');
 
 Returns the shared cache service or reads one cached value.
 
+### `http(): \Marwa\Framework\Contracts\HttpClientInterface`
+
+```php
+http()->withClient('github')->get('/repos/memran/marwa-framework');
+```
+
+Returns the shared Guzzle-backed HTTP client service.
+
 ### `mailer(): \Marwa\Framework\Contracts\MailerInterface`
 
 ```php
@@ -88,6 +96,10 @@ Creates a basic HTML response.
 ### `router(): mixed`
 
 Returns the router adapter from the container.
+
+### `http(): \Marwa\Framework\Contracts\HttpClientInterface`
+
+Returns the shared outbound HTTP client service.
 
 ### `db(): \Marwa\DB\Connection\ConnectionManager`
 
