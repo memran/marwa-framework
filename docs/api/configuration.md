@@ -174,6 +174,49 @@ return [
 ];
 ```
 
+## `config/notification.php`
+
+Defined by `Marwa\Framework\Config\NotificationConfig`.
+
+Supported keys:
+
+- `enabled`: enable the notification manager
+- `default`: default channel list used when a notification does not declare channels
+- `channels.mail.enabled`: enable or disable mail delivery
+- `channels.database.enabled`: enable or disable database persistence
+- `channels.database.connection`: `marwa-db` connection name
+- `channels.database.table`: database notifications table name
+- `channels.http.enabled`: enable outbound HTTP/webhook delivery
+- `channels.http.client`: HTTP client profile name
+- `channels.http.method`: HTTP method such as `POST`
+- `channels.http.url`: default webhook URL
+- `channels.http.headers`: default HTTP headers
+- `channels.sms.enabled`: enable SMS delivery
+- `channels.sms.client`: HTTP client profile name used by the SMS gateway
+- `channels.sms.method`: HTTP method for the SMS gateway
+- `channels.sms.url`: SMS gateway URL
+- `channels.broadcast.enabled`: enable event broadcast dispatching
+- `channels.broadcast.event`: broadcast event class name
+
+Example:
+
+```php
+return [
+    'enabled' => true,
+    'default' => ['mail', 'database'],
+    'channels' => [
+        'http' => [
+            'enabled' => true,
+            'url' => 'https://hooks.example.test/notify',
+        ],
+        'sms' => [
+            'enabled' => true,
+            'url' => 'https://sms.example.test/send',
+        ],
+    ],
+];
+```
+
 ## `config/cache.php`
 
 Defined by `Marwa\Framework\Config\CacheConfig`.

@@ -82,6 +82,15 @@ $http = $app->http();
 Short description:
 Returns the shared Guzzle-backed HTTP client wrapper.
 
+### `notifications(): NotificationManager`
+
+```php
+$notifications = $app->notifications();
+```
+
+Short description:
+Returns the shared notification manager.
+
 ### `console(): ConsoleKernel`
 
 ```php

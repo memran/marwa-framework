@@ -15,6 +15,7 @@ use Marwa\Framework\Config\HttpConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Config\MailConfig;
 use Marwa\Framework\Config\ModuleConfig;
+use Marwa\Framework\Config\NotificationConfig;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Config\SessionConfig;
@@ -156,6 +157,20 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('127.0.0.1', $defaults['smtp']['host']);
         self::assertSame(1025, $defaults['smtp']['port']);
         self::assertSame('/usr/sbin/sendmail -bs', $defaults['sendmail']['path']);
+    }
+
+    public function testNotificationConfigExposesExpectedDefaults(): void
+    {
+        $app = new Application($this->basePath);
+        $defaults = NotificationConfig::defaults($app);
+
+        self::assertTrue($defaults['enabled']);
+        self::assertSame(['mail'], $defaults['default']);
+        self::assertArrayHasKey('mail', $defaults['channels']);
+        self::assertArrayHasKey('database', $defaults['channels']);
+        self::assertArrayHasKey('http', $defaults['channels']);
+        self::assertArrayHasKey('sms', $defaults['channels']);
+        self::assertArrayHasKey('broadcast', $defaults['channels']);
     }
 
     public function testHttpConfigExposesExpectedDefaults(): void

@@ -20,6 +20,7 @@ use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
@@ -85,6 +86,10 @@ final class CoreBindingsBootstrapper
         $container->addShared(MailerInterface::class, function () use ($container) {
             return $container->get(Mailer::class);
         });
+
+        $container->addShared(NotificationManager::class)
+            ->addArgument($app)
+            ->addArgument($container->get(Config::class));
 
         $container->addShared(EncryptedSession::class)
             ->addArgument($app)

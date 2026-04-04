@@ -15,6 +15,7 @@ use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Task;
@@ -214,6 +215,11 @@ final class Application
     public function http(): HttpClientInterface
     {
         return $this->container->get(HttpClientInterface::class);
+    }
+
+    public function notifications(): NotificationManager
+    {
+        return $this->container->get(NotificationManager::class);
     }
 
     public function mailer(): MailerInterface

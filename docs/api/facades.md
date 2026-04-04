@@ -62,6 +62,17 @@ Mailer::to('user@example.com')
 Short description:
 Builds and sends messages through the shared SwiftMailer-compatible mail service.
 
+## `Notification`
+
+```php
+use Marwa\Framework\Facades\Notification;
+
+Notification::send(new App\Notifications\OrderShipped(), $user);
+```
+
+Short description:
+Dispatches a notification through the configured channel manager.
+
 ## `View`
 
 ```php

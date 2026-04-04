@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Adapters\Event\AbstractEvent;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
@@ -14,7 +13,9 @@ use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Contracts\NotificationInterface;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Image as ImageSupport;
 use Marwa\Framework\Supports\Mailer;
@@ -238,6 +239,11 @@ function mailer(): MailerInterface
     return app(Mailer::class);
 }
 
+function notification(): NotificationManager
+{
+    return app(NotificationManager::class);
+}
+
 function router(): mixed
 {
     return app(RouterAdapter::class);
@@ -325,6 +331,14 @@ function running_in_console(): bool
 function dispatch(object $event): object
 {
     return app()->dispatch($event);
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function notify(NotificationInterface $notification, ?object $notifiable = null): array
+{
+    return notification()->send($notification, $notifiable);
 }
 
 if (!function_exists('generate_key')) {

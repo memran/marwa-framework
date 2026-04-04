@@ -67,7 +67,8 @@
         "Marwa\\Framework\\Tests\\": "tests/"
       },
       "files": [
-        "tests/Fixtures/Guzzle/GuzzleHttpStub.php"
+        "tests/Fixtures/Guzzle/GuzzleHttpStub.php",
+        "tests/Fixtures/Notifications/NotificationFixtures.php"
       ]
     },
   "config": {

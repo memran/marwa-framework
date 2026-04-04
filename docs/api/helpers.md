@@ -69,6 +69,22 @@ http()->withClient('github')->get('/repos/memran/marwa-framework');
 
 Returns the shared Guzzle-backed HTTP client service.
 
+### `notification(): \Marwa\Framework\Notifications\NotificationManager`
+
+```php
+notification()->send(new App\Notifications\OrderShipped());
+```
+
+Returns the shared notification manager.
+
+### `notify(\Marwa\Framework\Contracts\NotificationInterface $notification, ?object $notifiable = null): array`
+
+```php
+notify(new App\Notifications\OrderShipped(), $user);
+```
+
+Sends a notification through the configured channels and returns channel results.
+
 ### `mailer(): \Marwa\Framework\Contracts\MailerInterface`
 
 ```php
