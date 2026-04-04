@@ -18,6 +18,7 @@ Use this index as the entry point for the framework docs.
 - [Mail](./tutorials/mail.md)
 - [Notifications](./tutorials/notifications.md)
 - [Models](./tutorials/models.md)
+- [Seeding](./tutorials/seeding.md)
 - [HTTP Client](./tutorials/http-client.md)
 - [Console Flow](./tutorials/console.md)
 
@@ -33,6 +34,7 @@ Use this index as the entry point for the framework docs.
 - [Security](./api/security.md)
 - [Notifications](./api/notifications.md)
 - [Models](./api/models.md)
+- [Seeding](./api/seeding.md)
 - [Console](./api/console.md)
 - [Helper Functions](./api/helpers.md)
 - [Facades](./api/facades.md)
@@ -49,6 +51,7 @@ Use this index as the entry point for the framework docs.
 3. [Controllers](./tutorials/controllers.md)
 4. [Validation](./tutorials/validation.md)
 5. [View](./tutorials/view.md)
-6. [Console Flow](./tutorials/console.md)
-7. [Configuration Contracts](./api/configuration.md)
-
+6. [Models](./tutorials/models.md)
+7. [Seeding](./tutorials/seeding.md)
+8. [Console Flow](./tutorials/console.md)
+9. [Configuration Contracts](./api/configuration.md)

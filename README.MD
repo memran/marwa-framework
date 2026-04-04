@@ -46,9 +46,11 @@ $response = $app->http()->handle($request);
 
 ```bash
 php bin/console make:controller Admin/PostController --resource
+php bin/console make:seeder UserSeeder
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
+php bin/console db:seed --class=DatabaseSeeder
 php bin/console schedule:run --for=60 --sleep=1
 ```
 
@@ -60,6 +62,7 @@ php bin/console schedule:run --for=60 --sleep=1
 - [Validation](docs/tutorials/validation.md)
 - [View](docs/tutorials/view.md)
 - [Console](docs/tutorials/console.md)
+- [Seeding](docs/tutorials/seeding.md)
 - [Architecture](docs/architecture.md)
 
 ## Notes
@@ -76,4 +79,3 @@ composer test
 composer analyse
 composer lint
 ```
-

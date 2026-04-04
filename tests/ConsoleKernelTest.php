@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use League\Container\Container;
+use Marwa\DB\Facades\DB;
+use Marwa\DB\Schema\Schema;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Console\CommandRegistry;
@@ -26,14 +28,17 @@ use Symfony\Component\Console\Tester\CommandTester;
 final class ConsoleKernelTest extends TestCase
 {
     private string $basePath;
+    private string $databaseFile;
     private bool $handlersBooted = false;
 
     protected function setUp(): void
     {
         $this->handlersBooted = false;
         $this->basePath = sys_get_temp_dir() . '/marwa-console-' . bin2hex(random_bytes(6));
+        $this->databaseFile = $this->basePath . '/database/database.sqlite';
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
+        mkdir($this->basePath . '/database', 0777, true);
         file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nAPP_NAME=\"Console App\"\nAPP_VERSION=1.2.3\nTIMEZONE=UTC\n");
     }
 
@@ -44,6 +49,7 @@ final class ConsoleKernelTest extends TestCase
             $this->basePath . '/config/module.php',
             $this->basePath . '/config/database.php',
             $this->basePath . '/.env',
+            $this->databaseFile,
         ] as $file) {
             @unlink($file);
         }
@@ -174,9 +180,11 @@ PHP
 
     public function testConsoleKernelRegistersMarwaDbCommandsWhenDatabaseIsEnabled(): void
     {
+        $dbFile = $this->databaseFile;
+
         file_put_contents(
             $this->basePath . '/config/database.php',
-            <<<'PHP'
+            <<<PHP
 <?php
 
 return [
@@ -185,7 +193,7 @@ return [
     'connections' => [
         'sqlite' => [
             'driver' => 'sqlite',
-            'database' => ':memory:',
+            'database' => '{$dbFile}',
         ],
     ],
 ];
@@ -229,6 +237,88 @@ PHP
         self::assertStringContainsString('use Marwa\\Framework\\Controllers\\Controller;', $contents);
         self::assertStringContainsString('final class PostController extends Controller', $contents);
         self::assertStringContainsString('public function index(): ResponseInterface', $contents);
+    }
+
+    public function testMakeSeederCommandGeneratesFrameworkSeederStub(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => '{$this->databaseFile}',
+        ],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $seederCommand = $console->find('make:seeder');
+        $seederTester = new CommandTester($seederCommand);
+        self::assertSame(0, $seederTester->execute([
+            'name' => 'UserSeeder',
+        ]));
+
+        self::assertFileExists($this->basePath . '/database/seeders/UserSeeder.php');
+
+        $contents = (string) file_get_contents($this->basePath . '/database/seeders/UserSeeder.php');
+        self::assertStringContainsString('namespace Database\\Seeders;', $contents);
+        self::assertStringContainsString('use Marwa\\Framework\\Database\\Seeder;', $contents);
+        self::assertStringContainsString('extends Seeder', $contents);
+        self::assertStringContainsString('$this->faker()', $contents);
+    }
+
+    public function testDbSeedCommandRunsExplicitSeederClass(): void
+    {
+        $seedersPath = __DIR__ . '/Fixtures/Seeders';
+
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => '{$this->databaseFile}',
+        ],
+    ],
+    'seedersPath' => '{$seedersPath}',
+    'seedersNamespace' => 'Marwa\\\\Framework\\\\Tests\\\\Fixtures\\\\Seeders',
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        Schema::create('users', static function ($table): void {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('email');
+        });
+
+        $command = $console->find('db:seed');
+        $tester = new CommandTester($command);
+        self::assertSame(0, $tester->execute([
+            'class' => 'DatabaseSeeder',
+        ]));
+
+        self::assertSame(5, DB::table('users')->count());
     }
 
     public function testKeyGenerateCommandPrintsEnvReadyHexKey(): void
@@ -334,7 +424,7 @@ PHP
     {
         file_put_contents(
             $this->basePath . '/config/database.php',
-            <<<'PHP'
+            <<<PHP
 <?php
 
 return [
@@ -343,7 +433,7 @@ return [
     'connections' => [
         'sqlite' => [
             'driver' => 'sqlite',
-            'database' => ':memory:',
+            'database' => '{$this->databaseFile}',
         ],
     ],
 ];

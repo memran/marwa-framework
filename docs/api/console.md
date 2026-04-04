@@ -37,5 +37,7 @@ Supported keys:
 - `make:controller` generates controllers in `app/Http/Controllers` and extends the framework base controller
 - `make:model` generates `marwa-db` models in `app/Models`
 - `make:model --migration` also runs the registered `make:migration` command from `marwa-db`
+- `make:seeder` generates a Faker-ready seeder in `database/seeders`
 - `make:module` generates a `marwa-module` folder scaffold in the first configured module path
 - `make:theme` generates a `marwa-view` theme under `resources/views/themes/<name>`
+- `db:seed` runs application seeders through the configured database seeder path

@@ -59,6 +59,7 @@ php bin/console module:cache
 php bin/console make:command CleanupCommand
 php bin/console make:controller Admin/PostController --resource
 php bin/console make:mail WelcomeMail
+php bin/console make:seeder UserSeeder
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
@@ -72,6 +73,8 @@ php bin/console schedule:table
 
 `make:model` generates `marwa-db` model classes in `app/Models`. Use `--migration` to call the registered `make:migration` command and create a matching table migration in `database/migrations`.
 
+`make:seeder` generates a Faker-ready seeder in `database/seeders` that extends `Marwa\Framework\Database\Seeder`. Use it to bulk insert fake data with `faker()`, `insertMany()`, and `truncate()`.
+
 `make:module` generates a `marwa-module` compatible folder in the first configured `module.paths` location, including `manifest.php`, a module service provider, `routes/http.php`, `resources/views/index.twig`, and `Console/Commands`.
 
 For the generated provider to autoload in a host application, map `App\\Modules\\` to `modules/` in the consumer `composer.json`.
@@ -79,6 +82,8 @@ For the generated provider to autoload in a host application, map `App\\Modules\
 `make:theme` generates `resources/views/themes/<name>` with a valid `marwa-view` `manifest.php`, starter Twig templates, and an `assets/css/app.css` file. Use `--parent` to scaffold theme inheritance.
 
 `key:generate` prints a cryptographically secure random key using the shared helper implementation. Use `--show-env` for `APP_KEY=...` output, `--length` to control byte length, and `--raw` if you do not want hex encoding.
+
+`db:seed` runs discovered seeders from the configured database seeder path. Pass `--class=DatabaseSeeder` to run a single entry point, `--dry-run` to inspect discovery, or `--no-transaction` if you want to manage transactions yourself.
 
 ## Scheduling
 
