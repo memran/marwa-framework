@@ -40,4 +40,5 @@ Supported keys:
 - `make:seeder` generates a Faker-ready seeder in `database/seeders`
 - `make:module` generates a `marwa-module` folder scaffold in the first configured module path
 - `make:theme` generates a `marwa-view` theme under `resources/views/themes/<name>`
+- `shell` opens an interactive PsySH session when `psy/psysh` is installed; otherwise it prints installation instructions and exits cleanly
 - `db:seed` runs application seeders through the configured database seeder path

@@ -23,6 +23,7 @@ use Marwa\Framework\Console\Commands\RouteCacheCommand;
 use Marwa\Framework\Console\Commands\RouteClearCommand;
 use Marwa\Framework\Console\Commands\ScheduleRunCommand;
 use Marwa\Framework\Console\Commands\ScheduleTableCommand;
+use Marwa\Framework\Console\Commands\ShellCommand;
 
 final class ConsoleConfig
 {
@@ -65,6 +66,7 @@ final class ConsoleConfig
                 MakeModuleCommand::class,
                 MakeThemeCommand::class,
                 MakeAiHelperCommand::class,
+                ShellCommand::class,
             ],
             'discover' => [],
             'autoDiscover' => [

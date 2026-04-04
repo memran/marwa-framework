@@ -124,6 +124,7 @@ PHP
         self::assertTrue($console->has('make:module'));
         self::assertTrue($console->has('make:theme'));
         self::assertTrue($console->has('make:ai-helper'));
+        self::assertTrue($console->has('shell'));
         self::assertSame('Console App', $console->getName());
         self::assertSame('1.2.3', $console->getVersion());
     }
@@ -153,6 +154,7 @@ PHP
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeThemeCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(\Marwa\Framework\Console\Commands\ShellCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
     public function testConsoleKernelAutoDiscoversModuleCommands(): void

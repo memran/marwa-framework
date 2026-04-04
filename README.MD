@@ -50,6 +50,7 @@ php bin/console make:seeder UserSeeder
 php bin/console make:model Billing/Invoice --migration
 php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
+php bin/console shell
 php bin/console db:seed --class=DatabaseSeeder
 php bin/console schedule:run --for=60 --sleep=1
 ```

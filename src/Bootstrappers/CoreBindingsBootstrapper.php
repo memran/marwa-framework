@@ -15,12 +15,14 @@ use Marwa\Framework\Console\CommandDiscovery;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
 use Marwa\Framework\Console\ConsoleKernel;
+use Marwa\Framework\Console\PsyshShellFactory;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Framework\Contracts\ShellFactoryInterface;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
@@ -156,6 +158,12 @@ final class CoreBindingsBootstrapper
             ->addArgument($app)
             ->addArgument($container)
             ->addArgument($container->get(LoggerInterface::class));
+
+        $container->addShared(PsyshShellFactory::class);
+
+        $container->addShared(ShellFactoryInterface::class, function () use ($container) {
+            return $container->get(PsyshShellFactory::class);
+        });
 
         $container->addShared(CommandDiscovery::class)
             ->addArgument($app)
