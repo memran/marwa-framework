@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace {{ namespace }};
 
+use Marwa\Framework\Controllers\Controller;
 use Psr\Http\Message\ResponseInterface;
 
-final class {{ class }}
+final class {{ class }} extends Controller
 {
     public function index(): ResponseInterface
     {

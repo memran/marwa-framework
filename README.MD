@@ -34,6 +34,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Framework model base on top of `marwa-db` with CRUD helpers, casts, and pagination
 - Symfony Console integration with a shared application container, abstract command base class, command discovery, and scaffolding commands
 - Built-in scaffolding for commands, controllers, and `marwa-db` models with optional migration generation
+- Base controller with response, redirect, validation, request, and flash helpers for faster application development
 - Lightweight scheduler with configurable file or database state storage, plus a file-backed queue for cron-driven recurring work and deferred jobs
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
@@ -57,9 +58,11 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [Notifications Tutorial](docs/tutorials/notifications.md)
 - [Models Tutorial](docs/tutorials/models.md)
 - [Validation Tutorial](docs/tutorials/validation.md)
+- [Controllers Tutorial](docs/tutorials/controllers.md)
 - [Console Tutorial](docs/tutorials/console.md)
 - [Architecture](docs/architecture.md)
 - [API Reference](docs/api/application.md)
+- [Controller API](docs/api/controllers.md)
 
 ## Requirements
 
@@ -114,6 +117,7 @@ The framework is aligned around the MarwaPHP package set:
 src/                  Framework source
 src/Console/          Console kernel, commands, and discovery services
 src/Adapters/         Integration adapters for router, events, view, error handling
+src/Controllers/      Base controller helpers for app controllers
 src/Notifications/    Notification manager, channels, and notification base classes
 src/Middlewares/      HTTP middleware
 src/Providers/        Service providers
@@ -146,6 +150,24 @@ php bin/console make:module Blog
 php bin/console make:theme dark --parent=default
 php bin/console schedule:table
 php bin/console schedule:run --for=60 --sleep=1
+```
+
+## Controllers
+
+Generated controllers extend `Marwa\Framework\Controllers\Controller` so application code can reuse common helpers for responses, redirects, validation, and flash data.
+
+```php
+final class PostController extends Controller
+{
+    public function store(): ResponseInterface
+    {
+        $data = $this->validate([
+            'title' => 'required|string|min:3',
+        ]);
+
+        return $this->json(['data' => $data]);
+    }
+}
 ```
 
 ## PHPUnit

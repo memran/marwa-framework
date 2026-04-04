@@ -34,7 +34,7 @@ Supported keys:
 
 - `key:generate` outputs a cryptographically secure random key for app configuration
 - `make:command` generates Symfony Console commands in `app/Console/Commands`
-- `make:controller` generates controllers in `app/Http/Controllers`
+- `make:controller` generates controllers in `app/Http/Controllers` and extends the framework base controller
 - `make:model` generates `marwa-db` models in `app/Models`
 - `make:model --migration` also runs the registered `make:migration` command from `marwa-db`
 - `make:module` generates a `marwa-module` folder scaffold in the first configured module path

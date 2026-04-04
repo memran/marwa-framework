@@ -226,7 +226,8 @@ PHP
         $contents = (string) file_get_contents($path);
 
         self::assertStringContainsString('namespace App\\Http\\Controllers\\Admin;', $contents);
-        self::assertStringContainsString('final class PostController', $contents);
+        self::assertStringContainsString('use Marwa\\Framework\\Controllers\\Controller;', $contents);
+        self::assertStringContainsString('final class PostController extends Controller', $contents);
         self::assertStringContainsString('public function index(): ResponseInterface', $contents);
     }
 

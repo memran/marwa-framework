@@ -66,7 +66,7 @@ php bin/console make:ai-helper SupportAgent --with-command
 php bin/console schedule:table
 ```
 
-`make:controller` generates controllers in `app/Http/Controllers`. Use `--resource` to scaffold CRUD-style methods.
+`make:controller` generates controllers in `app/Http/Controllers` and extends `Marwa\Framework\Controllers\Controller`. Use `--resource` to scaffold CRUD-style methods.
 
 `make:mail` generates `App\Mail\...` classes that extend the framework `Mailable` base and show how to build a SwiftMailer-compatible message.
 
