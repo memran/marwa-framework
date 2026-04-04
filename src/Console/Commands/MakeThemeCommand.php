@@ -90,13 +90,13 @@ final class MakeThemeCommand extends AbstractCommand
     private function themesBasePath(): string
     {
         $config = array_replace_recursive(ViewConfig::defaults($this->app()), $this->config()->getArray(ViewConfig::KEY, []));
-        $viewsPath = $config['viewsPath'] ?? $this->app()->basePath('resources/views');
+        $viewsPath = $config['themePath'] ?? $this->app()->basePath('resources/views/themes');
 
         if (!is_string($viewsPath) || $viewsPath === '') {
-            throw new \RuntimeException('The configured view path is invalid.');
+            throw new \RuntimeException('The configured theme path is invalid.');
         }
 
-        return rtrim($viewsPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'themes';
+        return rtrim($viewsPath, DIRECTORY_SEPARATOR);
     }
 
     private function normalizeThemeName(string $value): string

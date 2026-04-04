@@ -181,7 +181,7 @@ Helpers for CSRF, trust checks, rate limiting, and safe filesystem access.
 return view('welcome', ['name' => 'Marwa']);
 ```
 
-Returns the view adapter or renders a template directly.
+Returns the shared view service or renders a template as an HTML response directly.
 
 ## Events and Logging
 

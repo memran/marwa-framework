@@ -31,6 +31,7 @@ use Marwa\Framework\Supports\EncryptedSession;
 use Marwa\Framework\Supports\Http;
 use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Storage;
+use Marwa\Framework\Views\View as FrameworkView;
 use Psr\Log\LoggerInterface;
 
 final class CoreBindingsBootstrapper
@@ -87,6 +88,10 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(MailerInterface::class, function () use ($container) {
             return $container->get(Mailer::class);
+        });
+
+        $container->addShared(FrameworkView::class, function () use ($container) {
+            return new FrameworkView($container->get(\Marwa\Framework\Adapters\ViewAdapter::class));
         });
 
         $container->addShared(NotificationManager::class)

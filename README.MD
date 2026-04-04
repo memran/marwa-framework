@@ -37,7 +37,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - Lightweight scheduler with configurable file or database state storage, plus a file-backed queue for cron-driven recurring work and deferred jobs
 - First-class `marwa-module` runtime integration with module providers, routes, views, registry bindings, and module command discovery
 - First-class `marwa-db` integration with shared connection bootstrap and migration/seeder console commands
-- Twig-powered view adapter with theme support and cache directory bootstrapping
+- Twig-powered view service with optional theme management and cache directory bootstrapping
 - Shared error handling through `marwa-error-handler` for HTTP and console with logger/debug reporter integration
 - Debug and maintenance middleware for local development and operational controls
 - Production-ready quality tooling with PHPUnit, PHPStan, PHP-CS-Fixer, and GitHub Actions CI
@@ -50,6 +50,7 @@ Marwa Framework is a modular, PSR-aligned PHP 8.2+ framework core for applicatio
 - [HTTP Kernel Tutorial](docs/tutorials/http-kernel.md)
 - [HTTP Client Tutorial](docs/tutorials/http-client.md)
 - [Events Tutorial](docs/tutorials/events.md)
+- [View Tutorial](docs/tutorials/view.md)
 - [Security Tutorial](docs/tutorials/security.md)
 - [Mail Tutorial](docs/tutorials/mail.md)
 - [Notifications Tutorial](docs/tutorials/notifications.md)
@@ -193,6 +194,18 @@ throttle('login:' . $request->getUri()->getPath());
 ```
 
 Enable or tune CSRF, host/origin checks, and throttling in `config/security.php`.
+
+## Views
+
+The framework exposes a thin `view()` service wrapper around `marwa-view`.
+
+```php
+view()->share('appName', 'Marwa');
+echo view()->render('welcome', ['name' => 'Alice']);
+view()->theme('dark');
+```
+
+Theme manifests live under `resources/views/themes/<theme>/manifest.php` by default. Configure `config/view.php` if you want a different theme directory, active theme, or fallback theme.
 
 ## Sessions
 

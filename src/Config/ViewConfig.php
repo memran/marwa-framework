@@ -15,7 +15,9 @@ final class ViewConfig
      *     viewsPath: string,
      *     cachePath: string,
      *     debug: bool,
-     *     defaultTheme: string
+     *     themePath: string,
+     *     activeTheme: string,
+     *     fallbackTheme: string
      * }
      */
     public static function defaults(Application $app): array
@@ -24,7 +26,9 @@ final class ViewConfig
             'viewsPath' => $app->basePath('resources/views'),
             'cachePath' => $app->basePath('storage/cache/views'),
             'debug' => (bool) env('APP_DEBUG', false),
-            'defaultTheme' => 'default',
+            'themePath' => $app->basePath('resources/views/themes'),
+            'activeTheme' => 'default',
+            'fallbackTheme' => 'default',
         ];
     }
 }

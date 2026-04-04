@@ -16,6 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 final class ViewAdapter
 {
     protected View $engine;
+    private ?ThemeBuilder $themeBuilder = null;
 
     public function __construct(private Application $app, private Config $config)
     {
@@ -35,23 +36,65 @@ final class ViewAdapter
 
         $this->createViewEngine($config);
     }
+
     public function createViewEngine(ViewConfig $config): View
     {
+        $this->themeBuilder = $this->getThemeBuilder();
         $this->engine = new View(
             config: $config,
             extensions: [],
-            themeBuilder: $this->getThemeBuilder()
+            themeBuilder: $this->themeBuilder
         );
+
         return $this->engine;
     }
+
     public function getView(): View
     {
         return $this->engine;
     }
 
+    public function engine(): View
+    {
+        return $this->engine;
+    }
+
+    public function themeBuilder(): ?ThemeBuilder
+    {
+        return $this->themeBuilder;
+    }
+
+    public function currentTheme(): ?string
+    {
+        return $this->themeBuilder?->current();
+    }
+
+    public function selectedTheme(): ?string
+    {
+        return $this->themeBuilder?->selected();
+    }
+
+    public function useTheme(string $themeName): void
+    {
+        $this->themeBuilder?->useTheme($themeName);
+    }
+
+    public function share(string $namespace, mixed $value): void
+    {
+        $this->engine->share($namespace, $value);
+    }
+
     public function addNamespace(string $namespace, string $path): void
     {
         $this->engine->addNamespace($namespace, $path);
+    }
+
+    public function exists(string $template): bool
+    {
+        $twig = $this->twig();
+        $loader = $twig->getLoader();
+
+        return $loader->exists($template);
     }
 
     /**
@@ -65,18 +108,22 @@ final class ViewAdapter
     protected function getThemeBuilder(): ?ThemeBuilder
     {
         $defaults = ViewConfigContract::defaults($this->app);
-        $viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
-        $themesBaseDir = $viewsPath . DIRECTORY_SEPARATOR . 'themes';
+        $themesBaseDir = $this->config->getString(ViewConfigContract::KEY . '.themePath', $defaults['themePath']);
         $this->ensureDirectory($themesBaseDir);
-        $defaultTheme = $this->config->getString(ViewConfigContract::KEY . '.defaultTheme', $defaults['defaultTheme']);
+        $activeTheme = $this->config->getString(ViewConfigContract::KEY . '.activeTheme', $defaults['activeTheme']);
+        $fallbackTheme = $this->config->getString(ViewConfigContract::KEY . '.fallbackTheme', $defaults['fallbackTheme']);
 
-        if (!$this->hasThemeManifest($themesBaseDir, $defaultTheme)) {
+        $selectedTheme = $this->hasThemeManifest($themesBaseDir, $activeTheme)
+            ? $activeTheme
+            : ($this->hasThemeManifest($themesBaseDir, $fallbackTheme) ? $fallbackTheme : '');
+
+        if ($selectedTheme === '') {
             return null;
         }
 
         return ThemeBootstrap::initFromDirectory(
             themesBaseDir: $themesBaseDir,
-            defaultTheme: $defaultTheme
+            defaultTheme: $selectedTheme
         );
     }
 
@@ -95,5 +142,16 @@ final class ViewAdapter
 
         return is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.php')
             || is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.json');
+    }
+
+    private function twig(): \Twig\Environment
+    {
+        $reflection = new \ReflectionObject($this->engine);
+        $property = $reflection->getProperty('twig');
+
+        /** @var \Twig\Environment $twig */
+        $twig = $property->getValue($this->engine);
+
+        return $twig;
     }
 }

@@ -21,6 +21,7 @@ use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Task;
 use Marwa\Framework\Supports\Storage;
+use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
 use Marwa\Module\Contracts\ModuleServiceProviderInterface;
 use Marwa\Module\ModuleBuilder;
@@ -236,6 +237,11 @@ final class Application
     public function storage(): Storage
     {
         return $this->container->get(Storage::class);
+    }
+
+    public function view(): FrameworkView
+    {
+        return $this->container->get(FrameworkView::class);
     }
 
     public function add(string $id, mixed $value): void

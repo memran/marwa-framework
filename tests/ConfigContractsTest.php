@@ -69,6 +69,9 @@ final class ConfigContractsTest extends TestCase
 
         self::assertSame($this->basePath . '/resources/views', ViewConfig::defaults($app)['viewsPath']);
         self::assertSame($this->basePath . '/storage/cache/views', ViewConfig::defaults($app)['cachePath']);
+        self::assertSame($this->basePath . '/resources/views/themes', ViewConfig::defaults($app)['themePath']);
+        self::assertSame('default', ViewConfig::defaults($app)['activeTheme']);
+        self::assertSame('default', ViewConfig::defaults($app)['fallbackTheme']);
         self::assertSame($this->basePath . '/storage/cache/framework.sqlite', CacheConfig::defaults($app)['sqlite']['path']);
         self::assertSame($this->basePath . '/storage/app', StorageConfig::defaults($app)['disks']['local']['root']);
         self::assertSame($this->basePath . '/storage/app/public', StorageConfig::defaults($app)['disks']['public']['root']);

@@ -37,7 +37,22 @@ Supported keys:
 - `viewsPath`: absolute or base-path-resolved views directory
 - `cachePath`: writable compiled-template cache directory
 - `debug`: enable template debug behavior
-- `defaultTheme`: default theme name
+- `themePath`: theme root directory
+- `activeTheme`: currently selected theme name
+- `fallbackTheme`: fallback theme name
+
+Example:
+
+```php
+return [
+    'viewsPath' => resources_path('views'),
+    'cachePath' => storage_path('cache/views'),
+    'debug' => false,
+    'themePath' => resources_path('views/themes'),
+    'activeTheme' => 'default',
+    'fallbackTheme' => 'default',
+];
+```
 
 ## `config/event.php`
 

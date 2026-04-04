@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Marwa\Framework\Providers;
 
 use Marwa\Framework\Adapters\DebugbarAdapter;
-use Marwa\Framework\Adapters\{RouterAdapter, ViewAdapter};
+use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Adapters\ServiceProviderAdapter;
+use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;

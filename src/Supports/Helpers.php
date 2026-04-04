@@ -7,7 +7,6 @@ use Marwa\Framework\Adapters\Event\AbstractEvent;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
-use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
@@ -22,6 +21,7 @@ use Marwa\Framework\Supports\Image as ImageSupport;
 use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Supports\Storage as StorageSupport;
+use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\ModuleHandle;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -339,11 +339,14 @@ function image(?string $path = null): ImageSupport
  */
 function view(string $tplName = '', array $params = []): mixed
 {
+    /** @var FrameworkView $view */
+    $view = app(FrameworkView::class);
+
     if ($tplName !== '') {
-        return app(ViewAdapter::class)->render($tplName, $params);
+        return $view->make($tplName, $params);
     }
 
-    return app(ViewAdapter::class);
+    return $view;
 }
 
 function debugger(): mixed

@@ -6,11 +6,11 @@ namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
 use Marwa\Framework\Adapters\Event\ModulesBootstrapped;
-use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
 use Marwa\Module\Module;
 use Marwa\Module\ModulesServiceProvider;
@@ -106,11 +106,11 @@ final class ModuleBootstrapper
 
     private function registerModuleViews(ModuleRegistryInterface $registry): void
     {
-        if (!$this->container->has(ViewAdapter::class)) {
+        if (!$this->container->has(FrameworkView::class)) {
             return;
         }
 
-        $view = $this->container->get(ViewAdapter::class);
+        $view = $this->container->get(FrameworkView::class);
 
         foreach ($registry->all() as $module) {
             $viewsPath = $module->path('views');
