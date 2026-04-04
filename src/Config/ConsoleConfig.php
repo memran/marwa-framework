@@ -10,6 +10,7 @@ use Marwa\Framework\Console\Commands\BootstrapClearCommand;
 use Marwa\Framework\Console\Commands\ConfigCacheCommand;
 use Marwa\Framework\Console\Commands\ConfigClearCommand;
 use Marwa\Framework\Console\Commands\GenerateKeyCommand;
+use Marwa\Framework\Console\Commands\KafkaConsumeCommand;
 use Marwa\Framework\Console\Commands\MakeAiHelperCommand;
 use Marwa\Framework\Console\Commands\MakeCommandCommand;
 use Marwa\Framework\Console\Commands\MakeControllerCommand;
@@ -68,6 +69,7 @@ final class ConsoleConfig
                 MakeModuleCommand::class,
                 MakeThemeCommand::class,
                 MakeAiHelperCommand::class,
+                KafkaConsumeCommand::class,
                 ShellCommand::class,
             ],
             'discover' => [],

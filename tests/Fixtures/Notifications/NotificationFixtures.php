@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Response;
 use Marwa\Framework\Adapters\Event\NamedEvent;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
+use Marwa\Framework\Contracts\KafkaConsumerInterface;
 use Marwa\Framework\Contracts\KafkaPublisherInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\NotificationChannelInterface;
@@ -451,6 +452,43 @@ final class RecordingKafkaPublisher implements KafkaPublisherInterface
             'message' => $message,
             'options' => $options,
         ];
+    }
+}
+
+final class RecordingKafkaConsumer implements KafkaConsumerInterface
+{
+    /**
+     * @var list<array{topics: list<string>, message: array<string, mixed>, options: array<string, mixed>}>
+     */
+    public array $consumed = [];
+
+    /**
+     * @param list<string> $topics
+     * @param callable(array<string, mixed>, string): mixed $handler
+     * @param array<string, mixed> $options
+     */
+    public function consume(array $topics, callable $handler, array $options = []): int
+    {
+        $message = [
+            'offset' => 1,
+            'partition' => 0,
+            'key' => 'order-1001',
+            'payload' => [
+                'message' => 'kafka consumed message',
+            ],
+        ];
+
+        foreach ($topics as $topic) {
+            $this->consumed[] = [
+                'topics' => $topics,
+                'message' => $message,
+                'options' => $options,
+            ];
+
+            $handler($message, $topic);
+        }
+
+        return count($topics);
     }
 }
 

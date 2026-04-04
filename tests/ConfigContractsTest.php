@@ -201,6 +201,9 @@ final class ConfigContractsTest extends TestCase
         self::assertArrayHasKey('sms', $defaults['channels']);
         self::assertArrayHasKey('kafka', $defaults['channels']);
         self::assertArrayHasKey('broadcast', $defaults['channels']);
+        self::assertNull($defaults['channels']['kafka']['consumer']);
+        self::assertSame('notifications', $defaults['channels']['kafka']['topic']);
+        self::assertSame('marwa-framework', $defaults['channels']['kafka']['groupId']);
     }
 
     public function testHttpConfigExposesExpectedDefaults(): void

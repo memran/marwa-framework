@@ -10,6 +10,12 @@ Returns the merged notification configuration.
 
 Sends a notification through the configured channels and returns channel results keyed by channel name.
 
+## `Marwa\Framework\Contracts\KafkaConsumerInterface`
+
+### `consume(array $topics, callable $handler, array $options = []): int`
+
+Consumes messages from the configured Kafka topics. The handler receives a normalized message array and the topic name. Use this with the `kafka:consume` console command and bind your `marwa-kafka` consumer adapter into the container.
+
 ## `Marwa\Framework\Notifications\Notification`
 
 Base class for application notifications. Override `via()`, `toMail()`, `toDatabase()`, `toHttp()`, `toSms()`, and `toBroadcast()`.

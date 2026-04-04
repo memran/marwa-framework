@@ -23,6 +23,7 @@ use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Contracts\ShellFactoryInterface;
+use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
@@ -102,6 +103,9 @@ final class CoreBindingsBootstrapper
         $container->addShared(NotificationManager::class)
             ->addArgument($app)
             ->addArgument($container->get(Config::class));
+
+        $container->addShared(KafkaChannel::class)
+            ->addArgument($app);
 
         $container->addShared(EncryptedSession::class)
             ->addArgument($app)

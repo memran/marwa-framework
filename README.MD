@@ -16,7 +16,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - HTTP kernel, middleware pipeline, router integration, and lifecycle events
 - Twig-based views with themes, modules, and base controller helpers
 - Console application, scaffolding commands, scheduler, queue, and bootstrap cache
-- Sessions, validation, security, cache, storage, mail, notifications, Kafka, HTTP client, and error handling
+- Sessions, validation, security, cache, storage, mail, notifications, Kafka publish/consume, HTTP client, and error handling
 - `marwa-db` and `marwa-module` integration for app-level runtime features
 
 ## Install

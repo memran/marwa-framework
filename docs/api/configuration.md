@@ -212,7 +212,10 @@ Supported keys:
 - `channels.sms.url`: SMS gateway URL
 - `channels.kafka.enabled`: enable Kafka publishing
 - `channels.kafka.publisher`: service id implementing `Marwa\Framework\Contracts\KafkaPublisherInterface`
+- `channels.kafka.consumer`: service id implementing `Marwa\Framework\Contracts\KafkaConsumerInterface`
 - `channels.kafka.topic`: default Kafka topic
+- `channels.kafka.topics`: default Kafka topic list for consumers
+- `channels.kafka.groupId`: default Kafka consumer group ID
 - `channels.kafka.key`: optional Kafka message key
 - `channels.kafka.headers`: Kafka record headers
 - `channels.kafka.options`: extra publisher options
@@ -233,7 +236,10 @@ return [
         'kafka' => [
             'enabled' => true,
             'publisher' => App\Kafka\MarwaKafkaPublisher::class,
+            'consumer' => App\Kafka\MarwaKafkaConsumer::class,
             'topic' => 'notifications',
+            'topics' => ['notifications'],
+            'groupId' => 'app',
         ],
         'sms' => [
             'enabled' => true,

@@ -49,7 +49,10 @@ final class NotificationConfig
                 'kafka' => [
                     'enabled' => false,
                     'publisher' => KafkaPublisherInterface::class,
+                    'consumer' => null,
                     'topic' => 'notifications',
+                    'topics' => [],
+                    'groupId' => 'marwa-framework',
                     'key' => null,
                     'headers' => [],
                     'options' => [],

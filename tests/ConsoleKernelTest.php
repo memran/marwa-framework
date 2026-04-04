@@ -118,6 +118,7 @@ PHP
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
         self::assertTrue($console->has('security:report'));
+        self::assertTrue($console->has('kafka:consume'));
         self::assertTrue($console->has('make:command'));
         self::assertTrue($console->has('make:controller'));
         self::assertTrue($console->has('make:mail'));
@@ -157,6 +158,7 @@ PHP
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(\Marwa\Framework\Console\Commands\ShellCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(\Marwa\Framework\Console\Commands\SecurityReportCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(\Marwa\Framework\Console\Commands\KafkaConsumeCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
     public function testConsoleKernelAutoDiscoversModuleCommands(): void

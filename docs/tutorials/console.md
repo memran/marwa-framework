@@ -66,6 +66,7 @@ php bin/console make:theme dark --parent=default
 php bin/console make:ai-helper SupportAgent --with-command
 php bin/console shell
 php bin/console security:report --since-hours=24 --prune-days=30
+php bin/console kafka:consume --topic=notifications --once --json
 php bin/console schedule:table
 ```
 
@@ -86,6 +87,8 @@ For the generated provider to autoload in a host application, map `App\\Modules\
 `shell` opens an interactive PsySH session when the optional `psy/psysh` package is installed. It exposes `$app`, `$container`, `$config`, and `$logger` for live debugging. If PsySH is not installed, the command prints install instructions and exits with a failure code.
 
 `security:report` summarizes the security risk journal written by the request-time analyzer and can optionally prune old entries. This command is intended for cron jobs so you can roll up suspicious requests without slowing the hot path.
+
+`kafka:consume` starts an optional Kafka consumer loop. Bind your Kafka consumer adapter to `Marwa\Framework\Contracts\KafkaConsumerInterface`, set `channels.kafka.consumer` in `config/notification.php`, and use `--topic` or `--json` for ad hoc debugging.
 
 `key:generate` prints a cryptographically secure random key using the shared helper implementation. Use `--show-env` for `APP_KEY=...` output, `--length` to control byte length, and `--raw` if you do not want hex encoding.
 

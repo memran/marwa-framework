@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\DB\Connection\ConnectionManager;
+use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
+use Marwa\Framework\Contracts\KafkaConsumerInterface;
 use Marwa\Framework\Contracts\KafkaPublisherInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Notifications\Channels\BroadcastChannel;
@@ -15,6 +17,7 @@ use Marwa\Framework\Notifications\Channels\HttpChannel;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\Channels\MailChannel;
 use Marwa\Framework\Notifications\Channels\SmsChannel;
+use Marwa\Framework\Notifications\Events\KafkaMessageReceived;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Supports\Http as HttpSupport;
 use Marwa\Framework\Tests\Fixtures\Notifications\DemoNotifiable;
@@ -23,11 +26,13 @@ use Marwa\Framework\Tests\Fixtures\Notifications\RecordingBroadcastNotificationC
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingEventDispatcher;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingHttpClient;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingHttpNotificationChannel;
+use Marwa\Framework\Tests\Fixtures\Notifications\RecordingKafkaConsumer;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingKafkaPublisher;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingMailer;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingMailNotificationChannel;
 use Marwa\Framework\Tests\Fixtures\Notifications\RecordingSmsNotificationChannel;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final class NotificationSupportTest extends TestCase
 {
@@ -74,6 +79,7 @@ return [
         'kafka' => [
             'enabled' => true,
             'topic' => 'notifications.orders',
+            'consumer' => 'test.kafka.consumer',
         ],
     ],
 ];
@@ -112,16 +118,19 @@ PHP
         $http = new RecordingHttpClient();
         $events = new RecordingEventDispatcher();
         $kafka = new RecordingKafkaPublisher();
+        $consumer = new RecordingKafkaConsumer();
 
         $app->set(HttpSupport::class, $http);
         $app->set(MailerInterface::class, $mailer);
         $app->set(HttpClientInterface::class, $http);
         $app->set(KafkaPublisherInterface::class, $kafka);
+        $app->set('test.kafka.consumer', $consumer);
         $app->set(EventDispatcherInterface::class, $events);
         $app->set(MailChannel::class, new RecordingMailNotificationChannel($mailer));
         $app->set(HttpChannel::class, new RecordingHttpNotificationChannel($http));
         $app->set(SmsChannel::class, new RecordingSmsNotificationChannel($http));
         $app->set(BroadcastChannel::class, new RecordingBroadcastNotificationChannel($events));
+        $app->set(KafkaChannel::class, new KafkaChannel($app));
 
         $app->make(AppBootstrapper::class)->bootstrap();
 
@@ -184,6 +193,7 @@ SQL;
         $app->set(HttpChannel::class, new RecordingHttpNotificationChannel($http));
         $app->set(SmsChannel::class, new RecordingSmsNotificationChannel($http));
         $app->set(BroadcastChannel::class, new RecordingBroadcastNotificationChannel(new RecordingEventDispatcher()));
+        $app->set(KafkaChannel::class, new KafkaChannel($app));
         $app->make(AppBootstrapper::class)->bootstrap();
 
         self::assertInstanceOf(NotificationManager::class, notification());
@@ -205,5 +215,54 @@ SQL;
         self::assertCount(1, $kafka->messages);
         self::assertSame('notifications.orders', $kafka->messages[0]['topic']);
         self::assertSame('kafka message', $kafka->messages[0]['message']['payload']['message'] ?? null);
+    }
+
+    public function testKafkaConsumeCommandDispatchesReceivedMessages(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/notification.php',
+            <<<'PHP'
+<?php
+
+return [
+    'enabled' => true,
+    'channels' => [
+        'kafka' => [
+            'enabled' => true,
+            'consumer' => Marwa\Framework\Contracts\KafkaConsumerInterface::class,
+            'topics' => ['orders.created'],
+            'groupId' => 'integration-tests',
+        ],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $consumer = new RecordingKafkaConsumer();
+        $events = [];
+
+        $app->set(KafkaConsumerInterface::class, $consumer);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $app->make(EventDispatcherInterface::class)->listen(
+            KafkaMessageReceived::class,
+            function (KafkaMessageReceived $event) use (&$events): void {
+                $events[] = $event;
+            }
+        );
+
+        $console = $app->console()->application();
+        $tester = new CommandTester($console->find('kafka:consume'));
+
+        $status = $tester->execute([
+            '--once' => true,
+            '--json' => true,
+        ]);
+
+        self::assertSame(0, $status);
+        self::assertCount(1, $consumer->consumed);
+        self::assertCount(1, $events);
+        self::assertSame('kafka.message.received', $events[0]->getName());
+        self::assertStringContainsString('"topic":"orders.created"', $tester->getDisplay());
     }
 }
