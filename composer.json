@@ -89,6 +89,7 @@
   "prefer-stable": true,
   "scripts": {
     "test": "vendor/bin/phpunit",
+    "test:fast": "vendor/bin/phpunit --exclude-group=slow",
     "test:coverage": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
     "analyse": "php vendor/bin/phpstan analyse --memory-limit=1G --no-progress --debug",
     "stan": "@analyse",
@@ -97,7 +98,7 @@
     "ci": [
       "@analyse",
       "@lint",
-      "vendor/bin/phpunit --exclude-group=slow"
+      "@test:fast"
     ]
   },
   "require-dev": {
