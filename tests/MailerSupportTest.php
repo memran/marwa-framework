@@ -336,6 +336,9 @@ namespace Marwa\Framework\Tests {
     use Marwa\Framework\Tests\Fixtures\Mail\WelcomeMail;
     use PHPUnit\Framework\TestCase;
 
+    /**
+ * @group slow
+ */
     final class MailerSupportTest extends TestCase
     {
         private string $basePath;

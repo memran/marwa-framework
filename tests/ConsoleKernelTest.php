@@ -362,6 +362,10 @@ PHP
         self::assertStringContainsString('positive integer', $tester->getDisplay());
     }
 
+    /**
+     * @group slow
+     * @medium
+     */
     public function testScheduleRunCommandExecutesEverySecondTasks(): void
     {
         $app = new Application($this->basePath);

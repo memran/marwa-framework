@@ -206,7 +206,7 @@ final class File
 
     public function ensureDirectory(): self
     {
-        if (!is_dir($this->path) && !mkdir($this->path, 0755, true) && !is_dir($this->path)) {
+        if (!is_dir($this->path) && !mkdir($this->path, 0777, true) && !is_dir($this->path)) {
             throw new \RuntimeException(sprintf('Unable to create directory [%s].', $this->path));
         }
 
@@ -217,7 +217,7 @@ final class File
     {
         $directory = dirname($this->path);
 
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
             throw new \RuntimeException(sprintf('Unable to create directory [%s].', $directory));
         }
     }

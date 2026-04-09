@@ -42,12 +42,15 @@ final class LoggerAdapter
         $storage = $this->config->getArray(LoggerConfig::KEY . '.storage', $defaults['storage']);
         $this->setStorage($storage);
 
+        $level = $this->config->getString(LoggerConfig::KEY . '.level', $defaults['level']);
+
         $this->logger = new SimpleLogger(
             appName: env('APP_NAME', 'MarwaPHP'),
             env: env('APP_ENV', 'production'),
             sink: $this->sink,
             filter: $this->filter,
-            logging: $this->config->getBool(LoggerConfig::KEY . '.enable', $defaults['enable'])
+            logging: $this->config->getBool(LoggerConfig::KEY . '.enable', $defaults['enable']),
+            productionMinLevel: $level
         );
     }
 

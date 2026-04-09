@@ -11,6 +11,7 @@ use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ConsoleConfig;
+use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Console\CommandDiscovery;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
@@ -39,6 +40,7 @@ use Marwa\Framework\Validation\RequestValidator;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Router\Contract\ValidatorInterface as RouterValidatorInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 final class CoreBindingsBootstrapper
 {
@@ -56,13 +58,7 @@ final class CoreBindingsBootstrapper
             ->addArgument($app)
             ->addArgument($container->get(Config::class));
 
-        $container->addShared(LoggerAdapter::class, function () use ($app, $container) {
-            return (new LoggerAdapter($app, $container->get(Config::class)))->getLogger();
-        });
-
-        $container->addShared(LoggerInterface::class, function () use ($container) {
-            return $container->get(LoggerAdapter::class);
-        });
+        $this->registerLogger($container, $app);
 
         $container->addShared(EventDispatcherAdapter::class)
             ->addArgument($container)
@@ -206,5 +202,25 @@ final class CoreBindingsBootstrapper
             ->addArgument($container->get(CommandRegistry::class))
             ->addArgument($container->get(CommandDiscovery::class))
             ->addArgument($container->get(ConsoleApplication::class));
+    }
+
+    private function registerLogger(Container $container, Application $app): void
+    {
+        $config = $container->get(Config::class);
+        $defaults = \Marwa\Framework\Config\LoggerConfig::defaults($app);
+
+        $isEnabled = $config->getBool(LoggerConfig::KEY . '.enable', $defaults['enable']);
+
+        if ($isEnabled) {
+            $container->addShared(LoggerAdapter::class, function () use ($app, $container) {
+                return (new LoggerAdapter($app, $container->get(Config::class)))->getLogger();
+            });
+
+            $container->addShared(LoggerInterface::class, function () use ($container) {
+                return $container->get(LoggerAdapter::class);
+            });
+        } else {
+            $container->addShared(LoggerInterface::class, new NullLogger());
+        }
     }
 }

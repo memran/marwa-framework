@@ -195,7 +195,7 @@ final class FileQueue
         foreach (['', '/pending', '/processing', '/failed'] as $suffix) {
             $directory = $this->queueDirectory($queue) . $suffix;
 
-            if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
                 throw new \RuntimeException(sprintf('Unable to create queue directory [%s].', $directory));
             }
         }
@@ -233,7 +233,7 @@ final class FileQueue
     {
         $directory = dirname($path);
 
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
             throw new \RuntimeException(sprintf('Unable to create queue directory [%s].', $directory));
         }
 

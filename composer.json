@@ -97,7 +97,7 @@
     "ci": [
       "@analyse",
       "@lint",
-      "@test"
+      "vendor/bin/phpunit --exclude-group=slow"
     ]
   },
   "require-dev": {

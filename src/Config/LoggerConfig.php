@@ -14,6 +14,7 @@ final class LoggerConfig
      * @return array{
      *     enable: bool,
      *     filter: list<string>,
+     *     level: string,
      *     storage: array{
      *         driver: string,
      *         path: string,
@@ -24,8 +25,9 @@ final class LoggerConfig
     public static function defaults(Application $app): array
     {
         return [
-            'enable' => (bool) env('LOG_ENABLE', true),
+            'enable' => (bool) env('APP_DEBUG', false),
             'filter' => [],
+            'level' => 'debug',
             'storage' => [
                 'driver' => (string) env('LOG_CHANNEL', 'file'),
                 'path' => $app->basePath('storage/logs'),

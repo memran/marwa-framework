@@ -264,8 +264,9 @@ final class Security implements SecurityInterface
     private function throttleCacheKey(string $key): string
     {
         $prefix = (string) $this->settings['throttle']['prefix'];
+        $sanitizedKey = preg_replace('/[^a-zA-Z0-9]/', '-', ltrim($key, ':'));
 
-        return trim($prefix . ':' . ltrim($key, ':'), ':');
+        return trim($prefix . '-' . $sanitizedKey, '-');
     }
 
     private function normalizePath(string $path): string

@@ -141,13 +141,13 @@ final class ConfigContractsTest extends TestCase
         $defaults = SecurityConfig::defaults($app);
 
         self::assertTrue($defaults['enabled']);
-        self::assertFalse($defaults['csrf']['enabled']);
+        self::assertTrue($defaults['csrf']['enabled']);
         self::assertSame('X-CSRF-TOKEN', $defaults['csrf']['header']);
         self::assertSame('__marwa_csrf_token', $defaults['csrf']['token']);
         self::assertSame(['POST', 'PUT', 'PATCH', 'DELETE'], $defaults['csrf']['methods']);
         self::assertSame([], $defaults['trustedHosts']);
         self::assertSame([], $defaults['trustedOrigins']);
-        self::assertFalse($defaults['throttle']['enabled']);
+        self::assertTrue($defaults['throttle']['enabled']);
         self::assertTrue($defaults['risk']['enabled']);
         self::assertSame($this->basePath . '/storage/security/risk.jsonl', $defaults['risk']['logPath']);
         self::assertSame(30, $defaults['risk']['pruneAfterDays']);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
+use GuzzleHttp\Psr7\Response;
 use Laminas\Diactoros\ServerRequest;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\SecurityConfig;
@@ -15,7 +16,6 @@ use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Tests\Fixtures\Security\ArrayCache;
 use Marwa\Framework\Tests\Fixtures\Security\ArraySession;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 final class SecuritySupportTest extends TestCase
@@ -78,14 +78,14 @@ PHP
         $defaults = SecurityConfig::defaults($app);
 
         self::assertTrue($defaults['enabled']);
-        self::assertFalse($defaults['csrf']['enabled']);
+        self::assertTrue($defaults['csrf']['enabled']);
         self::assertSame('_token', $defaults['csrf']['field']);
         self::assertSame('X-CSRF-TOKEN', $defaults['csrf']['header']);
         self::assertSame('__marwa_csrf_token', $defaults['csrf']['token']);
         self::assertSame(['POST', 'PUT', 'PATCH', 'DELETE'], $defaults['csrf']['methods']);
         self::assertSame([], $defaults['trustedHosts']);
         self::assertSame([], $defaults['trustedOrigins']);
-        self::assertFalse($defaults['throttle']['enabled']);
+        self::assertTrue($defaults['throttle']['enabled']);
         self::assertTrue($defaults['risk']['enabled']);
         self::assertSame($this->riskLog, $defaults['risk']['logPath']);
         self::assertSame(30, $defaults['risk']['pruneAfterDays']);
@@ -149,7 +149,7 @@ PHP
             parsedBody: ['_token' => 'token-123']
         );
         $handler = $this->createMock(RequestHandlerInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
+        $response = new Response(200, ['Content-Type' => 'text/html'], '<html><body>test</body></html>');
 
         $security->expects(self::once())
             ->method('isEnabled')
@@ -186,7 +186,11 @@ PHP
 
         $middleware = new SecurityMiddleware($security);
 
-        self::assertSame($response, $middleware->process($request, $handler));
+        $result = $middleware->process($request, $handler);
+
+        self::assertSame(200, $result->getStatusCode());
+        self::assertEquals('nosniff', $result->getHeaderLine('X-Content-Type-Options'));
+        self::assertEquals('DENY', $result->getHeaderLine('X-Frame-Options'));
     }
 
     public function testSecurityMiddlewareRejectsCsrfMismatch(): void

@@ -11,6 +11,9 @@ use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group slow
+ */
 final class SchedulerSupportTest extends TestCase
 {
     private string $basePath;

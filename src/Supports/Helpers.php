@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Adapters\Event\AbstractEvent;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
-use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
@@ -236,7 +235,7 @@ function event(AbstractEvent $event): void
 
 function logger(): LoggerInterface
 {
-    return app(LoggerAdapter::class);
+    return app(LoggerInterface::class);
 }
 
 function mailer(): MailerInterface
