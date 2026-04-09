@@ -68,6 +68,7 @@
       },
       "files": [
         "tests/Fixtures/Guzzle/GuzzleHttpStub.php",
+        "tests/Fixtures/Mail/SwiftStubs.php",
         "tests/Fixtures/Notifications/NotificationFixtures.php"
       ]
     },
@@ -89,17 +90,12 @@
   "prefer-stable": true,
   "scripts": {
     "test": "vendor/bin/phpunit",
-    "test:fast": "vendor/bin/phpunit --exclude-group=slow",
     "test:coverage": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
     "analyse": "php vendor/bin/phpstan analyse --memory-limit=1G --no-progress --debug",
     "stan": "@analyse",
     "lint": "php vendor/bin/php-cs-fixer fix --dry-run --diff --verbose --sequential --allow-unsupported-php-version=yes",
     "fix": "php vendor/bin/php-cs-fixer fix --verbose --sequential --allow-unsupported-php-version=yes",
-    "ci": [
-      "@analyse",
-      "@lint",
-      "@test:fast"
-    ]
+    "ci": "php bin/ci"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.89",

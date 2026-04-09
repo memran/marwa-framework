@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Marwa\Framework\Scheduling;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
-use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArrayInput;

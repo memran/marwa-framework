@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Queue;
 
 use Marwa\Framework\Application;
-use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Config\QueueConfig;
+use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Supports\Config;
 use Psr\Log\LoggerInterface;
 

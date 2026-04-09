@@ -1,0 +1,50 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * CI wrapper that keeps PHPUnit flags out of PHPStan and PHP-CS-Fixer.
+ */
+
+$root = dirname(__DIR__);
+$php = PHP_BINARY;
+
+$phpunitArgs = array_slice($argv, 1);
+$commands = [
+    [$php, $root . '/vendor/bin/phpstan', 'analyse', '--memory-limit=1G', '--no-progress', '--debug'],
+    [$php, $root . '/vendor/bin/php-cs-fixer', 'fix', '--dry-run', '--diff', '--verbose', '--sequential', '--allow-unsupported-php-version=yes'],
+    array_merge([$php, $root . '/vendor/bin/phpunit'], $phpunitArgs),
+];
+
+foreach ($commands as $command) {
+    $exitCode = runCommand($command, $root);
+
+    if ($exitCode !== 0) {
+        exit($exitCode);
+    }
+}
+
+exit(0);
+
+/**
+ * @param list<string> $command
+ */
+function runCommand(array $command, string $cwd): int
+{
+    $descriptors = [
+        0 => STDIN,
+        1 => STDOUT,
+        2 => STDERR,
+    ];
+
+    $process = proc_open($command, $descriptors, $pipes, $cwd);
+
+    if (!is_resource($process)) {
+        fwrite(STDERR, "Unable to start command: " . implode(' ', $command) . PHP_EOL);
+
+        return 1;
+    }
+
+    return proc_close($process);
+}

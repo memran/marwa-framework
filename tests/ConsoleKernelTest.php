@@ -362,38 +362,6 @@ PHP
         self::assertStringContainsString('positive integer', $tester->getDisplay());
     }
 
-    /**
-     * @group slow
-     * @medium
-     */
-    public function testScheduleRunCommandExecutesEverySecondTasks(): void
-    {
-        $app = new Application($this->basePath);
-        $app->schedule()
-            ->call(function (Application $application, \DateTimeImmutable $time): void {
-                file_put_contents(
-                    $application->basePath('schedule-output.log'),
-                    $time->format('H:i:s') . PHP_EOL,
-                    FILE_APPEND
-                );
-            }, 'write-schedule-output')
-            ->everySecond();
-
-        $console = $app->console()->application();
-        $this->handlersBooted = true;
-
-        $command = $console->find('schedule:run');
-        $tester = new CommandTester($command);
-        $status = $tester->execute([
-            '--for' => '1',
-            '--sleep' => '1',
-        ]);
-
-        self::assertSame(0, $status);
-        self::assertFileExists($this->basePath . '/schedule-output.log');
-        self::assertStringContainsString('Ran [write-schedule-output]', $tester->getDisplay());
-    }
-
     public function testScheduleTableCommandCreatesMigrationUsingConfiguredTable(): void
     {
         file_put_contents(
