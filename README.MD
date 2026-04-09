@@ -63,6 +63,7 @@ php bin/console schedule:run --for=60 --sleep=1
 - [Controllers](docs/tutorials/controllers.md)
 - [Validation](docs/tutorials/validation.md)
 - [View](docs/tutorials/view.md)
+- [Error Pages](docs/tutorials/error-pages.md)
 - [Console](docs/tutorials/console.md)
 - [Seeding](docs/tutorials/seeding.md)
 - [DebugBar](docs/tutorials/debugbar.md)

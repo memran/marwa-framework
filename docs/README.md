@@ -14,6 +14,7 @@ Use this index as the entry point for the framework docs.
 - [Validation](./tutorials/validation.md)
 - [View](./tutorials/view.md)
 - [DebugBar](./tutorials/debugbar.md)
+- [Error Pages](./tutorials/error-pages.md)
 - [Security](./tutorials/security.md)
 - [Events](./tutorials/events.md)
 - [Mail](./tutorials/mail.md)
