@@ -222,7 +222,15 @@ final class CommandDiscovery
                 $relative
             );
 
-            if (!class_exists($class)) {
+            try {
+                if (!class_exists($class)) {
+                    continue;
+                }
+            } catch (\Error $e) {
+                $this->logger->warning('Skipped command class due to autoload error.', [
+                    'class' => $class,
+                    'error' => $e->getMessage(),
+                ]);
                 continue;
             }
 

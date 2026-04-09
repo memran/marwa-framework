@@ -12,6 +12,9 @@ final class EncryptedSession implements SessionInterface
 {
     private const SESSION_BAG = '__marwa_encrypted';
     private const FLASH_META = '__flash_meta';
+    private const AES_GCM_IV_LENGTH = 12;
+    private const AES_GCM_TAG_LENGTH = 16;
+    private const AES_GCM_MIN_PAYLOAD_LENGTH = 29;
 
     private bool $flashAged = false;
 
@@ -295,13 +298,13 @@ final class EncryptedSession implements SessionInterface
             return $this->decodeJson($decoded);
         }
 
-        if (strlen($decoded) < 29) {
+        if (strlen($decoded) < self::AES_GCM_MIN_PAYLOAD_LENGTH) {
             return null;
         }
 
-        $iv = substr($decoded, 0, 12);
-        $tag = substr($decoded, 12, 16);
-        $ciphertext = substr($decoded, 28);
+        $iv = substr($decoded, 0, self::AES_GCM_IV_LENGTH);
+        $tag = substr($decoded, self::AES_GCM_IV_LENGTH, self::AES_GCM_TAG_LENGTH);
+        $ciphertext = substr($decoded, self::AES_GCM_IV_LENGTH + self::AES_GCM_TAG_LENGTH);
 
         $json = openssl_decrypt(
             $ciphertext,

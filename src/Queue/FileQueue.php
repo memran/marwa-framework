@@ -68,22 +68,44 @@ final class FileQueue
         $timestamp = ($now ?? new \DateTimeImmutable())->getTimestamp();
 
         foreach ($this->pendingFiles($queueName) as $file) {
-            $job = $this->readJob($file);
+            $handle = fopen($file, 'c+');
 
-            if ($job === null || $job->availableAt() > $timestamp) {
+            if ($handle === false || !flock($handle, LOCK_EX | LOCK_NB)) {
+                if ($handle !== false) {
+                    fclose($handle);
+                }
                 continue;
             }
 
-            $reserved = $job->withAttempts($job->attempts() + 1);
-            $processingPath = $this->processingPath($reserved);
+            try {
+                $job = $this->readJob($file);
 
-            if (!@rename($file, $processingPath)) {
-                continue;
+                if ($job === null || $job->availableAt() > $timestamp) {
+                    flock($handle, LOCK_UN);
+                    fclose($handle);
+                    continue;
+                }
+
+                $reserved = $job->withAttempts($job->attempts() + 1);
+                $processingPath = $this->processingPath($reserved);
+
+                if (!@rename($file, $processingPath)) {
+                    flock($handle, LOCK_UN);
+                    fclose($handle);
+                    continue;
+                }
+
+                $this->writeJob($processingPath, $reserved);
+
+                flock($handle, LOCK_UN);
+                fclose($handle);
+
+                return $reserved;
+            } catch (\Throwable $e) {
+                flock($handle, LOCK_UN);
+                fclose($handle);
+                throw $e;
             }
-
-            $this->writeJob($processingPath, $reserved);
-
-            return $reserved;
         }
 
         return null;
@@ -173,7 +195,7 @@ final class FileQueue
         foreach (['', '/pending', '/processing', '/failed'] as $suffix) {
             $directory = $this->queueDirectory($queue) . $suffix;
 
-            if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+            if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
                 throw new \RuntimeException(sprintf('Unable to create queue directory [%s].', $directory));
             }
         }
@@ -211,7 +233,7 @@ final class FileQueue
     {
         $directory = dirname($path);
 
-        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
             throw new \RuntimeException(sprintf('Unable to create queue directory [%s].', $directory));
         }
 

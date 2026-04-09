@@ -51,6 +51,8 @@ final class Storage
 
     public function exists(string $path): bool
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->has($path);
     }
 
@@ -61,6 +63,8 @@ final class Storage
 
     public function read(string $path): string
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->read($path);
     }
 
@@ -112,6 +116,7 @@ final class Storage
 
     public function delete(string $path): bool
     {
+        $this->validatePath($path);
         $this->filesystem()->delete($path);
 
         return true;
@@ -139,6 +144,8 @@ final class Storage
      */
     public function copy(string $source, string $destination, array $config = []): bool
     {
+        $this->validatePath($source);
+        $this->validatePath($destination);
         $this->filesystem()->copy($source, $destination, $config);
 
         return true;
@@ -149,6 +156,8 @@ final class Storage
      */
     public function move(string $source, string $destination, array $config = []): bool
     {
+        $this->validatePath($source);
+        $this->validatePath($destination);
         $this->filesystem()->move($source, $destination, $config);
 
         return true;
@@ -156,16 +165,22 @@ final class Storage
 
     public function size(string $path): int
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->fileSize($path);
     }
 
     public function mimeType(string $path): string
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->mimeType($path);
     }
 
     public function lastModified(string $path): int
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->lastModified($path);
     }
 
@@ -174,6 +189,8 @@ final class Storage
      */
     public function checksum(string $path, array $config = []): string
     {
+        $this->validatePath($path);
+
         return $this->filesystem()->checksum($path, $config);
     }
 
@@ -263,6 +280,15 @@ final class Storage
         return new Filesystem($adapter, [
             'visibility' => (string) ($config['visibility'] ?? 'private'),
         ]);
+    }
+
+    private function validatePath(string $path): void
+    {
+        $normalizedPath = '/' . ltrim(str_replace(['\\', '..'], ['/', ''], $path), '/');
+
+        if (str_contains($normalizedPath, '../') || str_contains($normalizedPath, '/..')) {
+            throw new \RuntimeException(sprintf('Path traversal attempt detected in path [%s].', $path));
+        }
     }
 
     /**

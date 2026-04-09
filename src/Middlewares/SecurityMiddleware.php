@@ -67,7 +67,18 @@ final class SecurityMiddleware implements MiddlewareInterface
             ]);
         }
 
-        return $handler->handle($request);
+        $response = $handler->handle($request);
+
+        return $this->addSecurityHeaders($response);
+    }
+
+    private function addSecurityHeaders(ResponseInterface $response): ResponseInterface
+    {
+        return $response
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('X-Frame-Options', 'DENY')
+            ->withHeader('X-XSS-Protection', '1; mode=block')
+            ->withHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     }
 
     /**

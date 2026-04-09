@@ -42,7 +42,7 @@ final class SecurityConfig
         return [
             'enabled' => true,
             'csrf' => [
-                'enabled' => false,
+                'enabled' => true,
                 'field' => '_token',
                 'header' => 'X-CSRF-TOKEN',
                 'token' => '__marwa_csrf_token',
@@ -52,7 +52,7 @@ final class SecurityConfig
             'trustedHosts' => [],
             'trustedOrigins' => [],
             'throttle' => [
-                'enabled' => false,
+                'enabled' => true,
                 'prefix' => 'security',
                 'limit' => 60,
                 'window' => 60,
