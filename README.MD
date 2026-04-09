@@ -65,6 +65,7 @@ php bin/console schedule:run --for=60 --sleep=1
 - [View](docs/tutorials/view.md)
 - [Console](docs/tutorials/console.md)
 - [Seeding](docs/tutorials/seeding.md)
+- [DebugBar](docs/tutorials/debugbar.md)
 - [Architecture](docs/architecture.md)
 
 ## Notes

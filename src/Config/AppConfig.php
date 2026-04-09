@@ -38,7 +38,7 @@ final class AppConfig
                 RouterMiddleware::class,
                 DebugbarMiddleware::class,
             ],
-            'debugbar' => false,
+            'debugbar' => env('DEBUGBAR_ENABLED', false),
             'collectors' => [],
         ];
     }

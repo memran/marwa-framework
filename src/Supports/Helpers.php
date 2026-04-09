@@ -416,7 +416,7 @@ function view(string $tplName = '', array $params = []): mixed
 
 function debugger(): mixed
 {
-    if (env('DEBUGBAR_ENABLED', false)) {
+    if (config('app.debugbar', false)) {
         if (app()->has('debugbar')) {
             return app('debugbar');
         }
