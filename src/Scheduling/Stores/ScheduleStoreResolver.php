@@ -6,8 +6,9 @@ namespace Marwa\Framework\Scheduling\Stores;
 
 use Marwa\Framework\Bootstrappers\DatabaseBootstrapper;
 use Marwa\Framework\Contracts\CacheInterface;
+use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 
-final class ScheduleStoreResolver
+final class ScheduleStoreResolver implements ScheduleStoreResolverInterface
 {
     /**
      * @var array<string, ScheduleStoreInterface>

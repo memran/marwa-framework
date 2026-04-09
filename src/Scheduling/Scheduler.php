@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Marwa\Framework\Scheduling;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\QueueInterface;
+use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 use Marwa\Framework\Config\ScheduleConfig;
-use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreInterface;
-use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -39,8 +39,8 @@ final class Scheduler
     public function __construct(
         private Application $app,
         private LoggerInterface $logger,
-        private FileQueue $queue,
-        private ScheduleStoreResolver $storeResolver
+        private QueueInterface $queue,
+        private ScheduleStoreResolverInterface $storeResolver
     ) {}
 
     public function register(Task $task): Task

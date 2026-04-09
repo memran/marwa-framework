@@ -21,7 +21,9 @@ use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
+use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Contracts\ShellFactoryInterface;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
@@ -180,15 +182,23 @@ final class CoreBindingsBootstrapper
             ->addArgument($container->get(Config::class))
             ->addArgument($container->get(LoggerInterface::class));
 
+        $container->addShared(QueueInterface::class, function () use ($container) {
+            return $container->get(FileQueue::class);
+        });
+
         $container->addShared(ScheduleStoreResolver::class)
             ->addArgument($container->get(DatabaseBootstrapper::class))
             ->addArgument($container->get(CacheInterface::class));
 
+        $container->addShared(ScheduleStoreResolverInterface::class, function () use ($container) {
+            return $container->get(ScheduleStoreResolver::class);
+        });
+
         $container->addShared(Scheduler::class)
             ->addArgument($app)
             ->addArgument($container->get(LoggerInterface::class))
-            ->addArgument($container->get(FileQueue::class))
-            ->addArgument($container->get(ScheduleStoreResolver::class));
+            ->addArgument($container->get(QueueInterface::class))
+            ->addArgument($container->get(ScheduleStoreResolverInterface::class));
 
         $container->addShared(ConsoleApplication::class)
             ->addArgument(ConsoleConfig::defaults($app)['name'])

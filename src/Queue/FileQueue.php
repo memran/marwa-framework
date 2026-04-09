@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Marwa\Framework\Queue;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Supports\Config;
 use Psr\Log\LoggerInterface;
 
-final class FileQueue
+final class FileQueue implements QueueInterface
 {
     /**
      * @var array{enabled:bool,default:string,path:string,retryAfter:int}|null
