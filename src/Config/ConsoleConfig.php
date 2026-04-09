@@ -7,6 +7,7 @@ namespace Marwa\Framework\Config;
 use Marwa\Framework\Application;
 use Marwa\Framework\Console\Commands\BootstrapCacheCommand;
 use Marwa\Framework\Console\Commands\BootstrapClearCommand;
+use Marwa\Framework\Console\Commands\CacheClearCommand;
 use Marwa\Framework\Console\Commands\ConfigCacheCommand;
 use Marwa\Framework\Console\Commands\ConfigClearCommand;
 use Marwa\Framework\Console\Commands\GenerateKeyCommand;
@@ -52,6 +53,7 @@ final class ConsoleConfig
             'commands' => [
                 BootstrapCacheCommand::class,
                 BootstrapClearCommand::class,
+                CacheClearCommand::class,
                 ConfigCacheCommand::class,
                 ConfigClearCommand::class,
                 GenerateKeyCommand::class,
