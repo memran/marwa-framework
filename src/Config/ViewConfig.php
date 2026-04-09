@@ -15,6 +15,9 @@ final class ViewConfig
      *     viewsPath: string,
      *     cachePath: string,
      *     debug: bool,
+     *     extension: string,
+     *     cache: array{enabled: bool},
+     *     extensions: list<string>,
      *     themePath: string,
      *     activeTheme: string,
      *     fallbackTheme: string
@@ -26,6 +29,11 @@ final class ViewConfig
             'viewsPath' => $app->basePath('resources/views'),
             'cachePath' => $app->basePath('storage/cache/views'),
             'debug' => (bool) env('APP_DEBUG', false),
+            'extension' => '.twig',
+            'cache' => [
+                'enabled' => true,
+            ],
+            'extensions' => [],
             'themePath' => $app->basePath('resources/views/themes'),
             'activeTheme' => 'default',
             'fallbackTheme' => 'default',

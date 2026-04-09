@@ -6,12 +6,15 @@ namespace Marwa\Framework\Adapters;
 
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ViewConfig as ViewConfigContract;
+use Marwa\Framework\Contracts\ViewExtensionInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Router\Response;
 use Marwa\View\Theme\{ThemeBootstrap, ThemeBuilder};
 use Marwa\View\View;
 use Marwa\View\ViewConfig;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
+use Twig\Extension\AbstractExtension;
 
 final class ViewAdapter
 {
@@ -28,21 +31,69 @@ final class ViewAdapter
         $this->ensureDirectory($viewsPath);
         $this->ensureDirectory($cachePath);
 
-        $config = new ViewConfig(
+        $cacheEnabled = $this->config->getArray(ViewConfigContract::KEY . '.cache', $defaults['cache']);
+        $isCacheEnabled = (bool) ($cacheEnabled['enabled'] ?? true);
+
+        $finalCachePath = $isCacheEnabled ? $cachePath : false;
+
+        $viewConfig = new ViewConfig(
             viewsPath: $viewsPath,
-            cachePath: $cachePath,
+            cachePath: $finalCachePath,
             debug: $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']),
         );
 
-        $this->createViewEngine($config);
+        $this->createViewEngine($viewConfig);
+    }
+
+    /**
+     * @return array<int, AbstractExtension>
+     */
+    private function loadExtensions(): array
+    {
+        $defaults = ViewConfigContract::defaults($this->app);
+        $extensions = $this->config->getArray(ViewConfigContract::KEY . '.extensions', $defaults['extensions']);
+
+        $loadedExtensions = [];
+
+        foreach ($extensions as $extensionClass) {
+            if (!is_string($extensionClass)) {
+                continue;
+            }
+
+            if (!class_exists($extensionClass)) {
+                $this->logger()->warning('View extension class does not exist.', [
+                    'class' => $extensionClass,
+                ]);
+                continue;
+            }
+
+            $extension = new $extensionClass();
+
+            if (!$extension instanceof AbstractExtension) {
+                $this->logger()->warning('View extension must extend Twig\Extension\AbstractExtension.', [
+                    'class' => $extensionClass,
+                ]);
+                continue;
+            }
+
+            if ($extension instanceof ViewExtensionInterface) {
+                $extension->register();
+            }
+
+            $loadedExtensions[] = $extension;
+        }
+
+        return $loadedExtensions;
     }
 
     public function createViewEngine(ViewConfig $config): View
     {
         $this->themeBuilder = $this->getThemeBuilder();
+        $extensions = $this->loadExtensions();
+
         $this->engine = new View(
             config: $config,
-            extensions: [],
+            extensions: $extensions,
             themeBuilder: $this->themeBuilder
         );
 
@@ -153,5 +204,10 @@ final class ViewAdapter
         $twig = $property->getValue($this->engine);
 
         return $twig;
+    }
+
+    private function logger(): LoggerInterface
+    {
+        return $this->app->container()->get(LoggerInterface::class);
     }
 }
