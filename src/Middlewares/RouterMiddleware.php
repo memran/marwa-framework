@@ -6,6 +6,8 @@ namespace Marwa\Framework\Middlewares;
 
 use League\Route\Http\Exception\{MethodNotAllowedException, NotFoundException};
 use Marwa\Entity\Http\ValidationException as EntityValidationException;
+use Marwa\Framework\Facades\Config;
+use Marwa\Framework\Facades\View;
 use Marwa\Framework\Validation\ValidationException;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -35,36 +37,36 @@ final class RouterMiddleware implements MiddlewareInterface
             return Response::json(['error' => 'Method Not Allowed'], 405);
         }
     }
-    /**
-     * Generate a standard 404 Not Found response.
-     */
+
     private function render404(ServerRequestInterface $request): ResponseInterface
     {
-
         $accept = $request->getHeaderLine('Accept');
-
         $path = htmlspecialchars($request->getUri()->getPath(), ENT_QUOTES, 'UTF-8');
+        $method = $request->getMethod();
 
-        // JSON response if requested by client
         if (stripos($accept, 'application/json') !== false) {
-            $payload = [
-              'status'  => 404,
-              'error'   => 'Not Found',
-              'method'  => $request->getMethod(),
-              'message' => sprintf('The requested path "%s" was not found on this server.', $path),
-            ];
-            return Response::json($payload);
+            return Response::json([
+                'status' => 404,
+                'error' => 'Not Found',
+                'method' => $method,
+                'message' => sprintf('The requested path "%s" was not found on this server.', $path),
+            ]);
         }
 
-        // Otherwise, HTML response
-        $html = $this->renderHtml($path);
-        return Response::html($html);
+        $template = Config::get('app.error404.template');
+
+        if ($template !== null && View::exists($template)) {
+            return View::make($template, [
+                'path' => $path,
+                'method' => $method,
+                'debug' => $this->debug,
+            ])->withStatus(404);
+        }
+
+        return Response::html($this->renderHtml($path, $method));
     }
 
-    /**
-     * Render a simple HTML 404 page.
-     */
-    private function renderHtml(string $path): string
+    private function renderHtml(string $path, string $method): string
     {
         $debug = $this->debug ? "<p style='color:#888'>Requested path: <code>{$path}</code></p>" : '';
 

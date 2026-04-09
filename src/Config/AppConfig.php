@@ -21,7 +21,9 @@ final class AppConfig
      *     providers: list<class-string>,
      *     middlewares: list<class-string>,
      *     debugbar: bool,
-     *     collectors: list<string>
+     *     collectors: list<string>,
+     *     maintenance: array{template: string|null, message: string},
+     *     error404: array{template: string|null}
      * }
      */
     public static function defaults(): array
@@ -40,6 +42,13 @@ final class AppConfig
             ],
             'debugbar' => env('DEBUGBAR_ENABLED', false),
             'collectors' => [],
+            'maintenance' => [
+                'template' => 'maintenance.twig',
+                'message' => 'Service temporarily unavailable for maintenance',
+            ],
+            'error404' => [
+                'template' => 'errors/404.twig',
+            ],
         ];
     }
 }
