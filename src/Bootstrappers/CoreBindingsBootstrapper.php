@@ -162,56 +162,63 @@ final class CoreBindingsBootstrapper
             ->addArgument($container)
             ->addArgument($container->get(Config::class));
 
-        $container->addShared(CommandRegistry::class)
-            ->addArgument($app)
-            ->addArgument($container)
-            ->addArgument($container->get(LoggerInterface::class));
+        $container->addShared(CommandRegistry::class, fn() => new CommandRegistry(
+            $app,
+            $container,
+            $container->get(LoggerInterface::class)
+        ));
 
-        $container->addShared(PsyshShellFactory::class);
+        $container->addShared(PsyshShellFactory::class, fn() => new PsyshShellFactory());
 
         $container->addShared(ShellFactoryInterface::class, function () use ($container) {
             return $container->get(PsyshShellFactory::class);
         });
 
-        $container->addShared(CommandDiscovery::class)
-            ->addArgument($app)
-            ->addArgument($container->get(LoggerInterface::class));
+        $container->addShared(CommandDiscovery::class, fn() => new CommandDiscovery(
+            $app,
+            $container->get(LoggerInterface::class)
+        ));
 
-        $container->addShared(FileQueue::class)
-            ->addArgument($app)
-            ->addArgument($container->get(Config::class))
-            ->addArgument($container->get(LoggerInterface::class));
+        $container->addShared(FileQueue::class, fn() => new FileQueue(
+            $app,
+            $container->get(Config::class),
+            $container->get(LoggerInterface::class)
+        ));
 
         $container->addShared(QueueInterface::class, function () use ($container) {
             return $container->get(FileQueue::class);
         });
 
-        $container->addShared(ScheduleStoreResolver::class)
-            ->addArgument($container->get(DatabaseBootstrapper::class))
-            ->addArgument($container->get(CacheInterface::class));
+        $container->addShared(ScheduleStoreResolver::class, fn() => new ScheduleStoreResolver(
+            $container->get(DatabaseBootstrapper::class),
+            $container->get(CacheInterface::class)
+        ));
 
         $container->addShared(ScheduleStoreResolverInterface::class, function () use ($container) {
             return $container->get(ScheduleStoreResolver::class);
         });
 
-        $container->addShared(Scheduler::class)
-            ->addArgument($app)
-            ->addArgument($container->get(LoggerInterface::class))
-            ->addArgument($container->get(QueueInterface::class))
-            ->addArgument($container->get(ScheduleStoreResolverInterface::class));
+        $container->addShared(Scheduler::class, fn() => new Scheduler(
+            $app,
+            $container->get(LoggerInterface::class),
+            $container->get(QueueInterface::class),
+            $container->get(ScheduleStoreResolverInterface::class)
+        ));
 
-        $container->addShared(ConsoleApplication::class)
-            ->addArgument(ConsoleConfig::defaults($app)['name'])
-            ->addArgument(ConsoleConfig::defaults($app)['version']);
+        $container->addShared(ConsoleApplication::class, fn() => new ConsoleApplication(
+            ConsoleConfig::defaults($app)['name'],
+            ConsoleConfig::defaults($app)['version']
+        ));
 
-        $container->addShared(ConsoleKernel::class)
-            ->addArgument($app)
-            ->addArgument($container->get(Config::class))
-            ->addArgument($container->get(LoggerInterface::class))
-            ->addArgument($container->get(AppBootstrapper::class))
-            ->addArgument($container->get(CommandRegistry::class))
-            ->addArgument($container->get(CommandDiscovery::class))
-            ->addArgument($container->get(ConsoleApplication::class));
+        $container->addShared(ConsoleKernel::class, fn() => new ConsoleKernel(
+            $app,
+            $container->get(Config::class),
+            $container->get(LoggerInterface::class),
+            $container->get(AppBootstrapper::class),
+            $container->get(CommandRegistry::class),
+            $container->get(CommandDiscovery::class),
+            $container->get(ConsoleApplication::class)
+        ));
     }
 
     private function registerLogger(Container $container, Application $app): void
