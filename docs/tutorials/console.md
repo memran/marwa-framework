@@ -47,27 +47,44 @@ When `config/database.php` enables `marwa-db`, the console kernel also registers
 - `make:seeder`
 - `db:seed`
 
+## Database Management (DBForge)
+
+The framework includes a DBForge class for database-level operations:
+
+```bash
+php marwa db:create myapp              # Create a new database
+php marwa db:drop myapp                # Drop a database
+php marwa db:list                      # List all databases
+php marwa db:list --tables             # List tables in current database
+php marwa db:backup                    # Backup database to file
+php marwa db:restore backup.sql        # Restore from backup
+php marwa db:optimize                  # Optimize all tables
+php marwa db:analyze                   # Analyze all tables
+```
+
+DBForge supports MySQL, PostgreSQL, and SQLite drivers.
+
 ## Scaffolding
 
 ```bash
-php bin/console bootstrap:cache
-php bin/console bootstrap:clear
-php bin/console config:cache
-php bin/console key:generate --show-env
-php bin/console route:cache
-php bin/console module:cache
-php bin/console make:command CleanupCommand
-php bin/console make:controller Admin/PostController --resource
-php bin/console make:mail WelcomeMail
-php bin/console make:seeder UserSeeder
-php bin/console make:model Billing/Invoice --migration
-php bin/console make:module Blog
-php bin/console make:theme dark --parent=default
-php bin/console make:ai-helper SupportAgent --with-command
-php bin/console shell
-php bin/console security:report --since-hours=24 --prune-days=30
-php bin/console kafka:consume --topic=notifications --once --json
-php bin/console schedule:table
+php marwa bootstrap:cache
+php marwa bootstrap:clear
+php marwa config:cache
+php marwa key:generate --show-env
+php marwa route:cache
+php marwa module:cache
+php marwa make:command CleanupCommand
+php marwa make:controller Admin/PostController --resource
+php marwa make:mail WelcomeMail
+php marwa make:seeder UserSeeder
+php marwa make:model Billing/Invoice --migration
+php marwa make:module Blog
+php marwa make:theme dark --parent=default
+php marwa make:ai-helper SupportAgent --with-command
+php marwa shell
+php marwa security:report --since-hours=24 --prune-days=30
+php marwa kafka:consume --topic=notifications --once --json
+php marwa schedule:table
 ```
 
 `make:controller` generates controllers in `app/Http/Controllers` and extends `Marwa\Framework\Controllers\Controller`. Use `--resource` to scaffold CRUD-style methods.
@@ -117,13 +134,13 @@ $app->schedule()
 Run the scheduler once:
 
 ```bash
-php bin/console schedule:run
+php marwa schedule:run
 ```
 
 Run it every second from cron by keeping the process alive for one minute:
 
 ```cron
-* * * * * php /path/to/bin/console schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
+* * * * * php /path/to/marwa schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
 ```
 
 Scheduler storage is configurable through `config/schedule.php`:
@@ -147,8 +164,8 @@ return [
 If you use the `database` driver, generate the table migration first:
 
 ```bash
-php bin/console schedule:table
-php bin/console migrate
+php marwa schedule:table
+php marwa migrate
 ```
 
 With the file driver, state and overlap locks are stored below `storage/framework/schedule`. With the cache driver, the scheduler uses the configured cache backend and key namespace for both state and overlap locks. With the database driver, the scheduler persists task status and overlap locks in the configured `schedule_jobs` table.

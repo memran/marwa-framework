@@ -487,7 +487,7 @@ return [
 ];
 ```
 
-Use `php bin/console schedule:table` to create a migration stub for the configured scheduler table when the database driver is enabled.
+Use `php marwa schedule:table` to create a migration stub for the configured scheduler table when the database driver is enabled.
 
 ## `config/storage.php`
 

@@ -23,6 +23,7 @@ Use this index as the entry point for the framework docs.
 - [Seeding](./tutorials/seeding.md)
 - [HTTP Client](./tutorials/http-client.md)
 - [Console Flow](./tutorials/console.md)
+- [Database Management](./tutorials/database.md)
 
 ## API Reference
 

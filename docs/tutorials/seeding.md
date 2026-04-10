@@ -5,7 +5,7 @@ The framework supports Faker-backed seeders through `marwa-db` and the framework
 ## Generate a Seeder
 
 ```bash
-php bin/console make:seeder UserSeeder
+php marwa make:seeder UserSeeder
 ```
 
 The generated seeder extends the framework base class and gives you `faker()`, `insertMany()`, and `truncate()` helpers.
@@ -13,9 +13,9 @@ The generated seeder extends the framework base class and gives you `faker()`, `
 ## Run Seeders
 
 ```bash
-php bin/console db:seed
-php bin/console db:seed --class=DatabaseSeeder
-php bin/console db:seed --dry-run
+php marwa db:seed
+php marwa db:seed --class=DatabaseSeeder
+php marwa db:seed --dry-run
 ```
 
 `DatabaseSeeder` is a good entry point when you want one file to orchestrate multiple seeders.

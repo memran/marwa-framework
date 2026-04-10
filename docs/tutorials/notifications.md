@@ -81,7 +81,7 @@ final class OrderShipped extends Notification
 Bind a consumer adapter to `Marwa\Framework\Contracts\KafkaConsumerInterface`, then run the console worker:
 
 ```bash
-php bin/console kafka:consume --topic=orders.created --once --json
+php marwa kafka:consume --topic=orders.created --once --json
 ```
 
 The consumer command dispatches `Marwa\Framework\Notifications\Events\KafkaMessageReceived`, so your app can subscribe with the normal event system.

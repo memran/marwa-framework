@@ -56,13 +56,13 @@ Security risk events are written to `storage/security/risk.jsonl` by default. Th
 Generate a summary from cron:
 
 ```bash
-php bin/console security:report --since-hours=24 --prune-days=30
+php marwa security:report --since-hours=24 --prune-days=30
 ```
 
 Use `--json` if another job or dashboard consumes the output:
 
 ```bash
-php bin/console security:report --json
+php marwa security:report --json
 ```
 
 ## Safe Paths

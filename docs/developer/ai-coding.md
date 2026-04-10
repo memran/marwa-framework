@@ -7,7 +7,7 @@ Use the built-in AI scaffolding when you want a lightweight application-specific
 ## Generate Stubs
 
 ```bash
-php bin/console make:ai-helper SupportAgent --with-command
+php marwa make:ai-helper SupportAgent --with-command
 ```
 
 This generates:

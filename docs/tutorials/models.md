@@ -46,7 +46,7 @@ $dirty = $user->isDirty('name');
 Use the scaffold command to generate a model class:
 
 ```bash
-php bin/console make:model Billing/Invoice --migration
+php marwa make:model Billing/Invoice --migration
 ```
 
 The generated model extends `Marwa\Framework\Database\Model`, so the app gets the framework helper methods by default.

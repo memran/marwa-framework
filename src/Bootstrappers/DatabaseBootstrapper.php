@@ -13,6 +13,7 @@ use Marwa\DB\Schema\Schema;
 use Marwa\DB\Seeder\SeedRunner;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\DatabaseConfig;
+use Marwa\Framework\Database\DBForge;
 use Marwa\Framework\Supports\Config;
 use Psr\Log\LoggerInterface;
 
@@ -80,6 +81,7 @@ final class DatabaseBootstrapper
         $this->container->addShared(ConnectionManager::class, $manager);
         $this->container->addShared(\Marwa\DB\Connection\ConnectionInterface::class, $manager);
         $this->container->addShared(SeedRunner::class, $seedRunner);
+        $this->container->addShared(DBForge::class, DBForge::create($manager, $config['default']));
         $this->app->set('db', $manager);
         $this->manager = $manager;
         $this->booted = true;

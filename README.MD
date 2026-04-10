@@ -45,15 +45,26 @@ $response = $app->http()->handle($request);
 ```
 
 ```bash
-php bin/console make:controller Admin/PostController --resource
-php bin/console make:seeder UserSeeder
-php bin/console make:model Billing/Invoice --migration
-php bin/console make:module Blog
-php bin/console make:theme dark --parent=default
-php bin/console shell
-php bin/console security:report --since-hours=24 --prune-days=30
-php bin/console db:seed --class=DatabaseSeeder
-php bin/console schedule:run --for=60 --sleep=1
+# Console Commands
+php marwa make:controller Admin/PostController --resource
+php marwa make:seeder UserSeeder
+php marwa make:model Billing/Invoice --migration
+php marwa make:module Blog
+php marwa make:theme dark --parent=default
+php marwa shell
+php marwa security:report --since-hours=24 --prune-days=30
+php marwa db:seed --class=DatabaseSeeder
+php marwa schedule:run --for=60 --sleep=1
+
+# Database Management (DBForge)
+php marwa db:create myapp
+php marwa db:drop myapp
+php marwa db:list
+php marwa db:list --tables
+php marwa db:backup
+php marwa db:restore backup.sql
+php marwa db:optimize
+php marwa db:analyze
 ```
 
 ## Documentation
