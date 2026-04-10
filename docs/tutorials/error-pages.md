@@ -37,7 +37,7 @@ When a route is not found, the framework renders a 404 error page.
 
 Create `resources/views/errors/404.twig`:
 
-```twig
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,14 +46,10 @@ Create `resources/views/errors/404.twig`:
 </head>
 <body>
     <h1>404</h1>
-    <p>Sorry, the page <code>{{ path }}</code> was not found.</p>
-    <p>Method: {{ method }}</p>
+    <p>Sorry, the page was not found.</p>
+    <p>Method: GET</p>
     
-    {% if debug %}
-    <div class="debug">
-        <p>Debug mode is enabled</p>
-    </div>
-    {% endif %}
+    <!-- Debug info shows when APP_DEBUG=true -->
 </body>
 </html>
 ```

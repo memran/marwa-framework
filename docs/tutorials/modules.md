@@ -184,21 +184,12 @@ Router::prefix('blog')->group(function () {
 
 ### Create View
 
-```twig
-{# modules/Blog/resources/views/index.twig #}
-{% extends 'blog::layout' %}
+In your module's `resources/views/` directory:
+- Use `.twig` file extension
+- Standard Twig syntax applies (extends, block, for, etc.)
+- See [Twig Documentation](https://twig.symfony.com/doc/) for full syntax
 
-{% block content %}
-    <h1>Blog Posts</h1>
-    
-    {% for post in posts %}
-        <article>
-            <h2>{{ post.title }}</h2>
-            <p>{{ post.excerpt }}</p>
-        </article>
-    {% endfor %}
-{% endblock %}
-```
+Example file: `modules/Blog/resources/views/index.twig`
 
 ### Use View
 
@@ -212,15 +203,16 @@ return view('index', ['posts' => $posts]);
 
 ### Extend Layout
 
-```twig
+```html
 {# modules/Blog/resources/views/layout.twig #}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}Blog{% endblock %}</title>
+    <!-- block tags would go here in actual templates -->
+    <title>Blog Layout</title>
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <!-- content would go here -->
 </body>
 </html>
 ```
