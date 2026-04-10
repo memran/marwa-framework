@@ -9,6 +9,10 @@
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%206-brightgreen?style=flat-square)](https://phpstan.org/)
 [![PHPUnit](https://img.shields.io/badge/PHPUnit-11.5-blue?style=flat-square)](https://phpunit.de/)
 
+## Documentation
+
+📖 Full documentation at: **[https://memran.github.io/marwa-framework/](https://memran.github.io/marwa-framework/)**
+
 Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modular web apps, console tools, and reusable runtime services.
 
 ## What It Includes
