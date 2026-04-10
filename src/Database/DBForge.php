@@ -265,7 +265,7 @@ final class DBForge
         }
 
         $files = glob(dirname($dbPath) . '/*.sqlite');
-        return array_map(fn($f) => basename($f, '.sqlite'), $files ?: []);
+        return array_map(fn ($f) => basename($f, '.sqlite'), $files ?: []);
     }
 
     /** @return list<string> */
