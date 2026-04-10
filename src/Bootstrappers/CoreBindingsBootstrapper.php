@@ -129,10 +129,11 @@ final class CoreBindingsBootstrapper
             return $container->get(Security::class);
         });
 
-        $container->addShared(RiskAnalyzer::class)
-            ->addArgument($app)
-            ->addArgument($container->get(Config::class))
-            ->addArgument($container->get(LoggerInterface::class));
+        $container->addShared(RiskAnalyzer::class, fn () => new RiskAnalyzer(
+            $app,
+            $container->get(Config::class),
+            $container->get(LoggerInterface::class)
+        ));
 
         $container->addShared(ErrorHandlerAdapter::class)
             ->addArgument($app)
@@ -162,24 +163,24 @@ final class CoreBindingsBootstrapper
             ->addArgument($container)
             ->addArgument($container->get(Config::class));
 
-        $container->addShared(CommandRegistry::class, fn() => new CommandRegistry(
+        $container->addShared(CommandRegistry::class, fn () => new CommandRegistry(
             $app,
             $container,
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(PsyshShellFactory::class, fn() => new PsyshShellFactory());
+        $container->addShared(PsyshShellFactory::class, fn () => new PsyshShellFactory());
 
         $container->addShared(ShellFactoryInterface::class, function () use ($container) {
             return $container->get(PsyshShellFactory::class);
         });
 
-        $container->addShared(CommandDiscovery::class, fn() => new CommandDiscovery(
+        $container->addShared(CommandDiscovery::class, fn () => new CommandDiscovery(
             $app,
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(FileQueue::class, fn() => new FileQueue(
+        $container->addShared(FileQueue::class, fn () => new FileQueue(
             $app,
             $container->get(Config::class),
             $container->get(LoggerInterface::class)
@@ -189,7 +190,7 @@ final class CoreBindingsBootstrapper
             return $container->get(FileQueue::class);
         });
 
-        $container->addShared(ScheduleStoreResolver::class, fn() => new ScheduleStoreResolver(
+        $container->addShared(ScheduleStoreResolver::class, fn () => new ScheduleStoreResolver(
             $container->get(DatabaseBootstrapper::class),
             $container->get(CacheInterface::class)
         ));
@@ -198,19 +199,19 @@ final class CoreBindingsBootstrapper
             return $container->get(ScheduleStoreResolver::class);
         });
 
-        $container->addShared(Scheduler::class, fn() => new Scheduler(
+        $container->addShared(Scheduler::class, fn () => new Scheduler(
             $app,
             $container->get(LoggerInterface::class),
             $container->get(QueueInterface::class),
             $container->get(ScheduleStoreResolverInterface::class)
         ));
 
-        $container->addShared(ConsoleApplication::class, fn() => new ConsoleApplication(
+        $container->addShared(ConsoleApplication::class, fn () => new ConsoleApplication(
             ConsoleConfig::defaults($app)['name'],
             ConsoleConfig::defaults($app)['version']
         ));
 
-        $container->addShared(ConsoleKernel::class, fn() => new ConsoleKernel(
+        $container->addShared(ConsoleKernel::class, fn () => new ConsoleKernel(
             $app,
             $container->get(Config::class),
             $container->get(LoggerInterface::class),
