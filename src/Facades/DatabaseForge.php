@@ -6,7 +6,7 @@ namespace Marwa\Framework\Facades;
 
 use Marwa\Framework\Database\DBForge;
 
-final class DbForge extends Facade
+final class DatabaseForge extends Facade
 {
     protected static function getFacadeAccessor(): string
     {

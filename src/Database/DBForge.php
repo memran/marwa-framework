@@ -10,7 +10,8 @@ use RuntimeException;
 
 final class DBForge
 {
-    private array $config;
+    /** @var array<string, mixed> */
+    private $config;
 
     public function __construct(
         private ConnectionManager $manager,
@@ -19,6 +20,7 @@ final class DBForge
         $this->config = $this->loadConfig();
     }
 
+    /** @return array<string, mixed> */
     private function loadConfig(): array
     {
         $reflection = new \ReflectionClass($this->manager);
@@ -74,6 +76,7 @@ final class DBForge
         };
     }
 
+    /** @return list<string> */
     public function listDatabases(): array
     {
         $driver = $this->driver();
@@ -86,6 +89,7 @@ final class DBForge
         };
     }
 
+    /** @return list<string> */
     public function listTables(): array
     {
         $driver = $this->driver();
@@ -187,6 +191,7 @@ final class DBForge
         return true;
     }
 
+    /** @return list<array<string, mixed>> */
     private function query(string $sql): array
     {
         $stmt = $this->pdo()->query($sql);
@@ -232,18 +237,21 @@ final class DBForge
         return true;
     }
 
+    /** @return list<string> */
     private function listMysqlDatabases(): array
     {
         $result = $this->query("SHOW DATABASES");
         return array_column($result, 'Database');
     }
 
+    /** @return list<string> */
     private function listPgsqlDatabases(): array
     {
         $result = $this->query("SELECT datname FROM pg_database WHERE datistemplate = false");
         return array_column($result, 'datname');
     }
 
+    /** @return list<string> */
     private function listSqliteDatabases(): array
     {
         $dbPath = $this->getDatabaseName();
@@ -260,6 +268,7 @@ final class DBForge
         return array_map(fn($f) => basename($f, '.sqlite'), $files ?: []);
     }
 
+    /** @return list<string> */
     private function listMysqlTables(): array
     {
         $db = $this->getDatabaseName();
@@ -268,12 +277,14 @@ final class DBForge
         return array_column($result, $key);
     }
 
+    /** @return list<string> */
     private function listPgsqlTables(): array
     {
         $result = $this->query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
         return array_column($result, 'tablename');
     }
 
+    /** @return list<string> */
     private function listSqliteTables(): array
     {
         $result = $this->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
@@ -422,6 +433,6 @@ final class DBForge
 
     private function app(): \Marwa\Framework\Application
     {
-        return \Marwa\Framework\Facades\Facade::getApp();
+        return \app();
     }
 }
