@@ -74,14 +74,14 @@ final class DatabaseBootstrapper
         $this->container->addShared(\Marwa\DB\Connection\ConnectionInterface::class, $manager);
 
         // Lazy registration - only instantiated when first requested
-        $this->container->addShared(SeedRunner::class, fn() => new SeedRunner(
+        $this->container->addShared(SeedRunner::class, fn () => new SeedRunner(
             cm: $manager,
             logger: $this->logger,
             connection: $config['default'],
             seedPath: $config['seedersPath'],
             seedNamespace: $config['seedersNamespace'],
         ));
-        $this->container->addShared(DBForge::class, fn() => DBForge::create($manager, $config['default']));
+        $this->container->addShared(DBForge::class, fn () => DBForge::create($manager, $config['default']));
         $this->app->set('db', $manager);
         $this->manager = $manager;
         $this->booted = true;
