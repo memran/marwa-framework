@@ -1,6 +1,6 @@
 # View API
 
-`Marwa\Framework\Views\View` wraps the shared `marwa-view` adapter.
+API reference for `Marwa\Framework\Views\View`.
 
 ## Access
 
@@ -9,16 +9,98 @@ $views = view();
 $views->share('appName', 'Marwa');
 ```
 
-## Methods
+## Render Methods
 
-- `render(string $template, array $data = []): string` renders a template to a string
-- `make(string $template, array $data = []): ResponseInterface` returns an HTML response
-- `exists(string $template): bool` checks whether a template is available
-- `share(string $key, mixed $value): void` shares data globally
-- `addNamespace(string $namespace, string $path): void` registers module or package namespaces
-- `theme(?string $name = null): self|string` gets or changes the current theme
-- `useTheme(string $name): void` switches the active theme
-- `setFallbackTheme(string $name): void` changes the fallback theme
-- `currentTheme(): ?string` returns the active theme name
-- `selectedTheme(): ?string` returns the selected theme name
-- `clearCache(): void` clears compiled Twig and fragment cache
+| Method | Description | Returns |
+|-------|-------------|---------|
+| `render(string $template, array $data)` | Render template to string | `string` |
+| `make(string $template, array $data)` | Return HTML response | `ResponseInterface` |
+| `exists(string $template)` | Check template exists | `bool` |
+
+## Data Methods
+
+| Method | Description |
+|-------|-------------|
+| `share(string $key, mixed $value)` | Share data globally |
+| `shared(string $key)` | Get shared data |
+| `flushShared()` | Clear shared data |
+
+## Namespace Methods
+
+| Method | Description |
+|-------|-------------|
+| `addNamespace(string $namespace, string $path)` | Register namespace |
+| `addPath(string $path, ?string $namespace)` | Add template path |
+
+## Theme Methods
+
+| Method | Description |
+|-------|-------------|
+| `theme(?string $name)` | Get or change current theme |
+| `useTheme(string $name)` | Switch active theme |
+| `setFallbackTheme(string $name)` | Set fallback theme |
+| `currentTheme()` | Get active theme name |
+| `selectedTheme()` | Get selected theme name |
+| `clearCache()` | Clear Twig cache |
+
+## Shared View Helper
+
+```php
+// Render view
+view('template', $data);
+
+// Share data globally
+view()->share('key', 'value');
+```
+
+## Configuration
+
+In `config/view.php`:
+
+```php
+return [
+    'paths' => [
+        resource_path('views'),
+    ],
+    'cachePath' => storage_path('cache/views'),
+    'debug' => env('VIEW_DEBUG', false),
+    'themePath' => resource_path('views/themes'),
+    'activeTheme' => 'default',
+    'fallbackTheme' => null,
+];
+```
+
+## Example Usage
+
+```php
+<?php
+
+use Marwa\Framework\Views\View;
+
+$view = new View($container);
+
+// Render template
+$html = $view->render('welcome', [
+    'name' => 'Alice',
+]);
+
+// Make response
+$response = $view->make('welcome', [
+    'name' => 'Alice',
+]);
+
+// Share global data
+$view->share('siteName', 'My App');
+
+// Add namespace
+$view->addNamespace('blog', resource_path('views/blog'));
+
+// Theme
+$view->useTheme('dark');
+$view->clearCache();
+```
+
+## Related
+
+- [View Tutorial](../tutorials/view.md) - Full tutorial
+- [Twig Documentation](https://twig.symfony.com/)
