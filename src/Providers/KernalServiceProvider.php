@@ -13,6 +13,7 @@ use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Contracts\BootServiceProviderInterface;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Supports\Runtime;
 
 final class KernalServiceProvider extends ServiceProviderAdapter implements BootServiceProviderInterface
 {
@@ -52,6 +53,10 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
     {
         $this->getContainer()->addShared(RouterAdapter::class)
             ->addArgument($this->getContainer());
+
+        if (Runtime::isConsole()) {
+            return;
+        }
 
         /** @var Application $app */
         $app = $this->getContainer()->get(Application::class);
