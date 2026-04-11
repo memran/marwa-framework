@@ -39,7 +39,7 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
         $config = $this->getContainer()->get(Config::class);
         $defaults = AppConfig::defaults();
 
-        if ($config->getBool(AppConfig::KEY . '.debugbar', $defaults['debugbar'])) {
+        if (!Runtime::isConsole() && $config->getBool(AppConfig::KEY . '.debugbar', $defaults['debugbar'])) {
             $this->getContainer()->addShared('debugbar', function () {
                 /** @var Config $config */
                 $config = $this->getContainer()->get(Config::class);
