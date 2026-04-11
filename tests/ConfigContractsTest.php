@@ -103,7 +103,7 @@ final class ConfigContractsTest extends TestCase
 
         self::assertSame($this->basePath . '/bootstrap/cache/config.php', BootstrapConfig::defaults($app)['configCache']);
         self::assertSame($this->basePath . '/bootstrap/cache/routes.php', BootstrapConfig::defaults($app)['routeCache']);
-        self::assertSame($this->basePath . '/bootstrap/cache/modules.php', ModuleConfig::defaults($app)['cache']);
+        self::assertSame($this->basePath . '/storage/module/cache.php', ModuleConfig::defaults($app)['cache']);
         self::assertSame([$this->basePath . '/modules'], ModuleConfig::defaults($app)['paths']);
         self::assertFalse(ModuleConfig::defaults($app)['forceRefresh']);
         self::assertSame(['commands'], ModuleConfig::defaults($app)['commandPaths']);
