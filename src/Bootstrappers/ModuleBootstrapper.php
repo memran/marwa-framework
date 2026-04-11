@@ -270,14 +270,23 @@ final class ModuleBootstrapper
      */
     private function resolveMigrationPaths(Module $module): array
     {
-        $config = $this->moduleConfig();
         $paths = [];
 
-        foreach ($config['migrationsPath'] as $key) {
-            $path = $module->path($key);
+        $manifestMigrations = $module->migrations();
+        foreach ($manifestMigrations as $file) {
+            if (is_file($file)) {
+                $paths[] = $file;
+            }
+        }
 
-            if (is_string($path) && is_dir($path)) {
-                $paths[] = $path;
+        if (empty($paths)) {
+            $config = $this->moduleConfig();
+            foreach ($config['migrationsPath'] as $key) {
+                $path = $module->path($key);
+
+                if (is_string($path) && is_dir($path)) {
+                    $paths[] = $path;
+                }
             }
         }
 
