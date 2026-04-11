@@ -19,11 +19,18 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
 {
     public function provides(string $id): bool
     {
-        $services = [
-            'debugbar',
-            ViewAdapter::class,
-            RouterAdapter::class,
-        ];
+        if (Runtime::isConsole()) {
+            $services = [
+                'debugbar',
+                ViewAdapter::class,
+            ];
+        } else {
+            $services = [
+                'debugbar',
+                ViewAdapter::class,
+                RouterAdapter::class,
+            ];
+        }
 
         return in_array($id, $services, true);
     }
@@ -51,12 +58,12 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
 
     public function boot(): void
     {
-        $this->getContainer()->addShared(RouterAdapter::class)
-            ->addArgument($this->getContainer());
-
         if (Runtime::isConsole()) {
             return;
         }
+
+        $this->getContainer()->addShared(RouterAdapter::class)
+            ->addArgument($this->getContainer());
 
         /** @var Application $app */
         $app = $this->getContainer()->get(Application::class);
