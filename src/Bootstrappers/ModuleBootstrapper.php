@@ -171,6 +171,10 @@ final class ModuleBootstrapper
 
     private function loadModuleRoutes(ModuleRegistryInterface $registry): void
     {
+        if ($this->app->areModuleRoutesLoaded()) {
+            return;
+        }
+
         $routeCache = BootstrapConfig::defaults($this->app)['routeCache'];
 
         if (is_file($routeCache)) {
@@ -186,6 +190,8 @@ final class ModuleBootstrapper
                 }
             }
         }
+
+        $this->app->setModuleRoutesLoaded(true);
     }
 
     private function moduleNamespace(string $slug): string

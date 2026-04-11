@@ -48,6 +48,8 @@ final class Application
      */
     private array $bootedModuleServiceProviders = [];
 
+    private bool $moduleRoutesLoaded = false;
+
     public function __construct(string $basePath)
     {
         $this->basePath = rtrim($basePath, DIRECTORY_SEPARATOR);
@@ -162,6 +164,16 @@ final class Application
     public function container(): Container
     {
         return $this->container;
+    }
+
+    public function setModuleRoutesLoaded(bool $loaded = true): void
+    {
+        $this->moduleRoutesLoaded = $loaded;
+    }
+
+    public function areModuleRoutesLoaded(): bool
+    {
+        return $this->moduleRoutesLoaded;
     }
 
     /**
