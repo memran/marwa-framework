@@ -34,7 +34,7 @@ final class ViewAdapter
         $cacheEnabled = $this->config->getArray(ViewConfigContract::KEY . '.cache', $defaults['cache']);
         $isCacheEnabled = (bool) ($cacheEnabled['enabled'] ?? true);
 
-        $finalCachePath = $isCacheEnabled ? $cachePath : false;
+        $finalCachePath = $isCacheEnabled ? $cachePath : $cachePath;
 
         $viewConfig = new ViewConfig(
             viewsPath: $viewsPath,
