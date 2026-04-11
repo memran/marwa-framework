@@ -27,7 +27,8 @@ final class ModuleBootstrapper
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
-     *     migrationsPath: list<string>
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
      * }|null
      */
     private ?array $moduleConfig = null;
@@ -127,6 +128,28 @@ final class ModuleBootstrapper
         return array_values(array_unique($paths));
     }
 
+    /**
+     * @return list<string>
+     */
+    public function seederPaths(): array
+    {
+        $registry = $this->registry();
+
+        if ($registry === null) {
+            return [];
+        }
+
+        $paths = [];
+
+        foreach ($registry->all() as $module) {
+            foreach ($this->resolveSeederPaths($module) as $path) {
+                $paths[] = $path;
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
     private function registerModuleViews(ModuleRegistryInterface $registry): void
     {
         if (!$this->container->has(FrameworkView::class)) {
@@ -184,7 +207,8 @@ final class ModuleBootstrapper
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
-     *     migrationsPath: list<string>
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
      * }
      */
     private function moduleConfig(): array
@@ -202,7 +226,8 @@ final class ModuleBootstrapper
          *     forceRefresh: bool,
          *     commandPaths: list<string>,
          *     commandConventions: list<string>,
-         *     migrationsPath: list<string>
+         *     migrationsPath: list<string>,
+         *     seedersPath: list<string>
          * } $moduleConfig
          */
         $moduleConfig = array_replace_recursive(ModuleConfig::defaults($this->app), $this->config->getArray(ModuleConfig::KEY, []));
@@ -210,6 +235,7 @@ final class ModuleBootstrapper
         $moduleConfig['commandPaths'] = $this->normalizeStringList($moduleConfig['commandPaths']);
         $moduleConfig['commandConventions'] = $this->normalizeStringList($moduleConfig['commandConventions']);
         $moduleConfig['migrationsPath'] = $this->normalizeStringList($moduleConfig['migrationsPath']);
+        $moduleConfig['seedersPath'] = $this->normalizeStringList($moduleConfig['seedersPath']);
         $moduleConfig['forceRefresh'] = (bool) $moduleConfig['forceRefresh'];
         $moduleConfig['enabled'] = (bool) $moduleConfig['enabled'];
         $moduleConfig['cache'] = $moduleConfig['cache'];
@@ -287,6 +313,25 @@ final class ModuleBootstrapper
                 if (is_string($path) && is_dir($path)) {
                     $paths[] = $path;
                 }
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resolveSeederPaths(Module $module): array
+    {
+        $config = $this->moduleConfig();
+        $paths = [];
+
+        foreach ($config['seedersPath'] as $key) {
+            $path = $module->path($key);
+
+            if (is_string($path) && is_dir($path)) {
+                $paths[] = $path;
             }
         }
 

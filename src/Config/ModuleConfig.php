@@ -18,7 +18,8 @@ final class ModuleConfig
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
-     *     migrationsPath: list<string>
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
      * }
      */
     public static function defaults(Application $app): array
@@ -39,6 +40,9 @@ final class ModuleConfig
             ],
             'migrationsPath' => [
                 'database/migrations',
+            ],
+            'seedersPath' => [
+                'database/seeders',
             ],
         ];
     }

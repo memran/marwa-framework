@@ -22,6 +22,7 @@ use Marwa\Framework\Console\Commands\MakeThemeCommand;
 use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\ModuleMigrateCommand;
+use Marwa\Framework\Console\Commands\ModuleSeedCommand;
 use Marwa\Framework\Console\Commands\RouteCacheCommand;
 use Marwa\Framework\Console\Commands\RouteClearCommand;
 use Marwa\Framework\Console\Commands\ScheduleRunCommand;
@@ -66,6 +67,7 @@ final class ConsoleConfig
                 ModuleCacheCommand::class,
                 ModuleClearCommand::class,
                 ModuleMigrateCommand::class,
+                ModuleSeedCommand::class,
                 MakeCommandCommand::class,
                 MakeControllerCommand::class,
                 MakeMailCommand::class,
