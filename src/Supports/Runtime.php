@@ -6,9 +6,24 @@ namespace Marwa\Framework\Supports;
 
 final class Runtime
 {
+    private static ?bool $overrideConsole = null;
+
     public static function isConsole(): bool
     {
+        if (self::$overrideConsole !== null) {
+            return self::$overrideConsole;
+        }
+
         return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
+    }
+
+    /**
+     * Override the console detection result (useful for testing).
+     * Pass null to clear the override.
+     */
+    public static function setConsoleOverride(?bool $isConsole): void
+    {
+        self::$overrideConsole = $isConsole;
     }
 
     /**

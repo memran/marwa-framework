@@ -22,7 +22,6 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
         if (Runtime::isConsole()) {
             $services = [
                 'debugbar',
-                ViewAdapter::class,
             ];
         } else {
             $services = [
@@ -49,6 +48,10 @@ final class KernalServiceProvider extends ServiceProviderAdapter implements Boot
                 $bar->registerCollectors();
                 return $bar->getDebugger();
             });
+        }
+
+        if (Runtime::isConsole()) {
+            return;
         }
 
         $this->getContainer()->addShared(ViewAdapter::class)
