@@ -63,13 +63,23 @@ function routes_path(string $path = ''): string
 }
 
 /**
- * Storage Path
+ * Storage Path (Private)
  * @return string
  */
 function storage_path(string $path = ''): string
 {
     return base_path('storage' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
 }
+
+/**
+ * Public Storage Path (Web Accessible)
+ * @return string
+ */
+function public_storage_path(string $path = ''): string
+{
+    return base_path('public/storage' . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
+}
+
 /**
  * Config Path
  * @return string
