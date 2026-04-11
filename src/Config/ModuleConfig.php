@@ -17,7 +17,8 @@ final class ModuleConfig
      *     cache: string,
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
-     *     commandConventions: list<string>
+     *     commandConventions: list<string>,
+     *     migrationsPath: list<string>
      * }
      */
     public static function defaults(Application $app): array
@@ -35,6 +36,9 @@ final class ModuleConfig
             'commandConventions' => [
                 'Console/Commands',
                 'src/Console/Commands',
+            ],
+            'migrationsPath' => [
+                'database/migrations',
             ],
         ];
     }

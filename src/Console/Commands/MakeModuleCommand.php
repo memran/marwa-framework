@@ -44,6 +44,7 @@ final class MakeModuleCommand extends AbstractCommand
         $this->ensureDirectory($modulePath . '/routes');
         $this->ensureDirectory($modulePath . '/resources/views');
         $this->ensureDirectory($modulePath . '/Console/Commands');
+        $this->ensureDirectory($modulePath . '/database/migrations');
 
         $this->writeStubFile(
             $this->frameworkStubPath('console/module-manifest.stub'),

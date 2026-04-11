@@ -12,6 +12,7 @@ return [
     'paths' => [
         'views' => 'resources/views',
         'commands' => 'Console/Commands',
+        'migrations' => 'database/migrations',
     ],
     'routes' => [
         'http' => 'routes/http.php',
