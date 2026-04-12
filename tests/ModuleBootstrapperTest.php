@@ -92,4 +92,50 @@ PHP
 
         self::assertArrayNotHasKey('marwa_module_routes', $GLOBALS);
     }
+
+    public function testModuleBootstrapperSkipsViewsAndRoutesInCliMode(): void
+    {
+        \Marwa\Framework\Supports\Runtime::setConsoleOverride(true);
+
+        try {
+            self::assertTrue(\Marwa\Framework\Supports\Runtime::isConsole(), 'Runtime should detect CLI mode');
+
+            $app = new Application($this->basePath);
+            $app->make(AppBootstrapper::class)->bootstrap();
+
+            self::assertSame(1, BlogModuleServiceProvider::$registerCalls);
+            self::assertSame(1, BlogModuleServiceProvider::$bootCalls);
+            self::assertTrue($app->has('module.blog.registered'));
+            self::assertTrue($app->has('module.blog.booted'));
+            self::assertTrue($app->hasModule('blog'));
+            self::assertArrayNotHasKey('marwa_module_routes', $GLOBALS);
+        } finally {
+            \Marwa\Framework\Supports\Runtime::setConsoleOverride(false);
+        }
+    }
+
+    public function testCliBootDoesNotThrowContainerException(): void
+    {
+        \Marwa\Framework\Supports\Runtime::setConsoleOverride(true);
+
+        try {
+            $app = new Application($this->basePath);
+            $app->make(AppBootstrapper::class)->bootstrap();
+
+            self::assertSame(1, BlogModuleServiceProvider::$registerCalls);
+            self::assertSame(1, BlogModuleServiceProvider::$bootCalls);
+        } finally {
+            \Marwa\Framework\Supports\Runtime::setConsoleOverride(false);
+        }
+    }
+
+    public function testKernalServiceProviderAdvertisesHttpServicesInHttpMode(): void
+    {
+        \Marwa\Framework\Supports\Runtime::setConsoleOverride(false);
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        self::assertTrue($app->has(\Marwa\Framework\Views\View::class));
+    }
 }

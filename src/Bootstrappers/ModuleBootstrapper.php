@@ -10,6 +10,7 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Supports\Config;
+use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
 use Marwa\Module\Module;
@@ -66,8 +67,12 @@ final class ModuleBootstrapper
         $provider->register($this->app);
         $this->registry = $this->resolveRegistry();
         $this->app->bootModuleServiceProviders();
-        $this->registerModuleViews($this->registry);
-        $this->loadModuleRoutes($this->registry);
+
+        if (!Runtime::isConsole()) {
+            $this->registerModuleViews($this->registry);
+            $this->loadModuleRoutes($this->registry);
+        }
+
         $this->app->dispatch(new ModulesBootstrapped(modules: array_keys($this->registry->all())));
 
         $this->booted = true;
