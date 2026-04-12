@@ -23,11 +23,17 @@ final class ImageSupportTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (!isset($this->basePath)) {
+            return;
+        }
+
         foreach (glob($this->basePath . '/*') ?: [] as $file) {
             @unlink($file);
         }
 
-        @rmdir($this->basePath);
+        if (is_dir($this->basePath)) {
+            @rmdir($this->basePath);
+        }
     }
 
     public function testCanvasCanBeSavedAndLoadedFromDisk(): void

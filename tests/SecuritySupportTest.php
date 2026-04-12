@@ -25,11 +25,11 @@ final class SecuritySupportTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->basePath = sys_get_temp_dir() . '/marwa-security-' . bin2hex(random_bytes(6));
-        $this->riskLog = $this->basePath . '/storage/security/risk.jsonl';
+        $this->basePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'marwa-security-' . bin2hex(random_bytes(6));
+        $this->riskLog = $this->basePath . DIRECTORY_SEPARATOR . 'storage/security/risk.jsonl';
         mkdir($this->basePath, 0777, true);
-        mkdir($this->basePath . '/config', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        mkdir($this->basePath . DIRECTORY_SEPARATOR . 'config', 0777, true);
+        file_put_contents($this->basePath . DIRECTORY_SEPARATOR . '.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
         file_put_contents(
             $this->basePath . '/config/security.php',
             <<<PHP
@@ -87,7 +87,10 @@ PHP
         self::assertSame([], $defaults['trustedOrigins']);
         self::assertTrue($defaults['throttle']['enabled']);
         self::assertTrue($defaults['risk']['enabled']);
-        self::assertSame($this->riskLog, $defaults['risk']['logPath']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->riskLog),
+            str_replace('/', DIRECTORY_SEPARATOR, $defaults['risk']['logPath'])
+        );
         self::assertSame(30, $defaults['risk']['pruneAfterDays']);
     }
 
@@ -111,7 +114,10 @@ PHP
         self::assertFalse($security->isCsrfProtected('GET', '/account'));
         self::assertFalse($security->isCsrfProtected('POST', '/webhook/ping'));
         self::assertSame('invoice-2026.pdf', $security->sanitizeFilename('../invoice 2026.pdf'));
-        self::assertSame($this->basePath . '/storage/app/uploads/avatar.png', $security->safePath('uploads/avatar.png', $this->basePath . '/storage/app'));
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/app/uploads/avatar.png'),
+            str_replace('/', DIRECTORY_SEPARATOR, $security->safePath('uploads/avatar.png', $this->basePath . '/storage/app'))
+        );
     }
 
     public function testSecurityMiddlewareRecordsRiskSignals(): void

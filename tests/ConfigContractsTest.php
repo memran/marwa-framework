@@ -31,16 +31,16 @@ final class ConfigContractsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->basePath = sys_get_temp_dir() . '/marwa-config-contracts-' . bin2hex(random_bytes(6));
+        $this->basePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'marwa-config-contracts-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
-        mkdir($this->basePath . '/config', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_DEBUG=false\nLOG_ENABLE=true\nTIMEZONE=UTC\n");
+        mkdir($this->basePath . DIRECTORY_SEPARATOR . 'config', 0777, true);
+        file_put_contents($this->basePath . DIRECTORY_SEPARATOR . '.env', "APP_DEBUG=false\nLOG_ENABLE=true\nTIMEZONE=UTC\n");
     }
 
     protected function tearDown(): void
     {
-        @unlink($this->basePath . '/.env');
-        @rmdir($this->basePath . '/config');
+        @unlink($this->basePath . DIRECTORY_SEPARATOR . '.env');
+        @rmdir($this->basePath . DIRECTORY_SEPARATOR . 'config');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $_ENV['APP_DEBUG'], $_ENV['LOG_ENABLE'], $_ENV['TIMEZONE'], $_SERVER['APP_DEBUG'], $_SERVER['LOG_ENABLE'], $_SERVER['TIMEZONE']);
     }
@@ -67,15 +67,36 @@ final class ConfigContractsTest extends TestCase
     {
         $app = new Application($this->basePath);
 
-        self::assertSame($this->basePath . '/resources/views', ViewConfig::defaults($app)['viewsPath']);
-        self::assertSame($this->basePath . '/storage/cache/views', ViewConfig::defaults($app)['cachePath']);
-        self::assertSame($this->basePath . '/resources/views/themes', ViewConfig::defaults($app)['themePath']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/resources/views'),
+            str_replace('/', DIRECTORY_SEPARATOR, ViewConfig::defaults($app)['viewsPath'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/views'),
+            str_replace('/', DIRECTORY_SEPARATOR, ViewConfig::defaults($app)['cachePath'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/resources/views/themes'),
+            str_replace('/', DIRECTORY_SEPARATOR, ViewConfig::defaults($app)['themePath'])
+        );
         self::assertSame('default', ViewConfig::defaults($app)['activeTheme']);
         self::assertSame('default', ViewConfig::defaults($app)['fallbackTheme']);
-        self::assertSame($this->basePath . '/storage/cache/framework.sqlite', CacheConfig::defaults($app)['sqlite']['path']);
-        self::assertSame($this->basePath . '/storage/app', StorageConfig::defaults($app)['disks']['local']['root']);
-        self::assertSame($this->basePath . '/storage/app/public', StorageConfig::defaults($app)['disks']['public']['root']);
-        self::assertSame($this->basePath . '/storage/logs', LoggerConfig::defaults($app)['storage']['path']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework.sqlite'),
+            str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['sqlite']['path'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/app'),
+            str_replace('/', DIRECTORY_SEPARATOR, StorageConfig::defaults($app)['disks']['local']['root'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/app/public'),
+            str_replace('/', DIRECTORY_SEPARATOR, StorageConfig::defaults($app)['disks']['public']['root'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/logs'),
+            str_replace('/', DIRECTORY_SEPARATOR, LoggerConfig::defaults($app)['storage']['path'])
+        );
     }
 
     public function testEventConfigDefaultsAreEmptyLists(): void
@@ -101,10 +122,22 @@ final class ConfigContractsTest extends TestCase
     {
         $app = new Application($this->basePath);
 
-        self::assertSame($this->basePath . '/bootstrap/cache/config.php', BootstrapConfig::defaults($app)['configCache']);
-        self::assertSame($this->basePath . '/bootstrap/cache/routes.php', BootstrapConfig::defaults($app)['routeCache']);
-        self::assertSame($this->basePath . '/storage/module/cache.php', ModuleConfig::defaults($app)['cache']);
-        self::assertSame([$this->basePath . '/modules'], ModuleConfig::defaults($app)['paths']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache/config.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, BootstrapConfig::defaults($app)['configCache'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache/routes.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, BootstrapConfig::defaults($app)['routeCache'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/module/cache.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, ModuleConfig::defaults($app)['cache'])
+        );
+        self::assertSame(
+            [str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/modules')],
+            array_map(fn($p) => str_replace('/', DIRECTORY_SEPARATOR, $p), ModuleConfig::defaults($app)['paths'])
+        );
         self::assertFalse(ModuleConfig::defaults($app)['forceRefresh']);
         self::assertSame(['commands'], ModuleConfig::defaults($app)['commandPaths']);
         self::assertSame(['Console/Commands', 'src/Console/Commands'], ModuleConfig::defaults($app)['commandConventions']);
@@ -117,8 +150,14 @@ final class ConfigContractsTest extends TestCase
 
         self::assertFalse($defaults['enabled']);
         self::assertSame('sqlite', $defaults['default']);
-        self::assertSame($this->basePath . '/database/migrations', $defaults['migrationsPath']);
-        self::assertSame($this->basePath . '/database/seeders', $defaults['seedersPath']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/database/migrations'),
+            str_replace('/', DIRECTORY_SEPARATOR, $defaults['migrationsPath'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/database/seeders'),
+            str_replace('/', DIRECTORY_SEPARATOR, $defaults['seedersPath'])
+        );
         self::assertSame('Database\\Seeders', $defaults['seedersNamespace']);
     }
 
@@ -149,7 +188,10 @@ final class ConfigContractsTest extends TestCase
         self::assertSame([], $defaults['trustedOrigins']);
         self::assertTrue($defaults['throttle']['enabled']);
         self::assertTrue($defaults['risk']['enabled']);
-        self::assertSame($this->basePath . '/storage/security/risk.jsonl', $defaults['risk']['logPath']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/security/risk.jsonl'),
+            str_replace('/', DIRECTORY_SEPARATOR, $defaults['risk']['logPath'])
+        );
         self::assertSame(30, $defaults['risk']['pruneAfterDays']);
     }
 
@@ -159,13 +201,22 @@ final class ConfigContractsTest extends TestCase
 
         self::assertTrue(QueueConfig::defaults($app)['enabled']);
         self::assertSame('default', QueueConfig::defaults($app)['default']);
-        self::assertSame($this->basePath . '/storage/queue', QueueConfig::defaults($app)['path']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/queue'),
+            str_replace('/', DIRECTORY_SEPARATOR, QueueConfig::defaults($app)['path'])
+        );
         self::assertSame(90, QueueConfig::defaults($app)['retryAfter']);
 
         self::assertTrue(ScheduleConfig::defaults($app)['enabled']);
         self::assertSame('file', ScheduleConfig::defaults($app)['driver']);
-        self::assertSame($this->basePath . '/storage/framework/schedule', ScheduleConfig::defaults($app)['lockPath']);
-        self::assertSame($this->basePath . '/storage/framework/schedule', ScheduleConfig::defaults($app)['file']['path']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/schedule'),
+            str_replace('/', DIRECTORY_SEPARATOR, ScheduleConfig::defaults($app)['lockPath'])
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/schedule'),
+            str_replace('/', DIRECTORY_SEPARATOR, ScheduleConfig::defaults($app)['file']['path'])
+        );
         self::assertSame('schedule', ScheduleConfig::defaults($app)['cache']['namespace']);
         self::assertSame('sqlite', ScheduleConfig::defaults($app)['database']['connection']);
         self::assertSame('schedule_jobs', ScheduleConfig::defaults($app)['database']['table']);

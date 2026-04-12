@@ -15,11 +15,11 @@ final class HelpersTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->basePath = sys_get_temp_dir() . '/marwa-helpers-' . bin2hex(random_bytes(6));
+        $this->basePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'marwa-helpers-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
-        mkdir($this->basePath . '/config', 0777, true);
-        mkdir($this->basePath . '/modules/Blog/Console/Commands', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        mkdir($this->basePath . DIRECTORY_SEPARATOR . 'config', 0777, true);
+        mkdir($this->basePath . DIRECTORY_SEPARATOR . 'modules/Blog/Console/Commands', 0777, true);
+        file_put_contents($this->basePath . DIRECTORY_SEPARATOR . '.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
         file_put_contents(
             $this->basePath . '/modules/Blog/manifest.php',
             <<<'PHP'
@@ -81,13 +81,34 @@ PHP
     {
         new Application($this->basePath);
 
-        self::assertSame($this->basePath, base_path());
-        self::assertSame($this->basePath . '/database/migrations', database_path('migrations'));
-        self::assertSame($this->basePath . '/public/build', public_path('build'));
-        self::assertSame($this->basePath . '/bootstrap/cache', bootstrap_path('cache'));
-        self::assertSame($this->basePath . '/storage/cache', cache_path());
-        self::assertSame($this->basePath . '/storage/logs/app.log', logs_path('app.log'));
-        self::assertSame($this->basePath . '/resources/views/emails', view_path('emails'));
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath),
+            str_replace('/', DIRECTORY_SEPARATOR, base_path())
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/database/migrations'),
+            str_replace('/', DIRECTORY_SEPARATOR, database_path('migrations'))
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/public/build'),
+            str_replace('/', DIRECTORY_SEPARATOR, public_path('build'))
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache'),
+            str_replace('/', DIRECTORY_SEPARATOR, bootstrap_path('cache'))
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache'),
+            str_replace('/', DIRECTORY_SEPARATOR, cache_path())
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/logs/app.log'),
+            str_replace('/', DIRECTORY_SEPARATOR, logs_path('app.log'))
+        );
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/resources/views/emails'),
+            str_replace('/', DIRECTORY_SEPARATOR, view_path('emails'))
+        );
     }
 
     public function testEnvironmentAndRuntimeHelpersReflectTheCurrentApplication(): void

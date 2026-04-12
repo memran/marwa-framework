@@ -20,7 +20,8 @@ final class ViewConfig
      *     extensions: list<string>,
      *     themePath: string,
      *     activeTheme: string,
-     *     fallbackTheme: string
+     *     fallbackTheme: string,
+     *     sharedPath: string
      * }
      */
     public static function defaults(Application $app): array
@@ -37,6 +38,7 @@ final class ViewConfig
             'themePath' => $app->basePath('resources/views/themes'),
             'activeTheme' => 'default',
             'fallbackTheme' => 'default',
+            'sharedPath' => $app->basePath('resources/views'),
         ];
     }
 }

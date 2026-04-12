@@ -27,6 +27,7 @@ use Marwa\Module\Contracts\ModuleServiceProviderInterface;
 use Marwa\Module\ModuleBuilder;
 use Marwa\Module\ModuleHandle;
 use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\Dotenv\Exception\FormatException;
 
 /**
  * Application bootstrapper: container, env, config, providers.
@@ -73,7 +74,15 @@ final class Application
     {
         $env = $this->basePath . '/.env';
         if (is_file($env)) {
-            (new Dotenv())->load($env);
+            try {
+                (new Dotenv())->loadEnv($env, 'production');
+            } catch (FormatException $e) {
+                throw new \RuntimeException(
+                    sprintf('Environment file parsing failed: %s. Hint: Ensure values containing spaces are surrounded by quotes in your .env file.', $e->getMessage()),
+                    0,
+                    $e
+                );
+            }
         }
     }
 

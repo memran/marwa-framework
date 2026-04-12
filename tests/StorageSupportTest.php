@@ -14,10 +14,10 @@ final class StorageSupportTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->basePath = sys_get_temp_dir() . '/marwa-storage-' . bin2hex(random_bytes(6));
+        $this->basePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'marwa-storage-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
-        mkdir($this->basePath . '/config', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        mkdir($this->basePath . DIRECTORY_SEPARATOR . 'config', 0777, true);
+        file_put_contents($this->basePath . DIRECTORY_SEPARATOR . '.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
     }
 
     protected function tearDown(): void
@@ -40,7 +40,10 @@ final class StorageSupportTest extends TestCase
         self::assertSame(['name' => 'Marwa'], $storage->readJson('meta/app.json'));
         self::assertContains('docs/readme.txt', $storage->files('', true));
         self::assertContains('exports/daily', $storage->directories('', true));
-        self::assertSame($this->basePath . '/storage/app/docs/readme.txt', $storage->path('docs/readme.txt'));
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/app/docs/readme.txt'),
+            str_replace('/', DIRECTORY_SEPARATOR, $storage->path('docs/readme.txt'))
+        );
     }
 
     public function testStorageSupportsCopyMoveDeleteAndHelperAccess(): void
@@ -67,7 +70,10 @@ final class StorageSupportTest extends TestCase
 
         self::assertTrue($public->write('avatars/user.txt', 'public'));
         self::assertSame('public', $public->read('avatars/user.txt'));
-        self::assertSame($this->basePath . '/storage/app/public/avatars/user.txt', $public->path('avatars/user.txt'));
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/app/public/avatars/user.txt'),
+            str_replace('/', DIRECTORY_SEPARATOR, $public->path('avatars/user.txt'))
+        );
     }
 
     private function removeDirectory(string $path): void

@@ -43,6 +43,10 @@ final class ViewAdapter
         );
 
         $this->createViewEngine($viewConfig);
+
+        // Register Shared namespace by default
+        $sharedPath = $this->config->getString(ViewConfigContract::KEY . '.sharedPath', $defaults['sharedPath']);
+        $this->addNamespace('Shared', $sharedPath);
     }
 
     /**

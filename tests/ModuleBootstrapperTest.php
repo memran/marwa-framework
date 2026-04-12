@@ -16,6 +16,7 @@ final class ModuleBootstrapperTest extends TestCase
 
     protected function setUp(): void
     {
+        \Marwa\Framework\Supports\Runtime::setConsoleOverride(false);
         $this->basePath = sys_get_temp_dir() . '/marwa-module-runtime-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
@@ -43,6 +44,7 @@ PHP
 
     protected function tearDown(): void
     {
+        \Marwa\Framework\Supports\Runtime::setConsoleOverride(null);
         @unlink($this->basePath . '/config/module.php');
         @unlink($this->basePath . '/.env');
         @rmdir($this->basePath . '/config');
