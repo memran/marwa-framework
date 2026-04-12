@@ -136,7 +136,7 @@ final class ConfigContractsTest extends TestCase
         );
         self::assertSame(
             [str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/modules')],
-            array_map(fn($p) => str_replace('/', DIRECTORY_SEPARATOR, $p), ModuleConfig::defaults($app)['paths'])
+            array_map(fn ($p) => str_replace('/', DIRECTORY_SEPARATOR, $p), ModuleConfig::defaults($app)['paths'])
         );
         self::assertFalse(ModuleConfig::defaults($app)['forceRefresh']);
         self::assertSame(['commands'], ModuleConfig::defaults($app)['commandPaths']);
