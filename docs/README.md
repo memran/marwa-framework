@@ -38,6 +38,7 @@ Step-by-step guides for common tasks:
 | [Views](tutorials/view.md) | Twig templates |
 | [Models](tutorials/models.md) | Database models |
 | [Database](tutorials/database.md) | DB management |
+| [Modules](tutorials/modules.md) | Modular runtime, manifests, and module menus |
 | [Seeding](tutorials/seeding.md) | Seed database |
 | [Security](tutorials/security.md) | Security features |
 | [Events](tutorials/events.md) | Event handling |

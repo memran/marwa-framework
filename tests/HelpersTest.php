@@ -123,4 +123,11 @@ PHP
         // Skip - module registry resolution has issues in test context
         self::markTestSkipped('Module registry resolution needs work in test context');
     }
+
+    public function testMenuHelperReturnsSharedMenuRegistry(): void
+    {
+        $app = new Application($this->basePath);
+
+        self::assertSame($app->make(\Marwa\Framework\Navigation\MenuRegistry::class), menu());
+    }
 }

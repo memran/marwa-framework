@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Navigation\MenuRegistry;
 use PHPUnit\Framework\TestCase;
 
 final class ApplicationTest extends TestCase
@@ -34,5 +35,15 @@ final class ApplicationTest extends TestCase
         self::assertSame('testing', $app->environment());
         self::assertTrue($app->environment('testing'));
         self::assertFalse($app->environment('production'));
+    }
+
+    public function testMenuRegistryIsBoundAsASharedService(): void
+    {
+        $app = new Application($this->basePath);
+
+        $first = $app->make(MenuRegistry::class);
+        $second = $app->make(MenuRegistry::class);
+
+        self::assertSame($first, $second);
     }
 }

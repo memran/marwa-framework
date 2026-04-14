@@ -14,6 +14,7 @@ use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Contracts\NotificationInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Image as ImageSupport;
@@ -316,6 +317,11 @@ function module(string $slug): ModuleHandle
 function has_module(string $slug): bool
 {
     return app()->hasModule($slug);
+}
+
+function menu(): MenuRegistry
+{
+    return app(MenuRegistry::class);
 }
 
 function db(): ConnectionManager

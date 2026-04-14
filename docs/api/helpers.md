@@ -231,14 +231,17 @@ Returns the debug bar instance when enabled, otherwise `null`.
 
 ### `module(string $slug): \Marwa\Module\ModuleHandle`
 ### `has_module(string $slug): bool`
+### `menu(): \Marwa\Framework\Navigation\MenuRegistry`
 
 ```php
 if (has_module('blog')) {
     $blog = module('blog');
 }
+
+$mainMenu = menu()->tree();
 ```
 
-Read the active module runtime from the application.
+Read the active module runtime from the application, or resolve the shared menu registry.
 
 ### `is_local(): bool`
 ### `is_production(): bool`

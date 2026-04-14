@@ -26,10 +26,11 @@ Dispatches the application boot event once.
 
 ```php
 $logger = $app->make(\Marwa\Framework\Adapters\Logger\LoggerAdapter::class);
+$menu = $app->make(\Marwa\Framework\Navigation\MenuRegistry::class);
 ```
 
 Short description:
-Resolves a dependency from the container, registering it lazily when needed.
+Resolves a dependency from the container, registering it lazily when needed. This is also how you access shared framework services such as the menu registry.
 
 ### `singleton(string $abstract): mixed`
 
@@ -129,3 +130,25 @@ $views = $blog->path('views');
 
 Short description:
 Returns the typed module handle for a loaded module.
+
+## Related Runtime Services
+
+### `Marwa\Framework\Navigation\MenuRegistry`
+
+Resolve the shared menu registry from the application container:
+
+```php
+$menu = $app->make(\Marwa\Framework\Navigation\MenuRegistry::class);
+
+$menu->add([
+    'name' => 'dashboard',
+    'label' => 'Dashboard',
+    'url' => '/dashboard',
+    'order' => 10,
+]);
+
+$tree = $menu->tree();
+```
+
+Short description:
+Collects normalized menu items for the main application navigation. Module providers can register menu items during boot and views can consume the final `mainMenu` tree.

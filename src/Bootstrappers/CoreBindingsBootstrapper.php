@@ -26,6 +26,7 @@ use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Contracts\ShellFactoryInterface;
+use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\NotificationManager;
 use Marwa\Framework\Queue\FileQueue;
@@ -60,6 +61,8 @@ final class CoreBindingsBootstrapper
         $container->addShared(Storage::class)
             ->addArgument($app)
             ->addArgument($container->get(Config::class));
+
+        $container->addShared(MenuRegistry::class);
 
         $this->registerLogger($container, $app);
 

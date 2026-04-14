@@ -7,6 +7,7 @@ namespace Marwa\Framework\Tests;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Exceptions\ModuleDependencyException;
+use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Tests\Fixtures\Modules\Blog\BlogModuleServiceProvider;
 use Marwa\Module\ModuleBuilder;
 use PHPUnit\Framework\TestCase;
@@ -70,6 +71,7 @@ final class ModuleBootstrapperTest extends TestCase
         self::assertTrue($app->hasModule('blog'));
         self::assertSame('Blog Module', $app->module('blog')->name());
         self::assertArrayHasKey('blog', $app->modules());
+        self::assertSame(['blog'], array_column($app->make(MenuRegistry::class)->tree(), 'name'));
 
         $view = $app->view();
         self::assertSame('Hello from module', trim($view->render('@blog/hello.twig')));

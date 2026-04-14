@@ -10,6 +10,7 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Exceptions\ModuleDependencyException;
+use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Views\View as FrameworkView;
@@ -69,6 +70,7 @@ final class ModuleBootstrapper
         $this->registry = $this->resolveRegistry();
         $this->assertModuleDependencies($this->registry);
         $this->app->bootModuleServiceProviders();
+        $this->shareMainMenu();
 
         if (!Runtime::isConsole()) {
             $this->registerModuleViews($this->registry);
@@ -275,6 +277,21 @@ final class ModuleBootstrapper
         }
 
         throw new \RuntimeException('marwa-module did not register a module registry instance.');
+    }
+
+    private function shareMainMenu(): void
+    {
+        if (
+            !$this->container->has(FrameworkView::class)
+            || !$this->container->has(MenuRegistry::class)
+        ) {
+            return;
+        }
+
+        $view = $this->container->get(FrameworkView::class);
+        $menu = $this->container->get(MenuRegistry::class);
+
+        $view->share('mainMenu', $menu->tree());
     }
 
     private function assertModuleDependencies(ModuleRegistryInterface $registry): void

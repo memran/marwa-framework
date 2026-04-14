@@ -19,6 +19,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 
 - HTTP kernel, middleware pipeline, router integration, and lifecycle events
 - Twig-based views with themes, modules, and base controller helpers
+- Framework-level menu registry for app and module-driven navigation
 - Console application, scaffolding commands, scheduler, queue, and bootstrap cache
 - Sessions, validation, security, cache, storage, mail, notifications, Kafka publish/consume, HTTP client, and error handling
 - `marwa-db` and `marwa-module` integration for app-level runtime features
@@ -80,6 +81,7 @@ php marwa db:analyze
 - [View](docs/tutorials/view.md)
 - [Error Pages](docs/tutorials/error-pages.md)
 - [Console](docs/tutorials/console.md)
+- [Modules](docs/tutorials/modules.md)
 - [Seeding](docs/tutorials/seeding.md)
 - [DebugBar](docs/tutorials/debugbar.md)
 - [Architecture](docs/architecture.md)
@@ -90,6 +92,7 @@ php marwa db:analyze
 - Validation failures flash `_old_input` and `errors` into the session.
 - Theme manifests live in `resources/views/themes/<theme>/manifest.php` by default.
 - `APP_KEY` is required for encrypted sessions.
+- Modules can contribute navigation through `Marwa\Framework\Navigation\MenuRegistry` and the `menu()` helper.
 
 ## Development
 

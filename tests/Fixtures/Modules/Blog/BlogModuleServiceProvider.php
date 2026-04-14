@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests\Fixtures\Modules\Blog;
 
+use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Module\Contracts\ModuleServiceProviderInterface;
 
 final class BlogModuleServiceProvider implements ModuleServiceProviderInterface
@@ -21,5 +22,14 @@ final class BlogModuleServiceProvider implements ModuleServiceProviderInterface
     {
         self::$bootCalls++;
         $app->set('module.blog.booted', true);
+
+        /** @var MenuRegistry $menu */
+        $menu = $app->make(MenuRegistry::class);
+        $menu->add([
+            'name' => 'blog',
+            'label' => 'Blog',
+            'url' => '/blog',
+            'order' => 20,
+        ]);
     }
 }

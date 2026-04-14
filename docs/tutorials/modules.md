@@ -1,301 +1,363 @@
 # Modules Guide
 
-This guide covers creating and using modules in the Marwa Framework.
+This guide shows how modules work in the Marwa Framework as it is implemented in this repository.
 
-## Overview
+Modules are discovered from configured directories, registered through `marwa-module`, and then integrated into the framework bootstrap so their providers, routes, views, commands, migrations, and seeders can participate in the application runtime.
 
-Modules are self-contained packages that extend the framework:
+## What a Module Provides
 
-- Routes
-- Controllers
-- Models
-- Views
-- Config
-- Service providers
+A module can contribute:
+
+- a `manifest.php` or `manifest.json`
+- one or more module service providers
+- main navigation menu items
+- HTTP and API route files
+- Twig views
+- console commands
+- database migrations
+- database seeders
+
+The framework reads those pieces from module manifests and configured conventions. It does not require manual module registration in `config/app.php`.
 
 ## Quick Start
 
-### Create Module
+Generate a new module:
 
 ```bash
 php marwa make:module Blog
 ```
 
-### Module Structure
+The generated structure matches the framework stubs:
 
-```
+```text
 modules/
 └── Blog/
+    ├── BlogServiceProvider.php
+    ├── Console/
+    │   └── Commands/
+    ├── database/
+    │   └── migrations/
     ├── manifest.php
-    ├── routes/
-    │   └── web.php
     ├── resources/
     │   └── views/
     │       └── index.twig
-    ├── migrations/
-    ├── Providers/
-    │   └── BlogServiceProvider.php
-    └── app/
-        Controllers/
-        └── Models/
+    └── routes/
+        └── http.php
 ```
 
-## manifest.php
+Map your application namespace to `modules/` in the host app `composer.json` if you use the default generated namespace:
 
-Each module requires a manifest file:
-
-```php
-// modules/Blog/manifest.php
-return [
-    'name' => 'Blog',
-    'slug' => 'blog',
-    'version' => '1.0.0',
-    'description' => 'Blog module for Marwa',
-    
-    'providers' => [
-        App\Modules\Blog\Providers\BlogServiceProvider::class,
-    ],
-    
-    'routes' => [
-        'http' => 'routes/http.php',
-    ],
-    
-    'paths' => [
-        'views' => 'resources/views',
-    ],
-    
-    'migrations' => [
-        'database/migrations/2026_01_01_000000_create_posts_table.php',
-    ],
-];
+```json
+{
+  "autoload": {
+    "psr-4": {
+      "App\\Modules\\": "modules/"
+    }
+  }
+}
 ```
 
-## Configuration
+Then refresh autoloading:
 
-### config/module.php
+```bash
+composer dump-autoload
+```
+
+## Enable Modules
+
+Modules are disabled by default. Enable them in `config/module.php`:
 
 ```php
+<?php
+
 return [
     'enabled' => true,
-    
     'paths' => [
-        'modules' => base_path('modules'),
+        base_path('modules'),
     ],
-    
-    'scan' => [
-        'enabled' => true,
-        'paths' => [
-            base_path('modules/*'),
-            base_path('vendor/*/marwa-module'),
-        ],
+    'cache' => bootstrap_path('cache/modules.php'),
+    'forceRefresh' => false,
+    'commandPaths' => [
+        'commands',
     ],
-    
-    'cache' => [
-        'enabled' => true,
-        'path' => bootstrap_path('cache/modules.php'),
+    'commandConventions' => [
+        'Console/Commands',
+        'src/Console/Commands',
     ],
-];
-```
-
-## Registering Modules
-
-### Auto-Discovery
-
-Modules are automatically discovered from configured paths.
-
-### Manual Registration
-
-In `config/app.php`:
-
-```php
-return [
-    'providers' => [
-        App\Modules\Blog\Providers\BlogServiceProvider::class,
+    'migrationsPath' => [
+        'database/migrations',
+    ],
+    'seedersPath' => [
+        'database/seeders',
     ],
 ];
 ```
 
-## Module Service Provider
+Important keys:
+
+- `enabled`: turns module integration on or off
+- `paths`: module root directories to scan
+- `cache`: manifest cache file path used by `module:cache`
+- `forceRefresh`: ignore cached module manifests and rescan
+- `commandPaths`: manifest `paths` keys treated as command directories
+- `commandConventions`: module-relative fallback command directories
+- `migrationsPath`: manifest `paths` keys checked for migrations if the manifest does not list migration files directly
+- `seedersPath`: manifest `paths` keys treated as seeder directories
+
+## Module Manifest
+
+Each module needs exactly one manifest file: `manifest.php` or `manifest.json`.
+
+Typical `manifest.php`:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Modules\Blog\Providers;
+return [
+    'name' => 'Blog Module',
+    'slug' => 'blog',
+    'version' => '1.0.0',
+    'providers' => [
+        App\Modules\Blog\BlogServiceProvider::class,
+    ],
+    'paths' => [
+        'views' => 'resources/views',
+        'commands' => 'Console/Commands',
+        'migrations' => 'database/migrations',
+        'seeders' => 'database/seeders',
+    ],
+    'routes' => [
+        'http' => 'routes/http.php',
+        'api' => 'routes/api.php',
+    ],
+    'migrations' => [
+        'database/migrations/2026_01_01_000000_create_posts_table.php',
+    ],
+];
+```
 
-use Marwa\DB\Schema\Schema;
-use Marwa\Framework\Contracts\ServiceProviderInterface;
-use League\Container\Container;
+Standard manifest fields that the runtime exposes are:
 
-final class BlogServiceProvider implements ServiceProviderInterface
+- `name`
+- `slug`
+- `version`
+- `providers`
+- `paths`
+- `routes`
+- `migrations`
+
+The framework also reads `requires` and `dependencies` from the raw manifest for dependency validation during bootstrap.
+
+## Module Service Provider
+
+Generated module providers implement `Marwa\Module\Contracts\ModuleServiceProviderInterface`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Blog;
+
+use Marwa\Module\Contracts\ModuleServiceProviderInterface;
+
+final class BlogServiceProvider implements ModuleServiceProviderInterface
 {
-    public function register(Container $container): void
+    public function register($app): void
     {
-        // Register module services
-        $container->addShared(PostService::class, fn() => new PostService());
+        $app->set('module.blog.registered', true);
     }
 
-    public function boot(): void
+    public function boot($app): void
     {
-        // Register routes
-        require_once __DIR__ . '/../routes/web.php';
-        
-        // Register views
-        view()->addNamespace('blog', __DIR__ . '/../resources/views');
-        
-        // Run migrations
-        Schema::create('posts', function ($table) {
-            $table->id();
-            $table->string('title');
-            $table->text('content');
-            $table->timestamps();
-        });
+        $app->set('module.blog.booted', true);
     }
 }
 ```
 
-## Module Routes
+Use `register()` for bindings and service setup. Use `boot()` for runtime behavior that depends on registered services.
 
-### Define Routes
+The framework boots module providers automatically after discovery. You do not need to add them to `config/app.php`.
+
+## Menus
+
+Modules can contribute to the shared main navigation through `Marwa\Framework\Navigation\MenuRegistry`.
+
+Typical module usage inside `boot($app)`:
 
 ```php
-// modules/Blog/routes/web.php
+<?php
 
-use App\Modules\Blog\Controllers\PostController;
+declare(strict_types=1);
+
+namespace App\Modules\Blog;
+
+use Marwa\Framework\Navigation\MenuRegistry;
+use Marwa\Module\Contracts\ModuleServiceProviderInterface;
+
+final class BlogServiceProvider implements ModuleServiceProviderInterface
+{
+    public function register($app): void
+    {
+    }
+
+    public function boot($app): void
+    {
+        /** @var MenuRegistry $menu */
+        $menu = $app->make(MenuRegistry::class);
+
+        $menu->add([
+            'name' => 'blog',
+            'label' => 'Blog',
+            'url' => '/blog',
+            'order' => 20,
+        ]);
+
+        $menu->add([
+            'name' => 'blog.posts',
+            'label' => 'Posts',
+            'url' => '/blog/posts',
+            'parent' => 'blog',
+            'order' => 10,
+        ]);
+    }
+}
+```
+
+Supported menu item fields:
+
+- `name`: required stable identifier
+- `label`: required text shown in the menu
+- `url`: required target URL
+- `parent`: optional parent item name for nesting
+- `order`: optional integer sort order
+- `icon`: optional icon token or class name
+- `visible`: optional boolean or callable visibility rule
+
+Behavior:
+
+- duplicate `name` values throw `Marwa\Framework\Exceptions\MenuConfigurationException`
+- child items are nested under `parent`
+- items are sorted by `order`, then `label`
+- items whose parent does not exist are skipped from the built menu tree
+
+The framework shares the final menu tree to views as `mainMenu`, and you can also resolve it manually with `menu()->tree()`.
+
+## Routes
+
+The module bootstrapper automatically loads route files declared in the manifest under `routes.http` and `routes.api`.
+
+Example `routes/http.php`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
 use Marwa\Framework\Facades\Router;
+use Marwa\Router\Response;
 
-Router::get('/blog', [PostController::class, 'index']);
-Router::get('/blog/{slug}', [PostController::class, 'show']);
-Router::post('/blog', [PostController::class, 'store']);
+Router::get('/blog', fn () => Response::json([
+    'module' => 'Blog Module',
+    'ok' => true,
+]))->register();
 ```
 
-### Route Prefixing
+Module routes are loaded only when:
+
+- modules are enabled
+- the app is not running in console mode
+- no compiled route cache file already exists
+
+## Views
+
+If a module manifest defines `paths.views`, the framework registers that directory as a Twig namespace using the module slug.
+
+For a module with slug `blog`, render templates with the `@blog/...` convention:
 
 ```php
-Router::prefix('blog')->group(function () {
-    Router::get('/', [PostController::class, 'index']);
-    Router::get('/{slug}', [PostController::class, 'show']);
-});
-// Results in /blog, /blog/{slug}
-```
-
-## Module Views
-
-### Create View
-
-In your module's `resources/views/` directory:
-- Use `.twig` file extension
-- Standard Twig syntax applies (extends, block, for, etc.)
-- See [Twig Documentation](https://twig.symfony.com/doc/) for full syntax
-
-Example file: `modules/Blog/resources/views/index.twig`
-
-### Use View
-
-```php
-// In controller
-return view('blog::index.twig', ['posts' => $posts]);
-
-// Or with view namespace
-return view('index', ['posts' => $posts]);
-```
-
-### Extend Layout
-
-```html
-{# modules/Blog/resources/views/layout.twig #}
-<!DOCTYPE html>
-<html>
-<head>
-    <!-- block tags would go here in actual templates -->
-    <title>Blog Layout</title>
-</head>
-<body>
-    <!-- content would go here -->
-</body>
-</html>
-```
-
-## Module Assets
-
-### Publish Assets
-
-```bash
-php marwa vendor:publish --module=Blog
-```
-
-### Use Assets
-
-```php
-// In views
-<link rel="stylesheet" href="{{ asset('blog::css/style.css') }}">
-<script src="{{ asset('blog::js/script.js') }}"></script>
-```
-
-## Module Commands
-
-### Register Commands
-
-```php
-// In service provider
-$container->addShared(CommandRegistry::class)
-    ->addArgument($app)
-    ->addArgument($container)
-    ->addArgument($logger);
-
-// Add module commands
-$registry->registerMany([
-    BlogPostsList::class,
-    BlogPostsPublish::class,
+return view('@blog/index.twig', [
+    'title' => 'Blog',
 ]);
 ```
 
-### Module Command
+With this manifest entry:
 
 ```php
-#[AsCommand(name: 'blog:posts:list', description: 'List blog posts')]
-final class BlogPostsList extends AbstractCommand
-{
-    protected function configure(): void
-    {
-        $this->addArgument('status', InputArgument::OPTIONAL, 'Post status');
-    }
+'paths' => [
+    'views' => 'resources/views',
+],
+```
 
+the template path resolves to:
+
+```text
+modules/Blog/resources/views/index.twig
+```
+
+## Commands
+
+Module command discovery runs through:
+
+- manifest-defined directories referenced by keys listed in `commandPaths`
+- default conventions such as `Console/Commands` and `src/Console/Commands`
+
+Generated modules already include `Console/Commands`, and the generator adds `paths.commands` to the manifest.
+
+Example command:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Blog\Console\Commands;
+
+use Marwa\Framework\Console\AbstractCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+#[AsCommand(name: 'blog:hello', description: 'Example module command')]
+final class BlogHelloCommand extends AbstractCommand
+{
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $posts = Post::query();
-        
-        if ($status = $input->getArgument('status')) {
-            $posts->where('status', $status);
-        }
-        
-        foreach ($posts->get() as $post) {
-            $output->writeln("{$post->id}: {$post->title}");
-        }
-        
-        return Command::SUCCESS;
+        $output->writeln('Hello from the Blog module.');
+
+        return self::SUCCESS;
     }
 }
 ```
 
-## Database in Modules
+## Migrations and Seeders
 
-### Run Migrations
+Run module migrations:
 
 ```bash
 php marwa module:migrate
 ```
 
-`module:migrate` scans discovered modules and runs their migrations through `marwa-db`'s
-`MigrationRepository`. When a manifest declares individual migration files, the framework
-normalizes them to their containing directories so anonymous-class migration files are executed
-and recorded in the `migrations` table the same way as application migrations.
+Run module seeders:
 
-### Create Migrations
+```bash
+php marwa module:seed
+```
+
+Migration discovery works in two ways:
+
+- explicit file list in manifest `migrations`
+- manifest `paths` entries matched by `migrationsPath` config, typically `database/migrations`
+
+Seeder discovery uses `seedersPath` config against manifest `paths` entries, typically `database/seeders`.
+
+Example migration file:
 
 ```php
-// modules/Blog/migrations/2024_01_01_create_posts_table.php
+<?php
+
 use Marwa\DB\CLI\AbstractMigration;
 use Marwa\DB\Schema\Schema;
 
@@ -305,10 +367,6 @@ return new class extends AbstractMigration {
         Schema::create('blog_posts', function ($table): void {
             $table->increments('id');
             $table->string('title');
-            $table->string('slug')->unique();
-            $table->text('content');
-            $table->string('featured_image');
-            $table->enum('status', ['draft', 'published'])->default('draft');
             $table->timestamps();
         });
     }
@@ -320,167 +378,127 @@ return new class extends AbstractMigration {
 };
 ```
 
-## Module Configuration
-
-### Module Config File
-
-```php
-// modules/Blog/config/blog.php
-return [
-    'posts_per_page' => 10,
-    
-    'allow_comments' => true,
-    
-    'categories' => [
-        'General',
-        'Tech',
-        'Lifestyle',
-    ],
-    
-    'features' => [
-        'markdown' => true,
-        'social_share' => true,
-    ],
-];
-```
-
-### Access Config
-
-```php
-// In module
-config('blog.posts_per_page');
-
-// From outside
-config('blog::posts_per_page');
-```
-
-## Events in Modules
-
-### Dispatch Events
-
-```php
-$app->dispatch(new PostPublished($post));
-```
-
-### Listen to Events
-
-```php
-// In service provider
-$eventListener = $container->get(EventDispatcherInterface::class);
-$eventListener->listen(PostPublished::class, function ($event) {
-    logger()->info('Post published', ['id' => $event->post->id]);
-});
-```
-
 ## Module Dependencies
 
-### Declare Dependencies
+Modules can declare other required modules in the manifest using `requires` or `dependencies`:
 
 ```php
-// in manifest.php
 return [
-    'name' => 'Blog',
+    'name' => 'Auth Module',
+    'slug' => 'auth',
+    'providers' => [
+        App\Modules\Auth\AuthServiceProvider::class,
+    ],
     'requires' => [
-        'comment' => '^1.0',
+        'user',
     ],
 ];
 ```
 
-### Install Dependencies
+During bootstrap, the framework validates those dependencies before module providers are booted.
 
-```bash
-composer require vendor/comment-module
+Behavior:
+
+- dependency names are matched case-insensitively
+- missing dependencies fail fast
+- the framework throws `Marwa\Framework\Exceptions\ModuleDependencyException`
+
+Example failure:
+
+```text
+Module [auth] requires missing module(s): user.
 ```
 
-## Disabling Modules
+Use lowercase slugs in examples and manifests even though the dependency check is case-insensitive.
 
-### Disable Single Module
+## Reading Module Information at Runtime
+
+Use the helper APIs to inspect loaded modules:
 
 ```php
-// config/app.php
-return [
-    'modules' => [
-        'disabled' => [
-            'Blog' => 'Comment',
-        ],
-    ],
-];
+if (has_module('blog')) {
+    $blog = module('blog');
+
+    $name = $blog->name();
+    $slug = $blog->slug();
+    $manifest = $blog->manifest();
+}
 ```
 
-### Conditional Loading
+You can also access the application-level module registry:
 
 ```php
-// In manifest.php
-return [
-    'enabled' => env('BLOG_ENABLED', true),
-];
+$modules = app()->modules();
+$hasBlog = app()->hasModule('blog');
+$blog = app()->module('blog');
 ```
 
-## Module Publishing
+Important detail about metadata:
 
-### Publish Config
+- `module('blog')->manifest()` returns the normalized manifest that `marwa-module` keeps at runtime
+- standard manifest fields are available
+- arbitrary custom manifest keys are not exposed through `manifest()` today
+
+That means this works:
+
+```php
+$manifest = module('blog')->manifest();
+$version = $manifest['version'] ?? null;
+```
+
+But custom keys should not be relied on through that API unless the package is extended to preserve them.
+
+You can also access the shared menu registry at runtime:
+
+```php
+$menuTree = menu()->tree();
+$flatMenu = menu()->all();
+```
+
+## Caching
+
+Build the module manifest cache:
 
 ```bash
-php marwa vendor:publish --module=Blog --tag=config
+php marwa module:cache
 ```
 
-### Publish Views
+Clear the module manifest cache:
 
 ```bash
-php marwa vendor:publish --module=Blog --tag=views
+php marwa module:clear
 ```
 
-### Publish Assets
+The cache file path is controlled by `config/module.php` and is also used by bootstrap cache commands.
 
-```bash
-php marwa vendor:publish --module=Blog --tag=public
-```
+## Troubleshooting
+
+If a module is not loading:
+
+1. Confirm `config/module.php` has `'enabled' => true`.
+2. Confirm the module directory is inside one of `module.paths`.
+3. Confirm the module has exactly one valid manifest file.
+4. Confirm provider classes exist and implement `ModuleServiceProviderInterface`.
+5. Confirm the host app autoload maps `App\\Modules\\` to `modules/`.
+6. Clear and rebuild the module cache with `module:clear` and `module:cache`.
+
+If `module('slug')` fails, the module was not discovered or bootstrapped.
+
+If dependency validation fails, add the missing module or remove the declared dependency.
 
 ## Console Commands
 
 | Command | Description |
 |---------|-------------|
-| `make:module` | Create new module |
-| `module:cache` | Cache modules |
-| `module:clear` | Clear module cache |
+| `make:module` | Generate a module scaffold |
+| `module:cache` | Build the module manifest cache |
+| `module:clear` | Remove the module manifest cache |
 | `module:migrate` | Run discovered module migrations |
-
-## Best Practices
-
-### 1. Use Namespaces
-
-```php
-namespace App\Modules\Blog\Controllers;
-```
-
-### 2. Follow Conventions
-
-```
-Module/
-├── app/
-│   ├── Controllers/
-│   ├── Models/
-│   └── Services/
-├── config/
-├── migrations/
-├── Providers/
-├── resources/
-│   ├── assets/
-│   └── views/
-└── routes/
-```
-
-### 3. Version Your Module
-
-```php
-return [
-    'version' => '1.0.0',
-    'marwa_version' => '^1.0',
-];
-```
+| `module:seed` | Run discovered module seeders |
 
 ## Related
 
-- [Console Commands](console/index.md) - CLI reference
-- [Routing](controllers.md) - Route definitions
-- [Deployment](deployment.md) - Production setup
+- [API: Application](../api/application.md)
+- [API: Helpers](../api/helpers.md)
+- [API: Configuration](../api/configuration.md)
+- [Tutorial: Console](./console.md)

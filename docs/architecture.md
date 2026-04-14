@@ -9,6 +9,7 @@ Marwa Framework is intentionally small. The architecture is built around a few c
 - `ConsoleKernel`: builds the Symfony Console application and registers commands
 - `ProviderBootstrapper`: registers configured service providers
 - `ModuleBootstrapper`: loads `marwa-module` services, boots module providers, and integrates module routes, views, and console discovery
+- `MenuRegistry`: collects application and module menu items and exposes the built main navigation tree
 - `MiddlewareBootstrapper`: resolves and pushes middleware into the pipeline
 - `CommandRegistry`: stores commands from config, code, and package integrations
 - `CommandDiscovery`: resolves command classes from configured namespaces or PSR-4-mapped directories
@@ -20,7 +21,7 @@ Marwa Framework is intentionally small. The architecture is built around a few c
 2. The container is initialized with reflection-based autowiring.
 3. `.env` is loaded and core singletons are bound.
 4. `HttpKernel` loads app config and delegates provider, module, and middleware setup to dedicated bootstrappers.
-5. Module providers are booted, module routes are loaded, and module view namespaces are registered when enabled.
+5. Module providers are booted, menu contributions are collected, module routes are loaded, and module view namespaces are registered when enabled.
 6. The request enters `RelayPipelineAdapter`.
 7. `RouterMiddleware` dispatches to `marwa-router`.
 8. `HttpKernel::terminate()` emits the final response.
@@ -41,6 +42,7 @@ Marwa Framework is intentionally small. The architecture is built around a few c
 - Add modules through `config/module.php` and module manifests under your configured module paths
 - Register CLI commands through `config/console.php` or `Application::registerCommand()`
 - Resolve loaded modules through `Application::modules()`, `Application::hasModule()`, and `Application::module()`
+- Build shared navigation through `Marwa\Framework\Navigation\MenuRegistry` or the `menu()` helper
 - Configure custom not-found handling with `HttpKernel::setNotFound()`
 - Extend view, logger, and event behavior with their corresponding config files
 
