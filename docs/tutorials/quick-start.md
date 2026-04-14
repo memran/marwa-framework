@@ -4,6 +4,8 @@ Build your first Marwa Framework application in under 5 minutes.
 
 > **Prerequisites**: Complete [Installation](getting-started/installation.md) first
 
+If you prefer to start from a ready-made app skeleton, use [`memran/marwa-php`](https://github.com/memran/marwa-php). This tutorial is for developers who want to wire the framework package into an application manually.
+
 ## What We'll Build
 
 A simple web application with:

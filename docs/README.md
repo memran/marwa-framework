@@ -2,6 +2,8 @@
 
 Welcome to the official documentation for the Marwa Framework.
 
+If you want a complete starter application built on top of this framework, use [`memran/marwa-php`](https://github.com/memran/marwa-php).
+
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
@@ -24,6 +26,10 @@ New to Marwa? Start here:
 | [Installation](getting-started/installation.md) | Install and configure | 5 min |
 | [Quick Start](getting-started/quick-start.md) | Build your first app | 5 min |
 | [Project Structure](getting-started/project-structure.md) | Directory layout | 3 min |
+
+Starter application:
+
+- [`memran/marwa-php`](https://github.com/memran/marwa-php) - Recommended full application starter for Marwa Framework
 
 ---
 

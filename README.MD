@@ -30,6 +30,8 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 composer require memran/marwa-framework
 ```
 
+If you want a ready-to-run application skeleton instead of wiring the framework into a project manually, start with [`memran/marwa-php`](https://github.com/memran/marwa-php). It is the recommended starter application for this framework and shows the expected app structure, bootstrap files, routes, config, and developer workflow.
+
 For local development:
 
 ```bash
@@ -75,6 +77,7 @@ php marwa db:analyze
 ## Documentation
 
 - [Docs Index](docs/README.md)
+- [Starter Application: memran/marwa-php](https://github.com/memran/marwa-php)
 - [Quick Start](docs/tutorials/quick-start.md)
 - [Controllers](docs/tutorials/controllers.md)
 - [Validation](docs/tutorials/validation.md)

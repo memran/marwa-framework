@@ -2,6 +2,26 @@
 
 This guide walks you through installing the Marwa Framework in your project.
 
+If you want a complete application instead of integrating the core package into your own structure, use the recommended starter repository: [`memran/marwa-php`](https://github.com/memran/marwa-php).
+
+## Recommended Starter Application
+
+```bash
+git clone https://github.com/memran/marwa-php.git
+cd marwa-php
+composer install
+cp .env.example .env
+```
+
+Use the starter if you want:
+
+- a working Marwa app structure immediately
+- framework bootstrap files already wired
+- routes, config, resources, and public entrypoint in place
+- a concrete reference for how the framework is intended to be used
+
+## Install the Framework Package Manually
+
 ## Requirements
 
 | Requirement | Version | Notes |
