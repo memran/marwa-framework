@@ -40,7 +40,7 @@ final class AppConfig
                 RouterMiddleware::class,
                 DebugbarMiddleware::class,
             ],
-            'debugbar' => env('DEBUGBAR_ENABLED', false),
+            'debugbar' => (bool) env('DEBUGBAR_ENABLED', false),
             'collectors' => [],
             'maintenance' => [
                 'template' => 'maintenance.twig',

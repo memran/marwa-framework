@@ -120,6 +120,24 @@ PHP
         self::assertCount(1, $debugbar->state()->exceptions);
     }
 
+    public function testDebugReporterHandlesNumericDebugbarEnvFlag(): void
+    {
+        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nAPP_NAME=\"Marwa Test App\"\nDEBUGBAR_ENABLED=1\nTIMEZONE=UTC\n");
+
+        $app = new Application($this->basePath);
+        $appConfig = $app->make(AppBootstrapper::class)->bootstrap();
+
+        $handler = $app->make(ErrorHandlerAdapter::class)->handler();
+        $this->handlersBooted = $handler instanceof ErrorHandler;
+
+        self::assertInstanceOf(ErrorHandler::class, $handler);
+        self::assertTrue($appConfig['debugbar']);
+        self::assertTrue($app->has('debugbar'));
+
+        $debugReporter = $this->readProperty($handler, 'debugReporter');
+        self::assertInstanceOf(DebugReporterInterface::class, $debugReporter);
+    }
+
     public function testConsoleBootAlsoBootsTheSharedErrorHandler(): void
     {
         file_put_contents(

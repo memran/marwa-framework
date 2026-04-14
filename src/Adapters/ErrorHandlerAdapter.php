@@ -56,8 +56,7 @@ final class ErrorHandlerAdapter
     private function resolveDebugReporter(bool $useDebugReporter): mixed
     {
         if (!$useDebugReporter
-            || !$this->config->getBool(AppConfig::KEY . '.debugbar', AppConfig::defaults()['debugbar'])
-            || !env('DEBUGBAR_ENABLED', false)) {
+            || !$this->config->getBool(AppConfig::KEY . '.debugbar', AppConfig::defaults()['debugbar'])) {
             return null;
         }
 
