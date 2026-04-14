@@ -217,6 +217,139 @@ PHP
         self::assertTrue($console->has('make:migration'));
         self::assertTrue($console->has('make:seeder'));
         self::assertTrue($console->has('db:seed'));
+        self::assertTrue($console->has('module:migrate'));
+    }
+
+    public function testModuleMigrateRunsManifestDeclaredMigrationFilesThroughRepository(): void
+    {
+        $modulePath = $this->basePath . '/modules/Blog';
+        $migrationPath = $modulePath . '/database/migrations';
+        mkdir($modulePath, 0777, true);
+        mkdir($migrationPath, 0777, true);
+
+        file_put_contents(
+            $this->basePath . '/config/module.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => ['{$this->basePath}/modules'],
+];
+PHP
+        );
+
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => '{$this->databaseFile}',
+        ],
+    ],
+];
+PHP
+        );
+
+        file_put_contents(
+            $modulePath . '/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'Blog Module',
+    'slug' => 'blog',
+    'migrations' => [
+        'database/migrations/2026_01_01_000000_create_blog_posts_table.php',
+        'database/migrations/2026_01_01_000100_create_blog_comments_table.php',
+    ],
+];
+PHP
+        );
+
+        file_put_contents(
+            $migrationPath . '/2026_01_01_000000_create_blog_posts_table.php',
+            <<<'PHP'
+<?php
+
+use Marwa\DB\CLI\AbstractMigration;
+use Marwa\DB\Schema\Schema;
+
+return new class extends AbstractMigration {
+    public function up(): void
+    {
+        Schema::create('blog_posts', function ($table): void {
+            $table->increments('id');
+            $table->string('title');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::drop('blog_posts');
+    }
+};
+PHP
+        );
+
+        file_put_contents(
+            $migrationPath . '/2026_01_01_000100_create_blog_comments_table.php',
+            <<<'PHP'
+<?php
+
+use Marwa\DB\CLI\AbstractMigration;
+use Marwa\DB\Schema\Schema;
+
+return new class extends AbstractMigration {
+    public function up(): void
+    {
+        Schema::create('blog_comments', function ($table): void {
+            $table->increments('id');
+            $table->integer('post_id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::drop('blog_comments');
+    }
+};
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $tester = new CommandTester($console->find('module:migrate'));
+
+        self::assertSame(0, $tester->execute([]));
+
+        $display = $tester->getDisplay();
+        self::assertSame(1, substr_count($display, 'Migrating directory:'));
+        self::assertStringContainsString('Module migrations completed. Total: 2', $display);
+
+        $pdo = new \PDO('sqlite:' . $this->databaseFile);
+        $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table'")->fetchAll(\PDO::FETCH_COLUMN);
+        $migrations = $pdo->query('SELECT migration FROM migrations ORDER BY id ASC')->fetchAll(\PDO::FETCH_COLUMN);
+
+        self::assertContains('blog_posts', $tables);
+        self::assertContains('blog_comments', $tables);
+        self::assertSame([
+            '2026_01_01_000000_create_blog_posts_table',
+            '2026_01_01_000100_create_blog_comments_table',
+        ], $migrations);
+
+        self::assertSame(0, $tester->execute([]));
+        self::assertStringContainsString('Module migrations completed. Total: 0', $tester->getDisplay());
     }
 
     public function testMakeControllerCommandCreatesNestedResourceController(): void

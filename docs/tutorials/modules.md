@@ -48,6 +48,7 @@ Each module requires a manifest file:
 // modules/Blog/manifest.php
 return [
     'name' => 'Blog',
+    'slug' => 'blog',
     'version' => '1.0.0',
     'description' => 'Blog module for Marwa',
     
@@ -56,16 +57,15 @@ return [
     ],
     
     'routes' => [
-        'web' => __DIR__ . '/routes/web.php',
+        'http' => 'routes/http.php',
     ],
     
-    'views' => [
-        'namespace' => 'blog',
-        'path' => __DIR__ . '/resources/views',
+    'paths' => [
+        'views' => 'resources/views',
     ],
     
     'migrations' => [
-        'path' => __DIR__ . '/migrations',
+        'database/migrations/2026_01_01_000000_create_posts_table.php',
     ],
 ];
 ```
@@ -283,23 +283,27 @@ final class BlogPostsList extends AbstractCommand
 
 ### Run Migrations
 
-```php
-// Modules migrations run automatically if configured
-// Or manually:
-php marwa migrate --module=Blog
+```bash
+php marwa module:migrate
 ```
+
+`module:migrate` scans discovered modules and runs their migrations through `marwa-db`'s
+`MigrationRepository`. When a manifest declares individual migration files, the framework
+normalizes them to their containing directories so anonymous-class migration files are executed
+and recorded in the `migrations` table the same way as application migrations.
 
 ### Create Migrations
 
 ```php
 // modules/Blog/migrations/2024_01_01_create_posts_table.php
-use Marwa\DB\Migrations\Migration;
+use Marwa\DB\CLI\AbstractMigration;
+use Marwa\DB\Schema\Schema;
 
-return new class extends Migration {
+return new class extends AbstractMigration {
     public function up(): void
     {
-        Schema::create('blog_posts', function ($table) {
-            $table->id();
+        Schema::create('blog_posts', function ($table): void {
+            $table->increments('id');
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('content');
@@ -307,6 +311,11 @@ return new class extends Migration {
             $table->enum('status', ['draft', 'published'])->default('draft');
             $table->timestamps();
         });
+    }
+
+    public function down(): void
+    {
+        Schema::drop('blog_posts');
     }
 };
 ```
@@ -432,9 +441,9 @@ php marwa vendor:publish --module=Blog --tag=public
 | Command | Description |
 |---------|-------------|
 | `make:module` | Create new module |
-| `module:list` | List modules |
 | `module:cache` | Cache modules |
 | `module:clear` | Clear module cache |
+| `module:migrate` | Run discovered module migrations |
 
 ## Best Practices
 

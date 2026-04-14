@@ -309,25 +309,26 @@ final class ModuleBootstrapper
     {
         $paths = [];
 
-        $manifestMigrations = $module->migrations();
-        foreach ($manifestMigrations as $file) {
-            if (is_file($file)) {
-                $paths[] = $file;
+        foreach ($module->migrations() as $migrationPath) {
+            $normalizedPath = $this->normalizeMigrationPath($migrationPath);
+
+            if ($normalizedPath !== null) {
+                $paths[] = $normalizedPath;
             }
         }
 
         if (empty($paths)) {
             $config = $this->moduleConfig();
             foreach ($config['migrationsPath'] as $key) {
-                $path = $module->path($key);
+                $path = $this->normalizeMigrationPath($module->path($key));
 
-                if (is_string($path) && is_dir($path)) {
+                if ($path !== null) {
                     $paths[] = $path;
                 }
             }
         }
 
-        return $paths;
+        return array_values(array_unique($paths));
     }
 
     /**
@@ -362,5 +363,24 @@ final class ModuleBootstrapper
             ),
             static fn (?string $value): bool => $value !== null
         ));
+    }
+
+    private function normalizeMigrationPath(?string $path): ?string
+    {
+        if (!is_string($path) || $path === '') {
+            return null;
+        }
+
+        if (is_file($path)) {
+            $path = dirname($path);
+        }
+
+        if (!is_dir($path)) {
+            return null;
+        }
+
+        $resolvedPath = realpath($path);
+
+        return is_string($resolvedPath) ? $resolvedPath : null;
     }
 }
