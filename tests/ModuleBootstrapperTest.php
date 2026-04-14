@@ -6,6 +6,7 @@ namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
+use Marwa\Framework\Exceptions\ModuleDependencyException;
 use Marwa\Framework\Tests\Fixtures\Modules\Blog\BlogModuleServiceProvider;
 use Marwa\Module\ModuleBuilder;
 use PHPUnit\Framework\TestCase;
@@ -26,15 +27,7 @@ final class ModuleBootstrapperTest extends TestCase
         $moduleFixture = __DIR__ . '/Fixtures/Modules';
         file_put_contents(
             $this->basePath . '/config/module.php',
-            <<<PHP
-<?php
-
-return [
-    'enabled' => true,
-    'paths' => ['{$moduleFixture}'],
-    'cache' => '{$this->basePath}/bootstrap/cache/modules.php',
-];
-PHP
+            $this->moduleConfig($moduleFixture)
         );
 
         BlogModuleServiceProvider::$registerCalls = 0;
@@ -137,5 +130,164 @@ PHP
         $app->make(AppBootstrapper::class)->bootstrap();
 
         self::assertTrue($app->has(\Marwa\Framework\Views\View::class));
+    }
+
+    public function testModuleBootstrapperThrowsClearErrorWhenRequiredModuleIsMissing(): void
+    {
+        $modulesPath = $this->basePath . '/modules';
+        mkdir($modulesPath, 0777, true);
+        mkdir($modulesPath . '/Auth', 0777, true);
+
+        file_put_contents(
+            $modulesPath . '/Auth/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'Auth Module',
+    'slug' => 'auth',
+    'providers' => [
+        Marwa\Framework\Tests\Fixtures\Modules\Auth\AuthModuleServiceProvider::class,
+    ],
+    'requires' => [
+        'user',
+    ],
+];
+PHP
+        );
+
+        file_put_contents($this->basePath . '/config/module.php', $this->moduleConfig($modulesPath));
+
+        $app = new Application($this->basePath);
+
+        $this->expectException(ModuleDependencyException::class);
+        $this->expectExceptionMessage('Module [auth] requires missing module(s): user.');
+
+        $app->make(AppBootstrapper::class)->bootstrap();
+    }
+
+    public function testModuleBootstrapperAllowsModulesWhenDependenciesExist(): void
+    {
+        $modulesPath = $this->basePath . '/modules';
+        mkdir($modulesPath, 0777, true);
+        mkdir($modulesPath . '/Auth', 0777, true);
+        mkdir($modulesPath . '/User', 0777, true);
+
+        file_put_contents(
+            $modulesPath . '/Auth/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'Auth Module',
+    'slug' => 'auth',
+    'providers' => [
+        Marwa\Framework\Tests\Fixtures\Modules\Auth\AuthModuleServiceProvider::class,
+    ],
+    'requires' => [
+        'user',
+    ],
+];
+PHP
+        );
+
+        file_put_contents(
+            $modulesPath . '/User/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'User Module',
+    'slug' => 'user',
+    'providers' => [
+        Marwa\Framework\Tests\Fixtures\Modules\User\UserModuleServiceProvider::class,
+    ],
+];
+PHP
+        );
+
+        file_put_contents($this->basePath . '/config/module.php', $this->moduleConfig($modulesPath));
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        self::assertTrue($app->hasModule('auth'));
+        self::assertTrue($app->hasModule('user'));
+        self::assertTrue($app->has('module.auth.booted'));
+        self::assertTrue($app->has('module.user.booted'));
+    }
+
+    public function testModuleBootstrapperMatchesDependenciesCaseInsensitively(): void
+    {
+        $modulesPath = $this->basePath . '/modules';
+        mkdir($modulesPath, 0777, true);
+        mkdir($modulesPath . '/Auth', 0777, true);
+        mkdir($modulesPath . '/User', 0777, true);
+
+        file_put_contents(
+            $modulesPath . '/Auth/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'Auth Module',
+    'slug' => 'AUTH',
+    'providers' => [
+        Marwa\Framework\Tests\Fixtures\Modules\Auth\AuthModuleServiceProvider::class,
+    ],
+    'requires' => [
+        'user',
+    ],
+];
+PHP
+        );
+
+        file_put_contents(
+            $modulesPath . '/User/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'User Module',
+    'slug' => 'User',
+    'providers' => [
+        Marwa\Framework\Tests\Fixtures\Modules\User\UserModuleServiceProvider::class,
+    ],
+];
+PHP
+        );
+
+        file_put_contents($this->basePath . '/config/module.php', $this->moduleConfig($modulesPath));
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        self::assertSame('AUTH', $app->module('AUTH')->slug());
+        self::assertSame('User', $app->module('User')->slug());
+        self::assertTrue($app->has('module.auth.booted'));
+        self::assertTrue($app->has('module.user.booted'));
+    }
+
+    private function moduleConfig(string $modulePath): string
+    {
+        return <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => ['{$modulePath}'],
+    'cache' => '{$this->basePath}/bootstrap/cache/modules.php',
+];
+PHP;
     }
 }

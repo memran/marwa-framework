@@ -9,6 +9,7 @@ use Marwa\Framework\Adapters\Event\ModulesBootstrapped;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Config\ModuleConfig;
+use Marwa\Framework\Exceptions\ModuleDependencyException;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Views\View as FrameworkView;
@@ -66,6 +67,7 @@ final class ModuleBootstrapper
 
         $provider->register($this->app);
         $this->registry = $this->resolveRegistry();
+        $this->assertModuleDependencies($this->registry);
         $this->app->bootModuleServiceProviders();
 
         if (!Runtime::isConsole()) {
@@ -273,6 +275,101 @@ final class ModuleBootstrapper
         }
 
         throw new \RuntimeException('marwa-module did not register a module registry instance.');
+    }
+
+    private function assertModuleDependencies(ModuleRegistryInterface $registry): void
+    {
+        $registeredModules = [];
+
+        foreach ($registry->all() as $registeredModule) {
+            $registeredModules[strtolower($registeredModule->slug())] = true;
+        }
+
+        foreach ($registry->all() as $module) {
+            $requiredModules = $this->requiredModuleSlugs($module);
+
+            if ($requiredModules === []) {
+                continue;
+            }
+
+            $missingModules = array_values(array_filter(
+                $requiredModules,
+                static fn (string $slug): bool => !isset($registeredModules[strtolower($slug)])
+            ));
+
+            if ($missingModules === []) {
+                continue;
+            }
+
+            throw new ModuleDependencyException(sprintf(
+                'Module [%s] requires missing module(s): %s.',
+                $module->slug(),
+                implode(', ', $missingModules)
+            ));
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function requiredModuleSlugs(Module $module): array
+    {
+        $manifest = $this->rawManifest($module);
+        $requiredModules = [];
+
+        foreach (['requires', 'dependencies'] as $key) {
+            $values = $manifest[$key] ?? [];
+
+            if (!is_array($values)) {
+                continue;
+            }
+
+            foreach ($values as $value) {
+                if (!is_string($value)) {
+                    continue;
+                }
+
+                $slug = trim($value);
+
+                if ($slug === '') {
+                    continue;
+                }
+
+                $requiredModules[] = strtolower($slug);
+            }
+        }
+
+        return array_values(array_unique($requiredModules));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function rawManifest(Module $module): array
+    {
+        $phpManifest = $module->basePath() . DIRECTORY_SEPARATOR . 'manifest.php';
+
+        if (is_file($phpManifest)) {
+            $manifest = require $phpManifest;
+
+            return is_array($manifest) ? $manifest : [];
+        }
+
+        $jsonManifest = $module->basePath() . DIRECTORY_SEPARATOR . 'manifest.json';
+
+        if (!is_file($jsonManifest)) {
+            return [];
+        }
+
+        $contents = file_get_contents($jsonManifest);
+
+        if ($contents === false) {
+            return [];
+        }
+
+        $manifest = json_decode($contents, true);
+
+        return is_array($manifest) ? $manifest : [];
     }
 
     /**
