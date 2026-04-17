@@ -20,6 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Troubleshooting guide
   - Architecture section with boot flow and design docs
 
+### Refactored
+- Validation System Refactoring:
+  - Extracted validation rules into modular `ValidationRule/` directory structure
+  - Created `RuleRegistry` class for centralized rule management
+  - Extracted helper classes to `Validation/Helpers/` for better separation of concerns
+  - Reduced `RequestValidator.php` from 687 lines to 245 lines (64% reduction)
+  - Added support for custom validation rules via:
+    - Constructor injection of custom rule classes
+    - `validateInputWithCustomRules()` method for runtime custom rules
+  - 27 individual rule classes organized by category:
+    - TypeRules (14): required, present, filled, string, integer, numeric, boolean, array, email, url, file, image, accepted, declined
+    - ComparisonRules (6): min, max, between, in, same, confirmed
+    - DateRules (3): date, date_format, regex
+    - TransformRules (4): trim, lowercase, uppercase, default
+
 ## [1.0.0] - 2026-04-10
 
 ### Added

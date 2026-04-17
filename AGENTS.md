@@ -109,9 +109,15 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 ## Versioning
 
 - Version: `v1.0.0`
-- Updated: `[DATE]`
+- Updated: `2026-04-17`
 
 ## Change Log
 
-- `[DATE]` - Initial setup
-- `[DATE]` - Updated workflows
+- `2026-04-17` - Refactored Validation system:
+  - Extracted validation rules into `src/Validation/ValidationRule/` directory
+  - Created `RuleRegistry` for rule management with custom rule support
+  - Extracted helper classes to `src/Validation/Helpers/`
+  - Reduced `RequestValidator.php` from 687 to 245 lines (64% reduction)
+  - Added support for custom validation rules via constructor or method injection
+- `2026-04-17` - Initial setup
+- `2026-04-17` - Updated workflows
