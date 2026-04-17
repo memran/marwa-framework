@@ -37,6 +37,21 @@ final class ModuleBootstrapper
 
     private ?ModuleRegistryInterface $registry = null;
 
+    /**
+     * @var list<array{path:string,optional?:bool}>|null
+     */
+    private ?array $consoleDiscoverySources = null;
+
+    /**
+     * @var list<string>|null
+     */
+    private ?array $migrationPaths = null;
+
+    /**
+     * @var list<string>|null
+     */
+    private ?array $seederPaths = null;
+
     public function __construct(
         private Application $app,
         private Container $container,
@@ -97,9 +112,15 @@ final class ModuleBootstrapper
      */
     public function consoleDiscoverySources(): array
     {
+        if ($this->consoleDiscoverySources !== null) {
+            return $this->consoleDiscoverySources;
+        }
+
         $registry = $this->registry();
 
         if ($registry === null) {
+            $this->consoleDiscoverySources = [];
+
             return [];
         }
 
@@ -114,7 +135,9 @@ final class ModuleBootstrapper
             }
         }
 
-        return $sources;
+        $this->consoleDiscoverySources = $sources;
+
+        return $this->consoleDiscoverySources;
     }
 
     /**
@@ -122,9 +145,15 @@ final class ModuleBootstrapper
      */
     public function migrationPaths(): array
     {
+        if ($this->migrationPaths !== null) {
+            return $this->migrationPaths;
+        }
+
         $registry = $this->registry();
 
         if ($registry === null) {
+            $this->migrationPaths = [];
+
             return [];
         }
 
@@ -137,7 +166,9 @@ final class ModuleBootstrapper
             }
         }
 
-        return array_values(array_unique($paths));
+        $this->migrationPaths = array_values(array_unique($paths));
+
+        return $this->migrationPaths;
     }
 
     /**
@@ -145,9 +176,15 @@ final class ModuleBootstrapper
      */
     public function seederPaths(): array
     {
+        if ($this->seederPaths !== null) {
+            return $this->seederPaths;
+        }
+
         $registry = $this->registry();
 
         if ($registry === null) {
+            $this->seederPaths = [];
+
             return [];
         }
 
@@ -160,7 +197,9 @@ final class ModuleBootstrapper
             }
         }
 
-        return array_values(array_unique($paths));
+        $this->seederPaths = array_values(array_unique($paths));
+
+        return $this->seederPaths;
     }
 
     private function registerModuleViews(ModuleRegistryInterface $registry): void
