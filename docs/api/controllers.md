@@ -25,6 +25,8 @@
 - `abortUnless(bool $condition, string $message = 'Forbidden', int $status = 403): ?ResponseInterface`
 - `authorize(bool $condition, string $message = 'Forbidden'): ?ResponseInterface`
 
+`back()` only honors safe referrers. Relative URLs are allowed, and absolute URLs must match the current request origin. Unsafe or missing referrers fall back to the current request URI, then `/`.
+
 ## Usage
 
 ```php

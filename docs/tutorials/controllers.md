@@ -171,7 +171,7 @@ public function destroy(int $id): ResponseInterface
 }
 ```
 
-`back()` uses the request `Referer` header when it is available. If that header is missing, it falls back to the current request URI, and finally to `/`.
+`back()` uses the request `Referer` header when it is available, but only when the target is safe. Relative paths are allowed, and absolute URLs are only used when they match the current request origin. If the header is missing or unsafe, it falls back to the current request URI, and finally to `/`.
 
 ## Flashing Form State
 

@@ -9,6 +9,8 @@ use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 use Marwa\Router\Http\Input;
 use Marwa\Router\Response;
 use Marwa\Support\Validation\ErrorBag;
+use Marwa\Support\Str;
+use Marwa\Support\Url;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -110,15 +112,8 @@ abstract class Controller
     {
         /** @var ServerRequestInterface $request */
         $request = app(ServerRequestInterface::class);
-        $target = trim($request->getHeaderLine('Referer'));
 
-        if ($target === '') {
-            $target = (string) $request->getUri();
-        }
-
-        if ($target === '') {
-            $target = '/';
-        }
+        $target = $this->resolveBackTarget($request);
 
         return Response::redirect($target, $status, $headers);
     }
@@ -224,5 +219,50 @@ abstract class Controller
             403 => $this->forbidden($message),
             default => Response::html($message, $status),
         };
+    }
+
+    private function resolveBackTarget(ServerRequestInterface $request): string
+    {
+        $referer = trim($request->getHeaderLine('Referer'));
+        $fallback = (string) $request->getUri();
+
+        if ($referer === '') {
+            return $fallback !== '' ? $fallback : '/';
+        }
+
+        if (Str::startsWith($referer, '/')) {
+            return $referer;
+        }
+
+        if (!Url::isAbsolute($referer)) {
+            return $fallback !== '' ? $fallback : '/';
+        }
+
+        if ($this->isSameOrigin($referer, $request)) {
+            return $referer;
+        }
+
+        return $fallback !== '' ? $fallback : '/';
+    }
+
+    private function isSameOrigin(string $target, ServerRequestInterface $request): bool
+    {
+        $current = (string) $request->getUri();
+
+        $targetScheme = Url::scheme($target);
+        $currentScheme = Url::scheme($current);
+
+        if ($targetScheme !== null && $currentScheme !== null && strcasecmp($targetScheme, $currentScheme) !== 0) {
+            return false;
+        }
+
+        $targetHost = Url::host($target);
+        $currentHost = Url::host($current);
+
+        if ($targetHost !== null && $currentHost !== null && strcasecmp($targetHost, $currentHost) !== 0) {
+            return false;
+        }
+
+        return Url::port($target) === Url::port($current);
     }
 }

@@ -143,6 +143,28 @@ final class ControllerSupportTest extends TestCase
         self::assertNull($controller->abortUnlessValue(true));
     }
 
+    public function testBackFallsBackWhenRefererIsExternal(): void
+    {
+        $app = new Application($this->basePath);
+
+        $request = RequestFactory::fromArrays(
+            [
+                'REQUEST_METHOD' => 'POST',
+                'REQUEST_URI' => '/posts/create',
+                'HTTP_HOST' => 'example.test',
+                'HTTP_REFERER' => 'https://evil.test/phish',
+            ]
+        );
+
+        $app->add(ServerRequestInterface::class, $request);
+        $app->add('request', $request);
+        Input::setRequest($request);
+
+        $controller = new InspectableController();
+
+        self::assertSame('http://example.test/posts/create', $controller->backValue()->getHeaderLine('Location'));
+    }
+
     public function testValidatedValueCanConsumeAFormRequest(): void
     {
         $app = new Application($this->basePath);
