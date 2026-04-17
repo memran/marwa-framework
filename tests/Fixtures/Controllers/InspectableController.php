@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests\Fixtures\Controllers;
 
+use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 use Marwa\Framework\Controllers\Controller;
 use Marwa\Support\Validation\ErrorBag;
-use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

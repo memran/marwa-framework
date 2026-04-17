@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
-use Marwa\Framework\Application;
+use Marwa\ErrorHandler\ErrorHandler;
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
+use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\ProviderBootstrapper;
-use Marwa\ErrorHandler\ErrorHandler;
 use Marwa\Framework\Tests\Fixtures\Providers\CountingServiceProvider;
 use PHPUnit\Framework\TestCase;
 

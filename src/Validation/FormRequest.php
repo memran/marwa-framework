@@ -6,6 +6,4 @@ namespace Marwa\Framework\Validation;
 
 use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 
-abstract class FormRequest extends FormRequestAdapter
-{
-}
+abstract class FormRequest extends FormRequestAdapter {}
