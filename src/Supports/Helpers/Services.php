@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Service Helper Functions
+ */
+
+if (!function_exists('event')) {
+    function event(\Marwa\Framework\Adapters\Event\AbstractEvent $event): void
+    {
+        $bus = app(\Marwa\Framework\Adapters\Event\EventDispatcherAdapter::class);
+
+        if (!$bus instanceof \Marwa\Framework\Contracts\EventDispatcherInterface) {
+            throw new \RuntimeException('Event dispatcher binding is invalid.');
+        }
+
+        $bus->dispatch($event);
+    }
+}
+
+if (!function_exists('logger')) {
+    function logger(): \Psr\Log\LoggerInterface
+    {
+        return app(\Psr\Log\LoggerInterface::class);
+    }
+}
+
+if (!function_exists('mailer')) {
+    function mailer(): \Marwa\Framework\Contracts\MailerInterface
+    {
+        return app(\Marwa\Framework\Supports\Mailer::class);
+    }
+}
+
+if (!function_exists('notification')) {
+    function notification(): \Marwa\Framework\Notifications\NotificationManager
+    {
+        return app(\Marwa\Framework\Notifications\NotificationManager::class);
+    }
+}
+
+if (!function_exists('router')) {
+    function router(): mixed
+    {
+        return app(\Marwa\Framework\Adapters\RouterAdapter::class);
+    }
+}
+
+if (!function_exists('module')) {
+    function module(string $slug): \Marwa\Module\ModuleHandle
+    {
+        return app()->module($slug);
+    }
+}
+
+if (!function_exists('has_module')) {
+    function has_module(string $slug): bool
+    {
+        return app()->hasModule($slug);
+    }
+}
+
+if (!function_exists('menu')) {
+    function menu(): \Marwa\Framework\Navigation\MenuRegistry
+    {
+        return app(\Marwa\Framework\Navigation\MenuRegistry::class);
+    }
+}
+
+if (!function_exists('dispatch')) {
+    function dispatch(object $event): object
+    {
+        return app()->dispatch($event);
+    }
+}
+
+if (!function_exists('http')) {
+    function http(): \Marwa\Framework\Contracts\HttpClientInterface
+    {
+        /** @var \Marwa\Framework\Contracts\HttpClientInterface $http */
+        $http = app(\Marwa\Framework\Contracts\HttpClientInterface::class);
+
+        return $http;
+    }
+}
