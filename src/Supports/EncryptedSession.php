@@ -7,6 +7,8 @@ namespace Marwa\Framework\Supports;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\SessionConfig;
 use Marwa\Framework\Contracts\SessionInterface;
+use Marwa\Support\Json;
+use Marwa\Support\Random;
 
 final class EncryptedSession implements SessionInterface
 {
@@ -258,7 +260,7 @@ final class EncryptedSession implements SessionInterface
 
     private function encryptPayload(mixed $value): string
     {
-        $json = json_encode($value, JSON_THROW_ON_ERROR);
+        $json = Json::encode($value);
 
         if (!$this->settings['encrypt']) {
             return base64_encode($json);
@@ -268,7 +270,7 @@ final class EncryptedSession implements SessionInterface
             throw new \RuntimeException('OpenSSL is required to use encrypted sessions.');
         }
 
-        $iv = random_bytes(12);
+        $iv = Random::bytes(self::AES_GCM_IV_LENGTH);
         $tag = '';
         $ciphertext = openssl_encrypt(
             $json,
@@ -336,7 +338,7 @@ final class EncryptedSession implements SessionInterface
     private function decodeJson(string $json): mixed
     {
         try {
-            return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            return Json::decode($json, true);
         } catch (\JsonException) {
             return null;
         }

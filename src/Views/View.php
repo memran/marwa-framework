@@ -6,6 +6,7 @@ namespace Marwa\Framework\Views;
 
 use Marwa\Framework\Adapters\ViewAdapter;
 use Marwa\Router\Response;
+use Marwa\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 
 final class View
@@ -114,7 +115,7 @@ final class View
     {
         $name = trim(str_replace('\\', '/', $name));
 
-        if ($name === '' || str_contains($name, "\0")) {
+        if ($name === '' || Str::contains($name, "\0")) {
             throw new \InvalidArgumentException('Template name cannot be empty or contain null bytes.');
         }
 
@@ -137,7 +138,7 @@ final class View
 
         $normalized = implode('/', $segments);
 
-        if (!str_ends_with($normalized, '.twig')) {
+        if (!Str::endsWith($normalized, '.twig')) {
             $normalized .= '.twig';
         }
 

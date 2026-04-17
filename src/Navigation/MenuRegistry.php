@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Navigation;
 
 use Marwa\Framework\Exceptions\MenuConfigurationException;
+use Marwa\Support\Arr;
+use Marwa\Support\Url;
 
 final class MenuRegistry
 {
@@ -144,13 +146,13 @@ final class MenuRegistry
      */
     private function normalizeItem(array $item): array
     {
-        $name = is_string($item['name'] ?? null) ? trim($item['name']) : '';
-        $label = is_string($item['label'] ?? null) ? trim($item['label']) : '';
-        $url = is_string($item['url'] ?? null) ? trim($item['url']) : '';
-        $parent = is_string($item['parent'] ?? null) ? trim($item['parent']) : null;
-        $icon = is_string($item['icon'] ?? null) ? trim($item['icon']) : null;
-        $order = $item['order'] ?? 0;
-        $visible = $item['visible'] ?? true;
+        $name = $this->normalizeString(Arr::get($item, 'name'));
+        $label = $this->normalizeString(Arr::get($item, 'label'));
+        $url = $this->normalizeString(Arr::get($item, 'url'));
+        $parent = $this->normalizeNullableString(Arr::get($item, 'parent'));
+        $icon = $this->normalizeNullableString(Arr::get($item, 'icon'));
+        $order = Arr::get($item, 'order', 0);
+        $visible = Arr::get($item, 'visible', true);
 
         if ($name === '') {
             throw new MenuConfigurationException('Menu item [name] is required.');
@@ -168,6 +170,17 @@ final class MenuRegistry
                 'Menu item [%s] must define a non-empty url.',
                 $name
             ));
+        }
+
+        if (Url::isAbsolute($url)) {
+            try {
+                Url::parse($url);
+            } catch (\InvalidArgumentException $exception) {
+                throw new MenuConfigurationException(sprintf(
+                    'Menu item [%s] must define a valid url.',
+                    $name
+                ), previous: $exception);
+            }
         }
 
         if (!is_int($order)) {
@@ -193,6 +206,22 @@ final class MenuRegistry
             'icon' => $icon !== '' ? $icon : null,
             'visible' => $visible,
         ];
+    }
+
+    private function normalizeString(mixed $value): string
+    {
+        return is_string($value) ? trim($value) : '';
+    }
+
+    private function normalizeNullableString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value !== '' ? $value : null;
     }
 
     /**

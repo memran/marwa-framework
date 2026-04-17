@@ -6,6 +6,9 @@ declare(strict_types=1);
  * Utility Helper Functions
  */
 
+use Marwa\Support\Helper;
+use Marwa\Support\Random;
+
 if (!function_exists('generate_key')) {
     /**
      * Generate a cryptographically secure random key.
@@ -21,11 +24,7 @@ if (!function_exists('generate_key')) {
             throw new \InvalidArgumentException('Key length must be greater than 0.');
         }
 
-        try {
-            $randomBytes = random_bytes($length);
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Unable to generate a secure key.', 0, $e);
-        }
+        $randomBytes = Random::bytes($length);
 
         return $asHex ? bin2hex($randomBytes) : $randomBytes;
     }
@@ -42,7 +41,9 @@ if (!function_exists('with')) {
      */
     function with($value, callable $callback)
     {
-        return $callback($value) ?? $value;
+        $resolver = $callback instanceof \Closure ? $callback : \Closure::fromCallable($callback);
+
+        return Helper::value($resolver, $value) ?? $value;
     }
 }
 
@@ -59,19 +60,13 @@ if (!function_exists('tap')) {
      */
     function tap($value, callable $callback)
     {
-        $callback($value);
-
-        return $value;
+        return Helper::tap($value, $callback);
     }
 }
 
 if (!function_exists('dd')) {
     function dd(mixed ...$vars): never
     {
-        foreach ($vars as $var) {
-            var_dump($var);
-        }
-
-        exit(1);
+        Helper::dd(...$vars);
     }
 }

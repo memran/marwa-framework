@@ -6,6 +6,8 @@ namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Collection;
+use Marwa\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -34,7 +36,7 @@ final class MakeModuleCommand extends AbstractCommand
         }
 
         $moduleName = $this->normalizeModuleName($name);
-        $moduleSlug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $moduleName));
+        $moduleSlug = Str::snake($moduleName, '-');
         $modulesRoot = $this->moduleRootPath();
         $modulePath = rtrim($modulesRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $moduleName;
         $providerClass = $moduleName . 'ServiceProvider';
@@ -96,7 +98,10 @@ final class MakeModuleCommand extends AbstractCommand
     private function moduleRootPath(): string
     {
         $config = array_replace_recursive(ModuleConfig::defaults($this->app()), $this->config()->getArray(ModuleConfig::KEY, []));
-        $paths = array_values(array_filter($config['paths'] ?? [], static fn (mixed $path): bool => is_string($path) && $path !== ''));
+        $paths = Collection::make($config['paths'] ?? [])
+            ->filter(static fn (mixed $path, mixed $key): bool => is_string($path) && $path !== '')
+            ->values()
+            ->all();
 
         if ($paths === []) {
             throw new \RuntimeException('No module paths are configured. Define module.paths in config/module.php.');

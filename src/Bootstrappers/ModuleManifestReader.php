@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Bootstrappers;
 
+use Marwa\Support\File;
+use Marwa\Support\Str;
 use Marwa\Module\Module;
 
 final class ModuleManifestReader
@@ -23,17 +25,15 @@ final class ModuleManifestReader
 
         $jsonManifest = $module->basePath() . DIRECTORY_SEPARATOR . 'manifest.json';
 
-        if (!is_file($jsonManifest)) {
+        if (!File::exists($jsonManifest)) {
             return [];
         }
 
-        $contents = file_get_contents($jsonManifest);
-
-        if ($contents === false) {
+        try {
+            $manifest = json_decode(File::get($jsonManifest), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable) {
             return [];
         }
-
-        $manifest = json_decode($contents, true);
 
         return is_array($manifest) ? $manifest : [];
     }
@@ -64,7 +64,7 @@ final class ModuleManifestReader
                     continue;
                 }
 
-                $requiredModules[] = strtolower($slug);
+                $requiredModules[] = Str::lower($slug);
             }
         }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -71,7 +72,7 @@ final class MakeSeederCommand extends AbstractCommand
             $segments = ['DatabaseSeeder'];
         }
 
-        $className = (string) array_pop($segments);
+        $className = Str::studly((string) array_pop($segments));
         $namespace = $this->seedNamespace . ($segments !== [] ? '\\' . implode('\\', $segments) : '');
         $directory = rtrim($this->seedPath !== '' ? $this->seedPath : $this->basePath('database/seeders'), DIRECTORY_SEPARATOR);
         $target = $directory . ($segments !== [] ? DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $segments) : '') . DIRECTORY_SEPARATOR . $className . '.php';

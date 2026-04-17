@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console;
 
 use Marwa\Framework\Application;
+use Marwa\Support\File;
+use Marwa\Support\Str;
 use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -83,7 +85,7 @@ final class CommandDiscovery
 
     private function resolvePath(string $path): string
     {
-        if (str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1) {
+        if (Str::startsWith($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1) {
             return $path;
         }
 
@@ -101,7 +103,7 @@ final class CommandDiscovery
         foreach ($candidates as $prefix) {
             $trimmedPrefix = trim($prefix, '\\');
 
-            if ($namespace !== $trimmedPrefix && !str_starts_with($namespaceWithSeparator, $prefix)) {
+            if ($namespace !== $trimmedPrefix && !Str::startsWith($namespaceWithSeparator, $prefix)) {
                 continue;
             }
 
@@ -134,7 +136,7 @@ final class CommandDiscovery
             foreach ($basePaths as $basePath) {
                 $normalizedBasePath = $this->normalizePath(realpath($basePath) ?: $basePath);
 
-                if (!str_starts_with($resolvedPath . DIRECTORY_SEPARATOR, rtrim($normalizedBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)
+                if (!Str::startsWith($resolvedPath . DIRECTORY_SEPARATOR, rtrim($normalizedBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)
                     && $resolvedPath !== $normalizedBasePath) {
                     continue;
                 }
@@ -184,7 +186,7 @@ final class CommandDiscovery
             $this->app->basePath('vendor/composer/autoload_psr4.php'),
             dirname(__DIR__, 2) . '/vendor/composer/autoload_psr4.php',
         ] as $autoloadFile) {
-            if (!is_file($autoloadFile)) {
+            if (!File::exists($autoloadFile)) {
                 continue;
             }
 

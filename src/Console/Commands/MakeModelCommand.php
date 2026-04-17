@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -80,15 +81,15 @@ final class MakeModelCommand extends AbstractCommand
 
     private function inferTableName(string $className): string
     {
-        $snake = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $className));
+        $snake = Str::snake($className);
 
         return match (true) {
-            str_ends_with($snake, 'y') && !preg_match('/[aeiou]y$/', $snake) => substr($snake, 0, -1) . 'ies',
-            str_ends_with($snake, 's'),
-            str_ends_with($snake, 'x'),
-            str_ends_with($snake, 'z'),
-            str_ends_with($snake, 'ch'),
-            str_ends_with($snake, 'sh') => $snake . 'es',
+            Str::endsWith($snake, 'y') && !preg_match('/[aeiou]y$/', $snake) => substr($snake, 0, -1) . 'ies',
+            Str::endsWith($snake, 's'),
+            Str::endsWith($snake, 'x'),
+            Str::endsWith($snake, 'z'),
+            Str::endsWith($snake, 'ch'),
+            Str::endsWith($snake, 'sh') => $snake . 'es',
             default => $snake . 's',
         };
     }

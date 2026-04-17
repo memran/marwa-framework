@@ -6,6 +6,7 @@ namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -52,7 +53,7 @@ final class MakeAiHelperCommand extends AbstractCommand
 
         if ((bool) $input->getOption('with-command')) {
             $commandClass = $className . 'Command';
-            $commandName = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $className) ?: 'ai-helper');
+            $commandName = Str::snake($className, '-') ?: 'ai-helper';
             $commandTarget = $this->basePath('app/Console/Commands/' . $commandClass . '.php');
 
             $this->writeStub(

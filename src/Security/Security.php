@@ -11,6 +11,9 @@ use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Contracts\SessionInterface;
 use Marwa\Framework\Exceptions\InvalidArgumentException;
 use Marwa\Framework\Supports\Config;
+use Marwa\Support\Html;
+use Marwa\Support\Random;
+use Marwa\Support\Str;
 
 final class Security implements SecurityInterface
 {
@@ -104,9 +107,7 @@ final class Security implements SecurityInterface
     public function csrfField(): string
     {
         $field = $this->settings['csrf']['field'];
-        $token = htmlspecialchars($this->csrfToken(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-        return sprintf('<input type="hidden" name="%s" value="%s">', htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $token);
+        return Html::input('hidden', $field, $this->csrfToken());
     }
 
     public function isCsrfProtected(string $method, string $path): bool
@@ -207,7 +208,7 @@ final class Security implements SecurityInterface
         $basePath = $this->normalizePath($basePath);
         $candidate = $this->normalizePath($basePath . DIRECTORY_SEPARATOR . ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path), DIRECTORY_SEPARATOR));
 
-        if ($candidate === $basePath || str_starts_with($candidate, $basePath . DIRECTORY_SEPARATOR)) {
+        if ($candidate === $basePath || Str::startsWith($candidate, $basePath . DIRECTORY_SEPARATOR)) {
             return $candidate;
         }
 
@@ -221,7 +222,7 @@ final class Security implements SecurityInterface
 
     private function generateToken(): string
     {
-        return bin2hex(random_bytes(32));
+        return bin2hex(Random::bytes(32));
     }
 
     /**
@@ -250,10 +251,10 @@ final class Security implements SecurityInterface
             return true;
         }
 
-        $quoted = preg_quote(strtolower($pattern), '#');
+        $quoted = preg_quote(Str::lower($pattern), '#');
         $quoted = str_replace('\*', '.*', $quoted);
 
-        return (bool) preg_match('#^' . $quoted . '$#', strtolower($value));
+        return (bool) preg_match('#^' . $quoted . '$#', Str::lower($value));
     }
 
     private function pathMatches(string $path, string $pattern): bool
@@ -274,7 +275,7 @@ final class Security implements SecurityInterface
         $path = preg_replace('#[\\\\/]+#', DIRECTORY_SEPARATOR, $path) ?? $path;
         $path = trim($path);
 
-        $isAbsolute = str_starts_with($path, DIRECTORY_SEPARATOR);
+        $isAbsolute = Str::startsWith($path, DIRECTORY_SEPARATOR);
         $segments = explode(DIRECTORY_SEPARATOR, $path);
         $resolved = [];
 

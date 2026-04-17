@@ -2,6 +2,9 @@
 
 The framework exposes global helper functions through modular files in `src/Supports/Helpers/`. The main `Helpers.php` file re-exports all functions for backward compatibility.
 
+Most common helper operations now delegate to `memran/marwa-support` classes internally:
+`Arr`, `Helper`, `Random`, `Html`, `CSRF`, `Sanitizer`, `Validator`, and `Validation`.
+
 ## Architecture
 
 Helper functions are organized by category:
@@ -299,6 +302,8 @@ Returns the debug bar instance when enabled, otherwise `null`.
 ### `generate_key(int $length = 32, bool $asHex = true): string`
 
 Generates cryptographically secure random bytes or a hex-encoded key.
+
+Internally this uses `Marwa\Support\Random`.
 
 ```php
 $key = generate_key(); // 64-char hex string

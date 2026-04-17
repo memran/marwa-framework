@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Validation and Response Helper Functions
  */
 
+use Marwa\Support\Arr;
+
 if (!function_exists('validate_request')) {
     /**
      * @param array<string, mixed> $rules
@@ -42,20 +44,7 @@ if (!function_exists('old')) {
             return $data;
         }
 
-        if (array_key_exists($key, $data)) {
-            return $data[$key];
-        }
-
-        $current = $data;
-        foreach (explode('.', $key) as $segment) {
-            if (!is_array($current) || !array_key_exists($segment, $current)) {
-                return $default;
-            }
-
-            $current = $current[$segment];
-        }
-
-        return $current;
+        return Arr::get($data, $key, $default);
     }
 }
 

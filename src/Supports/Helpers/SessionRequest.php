@@ -6,6 +6,10 @@ declare(strict_types=1);
  * Session, Request, and Env Helper Functions
  */
 
+use Marwa\Support\Arr;
+use Marwa\Support\File;
+use Marwa\Support\Str;
+
 if (!function_exists('env')) {
     function env(string $key, mixed $default = null): mixed
     {
@@ -15,13 +19,19 @@ if (!function_exists('env')) {
             ? base_path('.env')
             : getcwd() . DIRECTORY_SEPARATOR . '.env';
 
-        if (!isset($loadedPaths[$envPath]) && is_file($envPath)) {
-            $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        if (!isset($loadedPaths[$envPath]) && File::exists($envPath)) {
+            try {
+                $contents = File::get($envPath);
+            } catch (\Throwable) {
+                $contents = '';
+            }
+
+            $lines = preg_split('/\r\n|\r|\n/', $contents) ?: [];
 
             foreach ($lines as $line) {
                 $line = trim($line);
 
-                if ($line === '' || str_starts_with($line, '#')) {
+                if ($line === '' || Str::startsWith($line, '#')) {
                     continue;
                 }
 
@@ -51,7 +61,7 @@ if (!function_exists('env')) {
             return $value;
         }
 
-        return match (strtolower($value)) {
+        return match (Str::lower($value)) {
             'true', '(true)' => true,
             'false', '(false)' => false,
             'empty', '(empty)' => '',
@@ -85,6 +95,6 @@ if (!function_exists('request')) {
             return $request;
         }
 
-        return \Marwa\Router\Http\Input::get($key, $default);
+        return Arr::get(\Marwa\Router\Http\Input::all(), $key, $default);
     }
 }

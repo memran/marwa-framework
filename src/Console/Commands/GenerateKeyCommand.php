@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Random;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +33,9 @@ final class GenerateKeyCommand extends AbstractCommand
             return Command::INVALID;
         }
 
-        $key = generate_key($length, !(bool) $input->getOption('raw'));
+        $key = (bool) $input->getOption('raw')
+            ? Random::bytes($length)
+            : bin2hex(Random::bytes($length));
         $value = (bool) $input->getOption('show-env') ? 'APP_KEY=' . $key : $key;
 
         $output->writeln($value);

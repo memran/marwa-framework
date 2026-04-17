@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Console\AbstractCommand;
+use Marwa\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -35,7 +36,7 @@ final class MakeCommandCommand extends AbstractCommand
         $target = $this->buildClassTarget($name, 'App\\Console\\Commands', 'app/Console/Commands', 'GeneratedCommand', 'Command');
         $className = $target['class'];
         $stub = $this->frameworkStubPath('console/command.stub');
-        $commandName = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', substr($className, 0, -7)) ?: 'generated');
+        $commandName = Str::snake(substr($className, 0, -7), '-') ?: 'generated';
 
         $this->writeStubFile(
             $stub,

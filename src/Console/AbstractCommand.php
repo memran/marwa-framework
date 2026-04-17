@@ -7,6 +7,8 @@ namespace Marwa\Framework\Console;
 use League\Container\Container;
 use Marwa\Framework\Application;
 use Marwa\Framework\Supports\Config;
+use Marwa\Support\File;
+use Marwa\Support\Str;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 
@@ -72,7 +74,7 @@ abstract class AbstractCommand extends Command
 
         $className = array_pop($segments) ?: $defaultClass;
 
-        if ($suffix !== '' && !str_ends_with($className, $suffix)) {
+        if ($suffix !== '' && !Str::endsWith($className, $suffix)) {
             $className .= $suffix;
         }
 
@@ -96,11 +98,11 @@ abstract class AbstractCommand extends Command
      */
     protected function writeStubFile(string $stubPath, string $targetPath, array $replacements, bool $force = false): void
     {
-        if (!is_file($stubPath)) {
+        if (!File::exists($stubPath)) {
             throw new \RuntimeException(sprintf('Stub file [%s] was not found.', $stubPath));
         }
 
-        if (!$force && is_file($targetPath)) {
+        if (!$force && File::exists($targetPath)) {
             throw new \RuntimeException(sprintf('Target file [%s] already exists.', $targetPath));
         }
 
@@ -109,9 +111,9 @@ abstract class AbstractCommand extends Command
             throw new \RuntimeException(sprintf('Unable to create directory [%s].', $directory));
         }
 
-        $contents = (string) file_get_contents($stubPath);
+        $contents = File::get($stubPath);
         $contents = str_replace(array_keys($replacements), array_values($replacements), $contents);
 
-        file_put_contents($targetPath, $contents);
+        File::put($targetPath, $contents, 0, 0644, false);
     }
 }
