@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
-use Marwa\Framework\Application;
 use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 use Marwa\Framework\Adapters\Validation\RequestValidatorAdapter;
 use Marwa\Framework\Adapters\Validation\ValidationExceptionResponder;
+use Marwa\Framework\Application;
 use Marwa\Framework\Tests\Fixtures\Validation\StartsWithRule;
+use Marwa\Router\Http\RequestFactory;
 use Marwa\Support\Validation\ErrorBag;
 use Marwa\Support\Validation\RuleRegistry;
 use Marwa\Support\Validation\ValidationException;
-use Marwa\Router\Http\RequestFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 

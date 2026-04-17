@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Bootstrappers;
 
+use Marwa\Module\Module;
 use Marwa\Support\File;
 use Marwa\Support\Str;
-use Marwa\Module\Module;
 
 final class ModuleManifestReader
 {
