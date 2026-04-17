@@ -10,7 +10,7 @@ use Marwa\Framework\Middlewares\RequestIdMiddleware;
 use Marwa\Framework\Middlewares\RouterMiddleware;
 use Marwa\Framework\Middlewares\SecurityMiddleware;
 use Marwa\Framework\Middlewares\SessionMiddleware;
-use Marwa\Framework\Providers\KernalServiceProvider;
+use Marwa\Framework\Providers\KernelServiceProvider;
 
 final class AppConfig
 {
@@ -30,7 +30,7 @@ final class AppConfig
     {
         return [
             'providers' => [
-                KernalServiceProvider::class,
+                KernelServiceProvider::class,
             ],
             'middlewares' => [
                 RequestIdMiddleware::class,

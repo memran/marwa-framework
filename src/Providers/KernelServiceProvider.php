@@ -15,7 +15,7 @@ use Marwa\Framework\Contracts\BootServiceProviderInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 
-final class KernalServiceProvider extends ServiceProviderAdapter implements BootServiceProviderInterface
+final class KernelServiceProvider extends ServiceProviderAdapter implements BootServiceProviderInterface
 {
     public function provides(string $id): bool
     {

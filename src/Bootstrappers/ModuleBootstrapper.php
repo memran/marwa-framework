@@ -41,7 +41,9 @@ final class ModuleBootstrapper
     public function __construct(
         private Application $app,
         private Container $container,
-        private Config $config
+        private Config $config,
+        private ModuleManifestReader $manifestReader = new ModuleManifestReader(),
+        private ModulePathResolver $pathResolver = new ModulePathResolver()
     ) {}
 
     public function bootstrap(): void
@@ -103,9 +105,10 @@ final class ModuleBootstrapper
         }
 
         $sources = [];
+        $moduleConfig = $this->moduleConfig();
 
         foreach ($registry->all() as $module) {
-            foreach ($this->resolveCommandPaths($module) as $path) {
+            foreach ($this->pathResolver->resolveCommandPaths($module, $moduleConfig) as $path) {
                 $sources[] = [
                     'path' => $path,
                 ];
@@ -127,9 +130,10 @@ final class ModuleBootstrapper
         }
 
         $paths = [];
+        $moduleConfig = $this->moduleConfig();
 
         foreach ($registry->all() as $module) {
-            foreach ($this->resolveMigrationPaths($module) as $path) {
+            foreach ($this->pathResolver->resolveMigrationPaths($module, $moduleConfig) as $path) {
                 $paths[] = $path;
             }
         }
@@ -149,9 +153,10 @@ final class ModuleBootstrapper
         }
 
         $paths = [];
+        $moduleConfig = $this->moduleConfig();
 
         foreach ($registry->all() as $module) {
-            foreach ($this->resolveSeederPaths($module) as $path) {
+            foreach ($this->pathResolver->resolveSeederPaths($module, $moduleConfig) as $path) {
                 $paths[] = $path;
             }
         }
@@ -303,7 +308,7 @@ final class ModuleBootstrapper
         }
 
         foreach ($registry->all() as $module) {
-            $requiredModules = $this->requiredModuleSlugs($module);
+            $requiredModules = $this->manifestReader->getRequiredModules($module);
 
             if ($requiredModules === []) {
                 continue;
@@ -327,144 +332,6 @@ final class ModuleBootstrapper
     }
 
     /**
-     * @return list<string>
-     */
-    private function requiredModuleSlugs(Module $module): array
-    {
-        $manifest = $this->rawManifest($module);
-        $requiredModules = [];
-
-        foreach (['requires', 'dependencies'] as $key) {
-            $values = $manifest[$key] ?? [];
-
-            if (!is_array($values)) {
-                continue;
-            }
-
-            foreach ($values as $value) {
-                if (!is_string($value)) {
-                    continue;
-                }
-
-                $slug = trim($value);
-
-                if ($slug === '') {
-                    continue;
-                }
-
-                $requiredModules[] = strtolower($slug);
-            }
-        }
-
-        return array_values(array_unique($requiredModules));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function rawManifest(Module $module): array
-    {
-        $phpManifest = $module->basePath() . DIRECTORY_SEPARATOR . 'manifest.php';
-
-        if (is_file($phpManifest)) {
-            $manifest = require $phpManifest;
-
-            return is_array($manifest) ? $manifest : [];
-        }
-
-        $jsonManifest = $module->basePath() . DIRECTORY_SEPARATOR . 'manifest.json';
-
-        if (!is_file($jsonManifest)) {
-            return [];
-        }
-
-        $contents = file_get_contents($jsonManifest);
-
-        if ($contents === false) {
-            return [];
-        }
-
-        $manifest = json_decode($contents, true);
-
-        return is_array($manifest) ? $manifest : [];
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function resolveCommandPaths(Module $module): array
-    {
-        $config = $this->moduleConfig();
-        $paths = [];
-
-        foreach ($config['commandPaths'] as $key) {
-            $path = $module->path($key);
-
-            if (is_string($path) && is_dir($path)) {
-                $paths[] = $path;
-            }
-        }
-
-        foreach ($config['commandConventions'] as $relativePath) {
-            $path = $module->basePath() . DIRECTORY_SEPARATOR . trim($relativePath, DIRECTORY_SEPARATOR);
-
-            if (is_dir($path)) {
-                $paths[] = $path;
-            }
-        }
-
-        return array_values(array_unique($paths));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function resolveMigrationPaths(Module $module): array
-    {
-        $paths = [];
-
-        foreach ($module->migrations() as $migrationPath) {
-            $normalizedPath = $this->normalizeMigrationPath($migrationPath);
-
-            if ($normalizedPath !== null) {
-                $paths[] = $normalizedPath;
-            }
-        }
-
-        if (empty($paths)) {
-            $config = $this->moduleConfig();
-            foreach ($config['migrationsPath'] as $key) {
-                $path = $this->normalizeMigrationPath($module->path($key));
-
-                if ($path !== null) {
-                    $paths[] = $path;
-                }
-            }
-        }
-
-        return array_values(array_unique($paths));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function resolveSeederPaths(Module $module): array
-    {
-        $config = $this->moduleConfig();
-        $paths = [];
-
-        foreach ($config['seedersPath'] as $key) {
-            $path = $module->path($key);
-
-            if (is_string($path) && is_dir($path)) {
-                $paths[] = $path;
-            }
-        }
-
-        return $paths;
-    }
-
-    /**
      * @param array<mixed> $values
      * @return list<string>
      */
@@ -477,24 +344,5 @@ final class ModuleBootstrapper
             ),
             static fn (?string $value): bool => $value !== null
         ));
-    }
-
-    private function normalizeMigrationPath(?string $path): ?string
-    {
-        if (!is_string($path) || $path === '') {
-            return null;
-        }
-
-        if (is_file($path)) {
-            $path = dirname($path);
-        }
-
-        if (!is_dir($path)) {
-            return null;
-        }
-
-        $resolvedPath = realpath($path);
-
-        return is_string($resolvedPath) ? $resolvedPath : null;
     }
 }
