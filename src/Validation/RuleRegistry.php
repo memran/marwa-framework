@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Validation;
 
-use Marwa\Framework\Validation\ValidationRule\AbstractRule;
-use Marwa\Framework\Validation\ValidationRule\Contracts\RuleInterface;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\BetweenRule;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\ConfirmedRule;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\InRule;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\MaxRule;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\MinRule;
 use Marwa\Framework\Validation\ValidationRule\ComparisonRules\SameRule;
+use Marwa\Framework\Validation\ValidationRule\Contracts\RuleInterface;
 use Marwa\Framework\Validation\ValidationRule\DateRules\DateFormatRule;
 use Marwa\Framework\Validation\ValidationRule\DateRules\DateRule;
 use Marwa\Framework\Validation\ValidationRule\DateRules\RegexRule;

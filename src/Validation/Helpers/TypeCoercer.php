@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Validation\Helpers;
 
-use Psr\Http\Message\UploadedFileInterface;
-
 final class TypeCoercer
 {
     /**
