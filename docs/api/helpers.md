@@ -1,6 +1,24 @@
 # Helper Functions
 
-The project exposes global helpers through `src/Supports/Helpers.php`.
+The framework exposes global helper functions through modular files in `src/Supports/Helpers/`. The main `Helpers.php` file re-exports all functions for backward compatibility.
+
+## Architecture
+
+Helper functions are organized by category:
+
+```
+src/Supports/
+├── Helpers/
+│   ├── Paths.php             # Path helper functions
+│   ├── Container.php         # app(), config(), cache(), storage(), db()
+│   ├── SessionRequest.php    # session(), request(), env()
+│   ├── Services.php          # event(), logger(), mailer(), router(), http(), etc.
+│   ├── Security.php          # security(), csrf_*(), throttle(), etc.
+│   ├── ValidationResponse.php # validate_request(), old(), response()
+│   ├── ViewDebug.php        # view(), image(), debugger(), is_local(), etc.
+│   └── Utilities.php         # generate_key(), with(), tap(), dd()
+└── Helpers.php              # Re-exports all helpers
+```
 
 ## Application and Paths
 
@@ -13,26 +31,29 @@ $logger = app(\Marwa\Framework\Adapters\Logger\LoggerAdapter::class);
 
 Returns the application instance or resolves a service from the container.
 
-### `base_path(string $path = ''): string`
-### `bootstrap_path(string $path = ''): string`
-### `cache_path(string $path = ''): string`
-### `config_path(string $path = ''): string`
-### `database_path(string $path = ''): string`
-### `logs_path(string $path = ''): string`
-### `public_path(string $path = ''): string`
-### `routes_path(string $path = ''): string`
-### `resources_path(string $path = ''): string`
-### `storage_path(string $path = ''): string`
-### `module_path(string $path = ''): string`
-### `view_path(string $path = ''): string`
+### Path Functions
+
+| Function | Description |
+|----------|-------------|
+| `base_path(string $path = '')` | Application root |
+| `bootstrap_path(string $path = '')` | Bootstrap directory |
+| `cache_path(string $path = '')` | Cache directory |
+| `config_path(string $path = '')` | Config directory |
+| `database_path(string $path = '')` | Database directory |
+| `logs_path(string $path = '')` | Logs directory |
+| `module_path(string $path = '')` | Modules directory |
+| `public_path(string $path = '')` | Public directory |
+| `public_storage_path(string $path = '')` | Public storage directory |
+| `resources_path(string $path = '')` | Resources directory |
+| `routes_path(string $path = '')` | Routes directory |
+| `storage_path(string $path = '')` | Storage directory |
+| `view_path(string $path = '')` | Views directory |
 
 ```php
 $configFile = config_path('app.php');
 $migrationPath = database_path('migrations');
 $compiledConfig = bootstrap_path('cache/config.php');
 ```
-
-Return absolute paths relative to the application base path.
 
 ## Configuration and Environment
 
@@ -52,6 +73,8 @@ $debug = env('APP_DEBUG', false);
 
 Reads environment values with basic type normalization for booleans, numbers, `null`, and empty strings.
 
+## Container Services
+
 ### `cache(?string $key = null, mixed $default = null): mixed`
 
 ```php
@@ -61,6 +84,25 @@ $theme = cache('settings.theme', 'dark');
 
 Returns the shared cache service or reads one cached value.
 
+### `db(): \Marwa\DB\Connection\ConnectionManager`
+
+```php
+$users = db()->table('users')->get();
+```
+
+Returns the shared `marwa-db` connection manager.
+
+### `storage(?string $disk = null): \Marwa\Framework\Supports\Storage`
+
+```php
+storage()->write('docs/readme.txt', 'Hello');
+$public = storage('public');
+```
+
+Returns the shared Flysystem-backed storage manager.
+
+## HTTP and Requests
+
 ### `http(): \Marwa\Framework\Contracts\HttpClientInterface`
 
 ```php
@@ -68,6 +110,28 @@ http()->withClient('github')->get('/repos/memran/marwa-framework');
 ```
 
 Returns the shared Guzzle-backed HTTP client service.
+
+### `session(?string $key = null, mixed $default = null): mixed`
+
+```php
+$session = session();
+session()->set('user_id', 42);
+session()->flash('status', 'Saved');
+$userId = session('user_id');
+```
+
+Returns the encrypted session service or reads one session value.
+
+### `request(?string $key = null, mixed $default = null): mixed`
+
+```php
+$request = request();
+$title = request('title');
+```
+
+Returns the current PSR-7 request when called without a key, or the current input value when a key is provided.
+
+## Notifications and Mail
 
 ### `notification(): \Marwa\Framework\Notifications\NotificationManager`
 
@@ -103,43 +167,7 @@ Queue mail with a mailable class:
 mailer()->queue(new App\Mail\WelcomeMail(['subject' => 'Welcome']));
 ```
 
-## HTTP and Rendering
-
-### `response(string $body = '', int $status = 200): ResponseInterface`
-
-Creates a basic HTML response.
-
-### `router(): mixed`
-
-Returns the router adapter from the container.
-
-### `http(): \Marwa\Framework\Contracts\HttpClientInterface`
-
-Returns the shared outbound HTTP client service.
-
-### `db(): \Marwa\DB\Connection\ConnectionManager`
-
-Returns the shared `marwa-db` connection manager after bootstrap.
-
-### `session(?string $key = null, mixed $default = null): mixed`
-
-```php
-$session = session();
-session()->set('user_id', 42);
-session()->flash('status', 'Saved');
-$userId = session('user_id');
-```
-
-Returns the encrypted session service or reads one session value.
-
-### `request(?string $key = null, mixed $default = null): mixed`
-
-```php
-$request = request();
-$title = request('title');
-```
-
-Returns the current PSR-7 request when called without a key, or the current input value when a key is provided.
+## Validation
 
 ### `validate_request(array $rules, array $messages = [], array $attributes = [], ?ServerRequestInterface $request = null): array`
 
@@ -160,6 +188,16 @@ $title = old('title', '');
 
 Reads flashed validation input from the session after a failed validation response.
 
+## Rendering
+
+### `view(string $tplName = '', array $params = []): mixed`
+
+```php
+return view('welcome', ['name' => 'Marwa']);
+```
+
+Returns the shared view service or renders a template as an HTML response directly.
+
 ### `image(?string $path = null): \Marwa\Framework\Supports\Image`
 
 ```php
@@ -170,14 +208,11 @@ $thumb = image(public_path('images/photo.jpg'))
 
 Returns a GD-backed image instance from disk, or a blank 1x1 canvas when no path is provided.
 
-### `storage(?string $disk = null): \Marwa\Framework\Supports\Storage`
+### `response(string $body = '', int $status = 200): ResponseInterface`
 
-```php
-storage()->write('docs/readme.txt', 'Hello');
-$public = storage('public');
-```
+Creates a basic HTML response.
 
-Returns the shared Flysystem-backed storage manager, optionally scoped to a configured disk.
+## Security
 
 ### `security(): \Marwa\Framework\Contracts\SecurityInterface`
 
@@ -187,33 +222,27 @@ $token = security()->csrfToken();
 
 Returns the shared security service.
 
-### `csrf_token(): string`
-### `csrf_field(): string`
-### `validate_csrf_token(string $token): bool`
-### `is_trusted_host(string $host): bool`
-### `is_trusted_origin(string $origin): bool`
-### `throttle(string $key, ?int $limit = null, ?int $window = null): bool`
-### `sanitize_filename(string $name): string`
-### `safe_path(string $path, string $basePath): string`
+### Security Helpers
+
+| Function | Description |
+|----------|-------------|
+| `csrf_token(): string` | Generate CSRF token |
+| `csrf_field(): string` | Generate CSRF hidden field |
+| `validate_csrf_token(string $token): bool` | Validate CSRF token |
+| `is_trusted_host(string $host): bool` | Check trusted host |
+| `is_trusted_origin(string $origin): bool` | Check trusted origin |
+| `throttle(string $key, ?int $limit, ?int $window): bool` | Rate limit check |
+| `sanitize_filename(string $name): string` | Sanitize filename |
+| `safe_path(string $path, string $basePath): string` | Safe path resolution |
 
 ```php
 csrf_field();
 validate_csrf_token($request->getHeaderLine('X-CSRF-TOKEN'));
 ```
 
-Helpers for CSRF, trust checks, rate limiting, and safe filesystem access.
-
-### `view(string $tplName = '', array $params = []): mixed`
-
-```php
-return view('welcome', ['name' => 'Marwa']);
-```
-
-Returns the shared view service or renders a template as an HTML response directly.
-
 ## Events and Logging
 
-### `event(AbstractEvent $event): void`
+### `event(\Marwa\Framework\Adapters\Event\AbstractEvent $event): void`
 
 Dispatches a framework event.
 
@@ -225,29 +254,45 @@ Dispatches any object event through the shared application dispatcher and return
 
 Returns the current logger instance.
 
-### `debugger(): mixed`
-
-Returns the debug bar instance when enabled, otherwise `null`.
+## Modules and Navigation
 
 ### `module(string $slug): \Marwa\Module\ModuleHandle`
+
 ### `has_module(string $slug): bool`
-### `menu(): \Marwa\Framework\Navigation\MenuRegistry`
 
 ```php
 if (has_module('blog')) {
     $blog = module('blog');
 }
+```
 
+Read the active module runtime from the application.
+
+### `menu(): \Marwa\Framework\Navigation\MenuRegistry`
+
+```php
 $mainMenu = menu()->tree();
 ```
 
-Read the active module runtime from the application, or resolve the shared menu registry.
+Returns the shared menu registry.
 
-### `is_local(): bool`
-### `is_production(): bool`
-### `running_in_console(): bool`
+### `router(): mixed`
 
-Helpers for common environment and runtime checks.
+Returns the router adapter from the container.
+
+## Debugging and Environment
+
+### `debugger(): mixed`
+
+Returns the debug bar instance when enabled, otherwise `null`.
+
+### Environment Helpers
+
+| Function | Description |
+|----------|-------------|
+| `is_local(): bool` | Check if running locally |
+| `is_production(): bool` | Check if running in production |
+| `running_in_console(): bool` | Check if running in CLI |
 
 ## Utility Helpers
 
@@ -255,11 +300,35 @@ Helpers for common environment and runtime checks.
 
 Generates cryptographically secure random bytes or a hex-encoded key.
 
+```php
+$key = generate_key(); // 64-char hex string
+$bytes = generate_key(16, false); // 16 raw bytes
+```
+
 ### `with(mixed $value, callable $callback): mixed`
+
+```php
+$result = with($value, fn($v) => strtoupper($v));
+```
+
+Returns the value after passing it through a callback.
+
 ### `tap(mixed $value, callable $callback): mixed`
 
-Utility helpers for fluent transformation and side effects.
+```php
+tap($user, fn($u) => $u->save());
+```
+
+Executes a callback for side effects while returning the original value.
 
 ### `dd(mixed ...$vars): never`
 
+```php
+dd($variable);
+```
+
 Dumps values and terminates execution. Use only for local debugging.
+
+## Backward Compatibility
+
+All helper functions are available through the main `Helpers.php` file which re-exports all modular helper files. Existing code continues to work without any changes.

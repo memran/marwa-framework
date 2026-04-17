@@ -15,7 +15,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Routes: `routes/web.php`
 - CLI entrypoint: `marwa`
 - Tests: `tests/`
-- Helper: `src/Supports/Helpers.php`
+- Helpers: `src/Supports/Helpers.php` (re-exports modular helpers from `src/Supports/Helpers/`)
 - DB Library: memran\marwa-db
 - Support utilities Libaray: memran\marwa-support
 - Debugbar : memran\marwa-debugbar
@@ -113,6 +113,11 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 
 ## Change Log
 
+- `2026-04-17` - Refactored Helpers.php into modular files:
+  - Extracted 8 helper categories into `src/Supports/Helpers/` directory
+  - `Helpers.php` reduced from 544 to 16 lines (re-exports only)
+  - New files: Paths, Container, SessionRequest, Services, Security, ValidationResponse, ViewDebug, Utilities
+  - 100% backward compatible
 - `2026-04-17` - Refactored Validation system:
   - Extracted validation rules into `src/Validation/ValidationRule/` directory
   - Created `RuleRegistry` for rule management with custom rule support

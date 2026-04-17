@@ -35,6 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - DateRules (3): date, date_format, regex
     - TransformRules (4): trim, lowercase, uppercase, default
 
+- Helpers Refactoring:
+  - Extracted helper functions into modular `Helpers/` directory
+  - `Helpers.php` reduced from 544 lines to 16 lines (re-exports only)
+  - 8 new helper files organized by category:
+    - Paths.php (90 lines): path_*() functions
+    - Container.php (48 lines): app(), config(), cache(), storage(), db()
+    - SessionRequest.php (69 lines): env(), session(), request()
+    - Services.php (76 lines): event(), logger(), mailer(), router(), http(), etc.
+    - Security.php (59 lines): security(), csrf_*(), throttle(), etc.
+    - ValidationResponse.php (55 lines): validate_request(), old(), response()
+    - ViewDebug.php (67 lines): view(), image(), debugger(), etc.
+    - Utilities.php (67 lines): generate_key(), with(), tap(), dd()
+  - 100% backward compatible
+
 ## [1.0.0] - 2026-04-10
 
 ### Added
