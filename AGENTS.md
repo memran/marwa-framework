@@ -40,7 +40,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - PascalCase classes
 - `*Interface`, `*Exception`, `*ServiceProvider`
 - Prefer small, single-purpose classes
-- Keep files small: max 200 lines/class, 20 lines/method
+- Keep files small: prefer max 200 lines/class, 20 lines/method
 - Use constants and enums for finite states
 
 ## Engineering Principles

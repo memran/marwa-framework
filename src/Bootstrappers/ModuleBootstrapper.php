@@ -15,7 +15,6 @@ use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
-use Marwa\Module\Module;
 use Marwa\Module\ModulesServiceProvider;
 
 final class ModuleBootstrapper
