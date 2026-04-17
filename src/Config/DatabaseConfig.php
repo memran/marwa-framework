@@ -16,7 +16,6 @@ final class DatabaseConfig
      *     default: string,
      *     connections: array<string, array<string, mixed>>,
      *     debug: bool,
-     *     useDebugPanel: bool,
      *     migrationsPath: string,
      *     seedersPath: string,
      *     seedersNamespace: string
@@ -35,7 +34,6 @@ final class DatabaseConfig
                 ],
             ],
             'debug' => false,
-            'useDebugPanel' => false,
             'migrationsPath' => $app->basePath('database/migrations'),
             'seedersPath' => $app->basePath('database/seeders'),
             'seedersNamespace' => 'Database\\Seeders',
@@ -49,7 +47,6 @@ final class DatabaseConfig
      *     default: string,
      *     connections: array<string, array<string, mixed>>,
      *     debug: bool,
-     *     useDebugPanel: bool,
      *     migrationsPath: string,
      *     seedersPath: string,
      *     seedersNamespace: string
@@ -75,7 +72,6 @@ final class DatabaseConfig
                 : $defaults['default'],
             'connections' => $connections,
             'debug' => (bool) ($overrides['debug'] ?? $defaults['debug']),
-            'useDebugPanel' => (bool) ($overrides['useDebugPanel'] ?? $defaults['useDebugPanel']),
             'migrationsPath' => is_string($overrides['migrationsPath'] ?? null) && $overrides['migrationsPath'] !== ''
                 ? $overrides['migrationsPath']
                 : $defaults['migrationsPath'],

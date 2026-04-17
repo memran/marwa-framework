@@ -11,6 +11,7 @@ Supported keys:
 - `providers`: list of service provider class names
 - `middlewares`: list of middleware class names
 - `debugbar`: boolean flag for debug bar registration
+- `useDebugPanel`: enable the marwa-db debug panel on the shared connection manager
 - `collectors`: list of debug bar collector class names
 
 Example:
@@ -24,6 +25,7 @@ return [
         App\Http\Middleware\TrustProxies::class,
     ],
     'debugbar' => false,
+    'useDebugPanel' => false,
     'collectors' => [],
 ];
 ```
@@ -372,10 +374,11 @@ Supported keys:
 - `default`: default connection name
 - `connections`: named connection map in the `marwa-db` package format
 - `debug`: default debug flag applied to connections unless overridden
-- `useDebugPanel`: enable the package debug panel on the connection manager
 - `migrationsPath`: application migrations directory
 - `seedersPath`: application seeders directory
 - `seedersNamespace`: namespace used by seeder discovery and scaffolding
+
+The debug panel toggle lives in `config/app.php` as `useDebugPanel`.
 
 Example:
 

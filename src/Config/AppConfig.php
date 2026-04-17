@@ -21,6 +21,7 @@ final class AppConfig
      *     providers: list<class-string>,
      *     middlewares: list<class-string>,
      *     debugbar: bool,
+     *     useDebugPanel: bool,
      *     collectors: list<string>,
      *     maintenance: array{template: string|null, message: string},
      *     error404: array{template: string|null}
@@ -41,6 +42,7 @@ final class AppConfig
                 DebugbarMiddleware::class,
             ],
             'debugbar' => (bool) env('DEBUGBAR_ENABLED', false),
+            'useDebugPanel' => false,
             'collectors' => [],
             'maintenance' => [
                 'template' => 'maintenance.twig',

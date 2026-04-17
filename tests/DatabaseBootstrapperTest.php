@@ -47,6 +47,7 @@ PHP
     protected function tearDown(): void
     {
         foreach ([
+            $this->basePath . '/config/app.php',
             $this->basePath . '/config/database.php',
             $this->basePath . '/.env',
         ] as $file) {
@@ -65,6 +66,17 @@ PHP
 
     public function testDatabaseBootstrapperBindsConnectionManagerAndDbService(): void
     {
+        file_put_contents(
+            $this->basePath . '/config/app.php',
+            <<<'PHP'
+<?php
+
+return [
+    'useDebugPanel' => true,
+];
+PHP
+        );
+
         $app = new Application($this->basePath);
         $app->make(AppBootstrapper::class)->bootstrap();
         $this->handlersBooted = true;
@@ -73,12 +85,44 @@ PHP
         self::assertTrue($app->has('db'));
         self::assertInstanceOf(ConnectionManager::class, $app->make(ConnectionManager::class));
         self::assertInstanceOf(ConnectionManager::class, $app->make('db'));
+        self::assertNotNull($app->make(ConnectionManager::class)->getDebugPanel());
 
         $modelConnectionManager = $this->readStaticProperty(Model::class, 'cm');
         $schemaFactory = $this->readStaticProperty(Schema::class, 'factory');
 
         self::assertInstanceOf(ConnectionManager::class, $modelConnectionManager);
         self::assertNotNull($schemaFactory);
+    }
+
+    public function testDatabaseBootstrapperKeepsDebugPanelDisabledByDefault(): void
+    {
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $this->handlersBooted = true;
+
+        self::assertInstanceOf(ConnectionManager::class, $app->make(ConnectionManager::class));
+        self::assertNull($app->make(ConnectionManager::class)->getDebugPanel());
+    }
+
+    public function testDatabaseBootstrapperKeepsDebugPanelDisabledWhenAppConfigFlagIsFalse(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/app.php',
+            <<<'PHP'
+<?php
+
+return [
+    'useDebugPanel' => false,
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $this->handlersBooted = true;
+
+        self::assertInstanceOf(ConnectionManager::class, $app->make(ConnectionManager::class));
+        self::assertNull($app->make(ConnectionManager::class)->getDebugPanel());
     }
 
     private function readStaticProperty(string $class, string $property): mixed

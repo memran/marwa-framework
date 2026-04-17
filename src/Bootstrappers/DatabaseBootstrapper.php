@@ -12,6 +12,7 @@ use Marwa\DB\ORM\Model;
 use Marwa\DB\Schema\Schema;
 use Marwa\DB\Seeder\SeedRunner;
 use Marwa\Framework\Application;
+use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Config\DatabaseConfig;
 use Marwa\Framework\Database\DBForge;
 use Marwa\Framework\Supports\Config;
@@ -27,7 +28,6 @@ final class DatabaseBootstrapper
      *     default: string,
      *     connections: array<string, array<string, mixed>>,
      *     debug: bool,
-     *     useDebugPanel: bool,
      *     migrationsPath: string,
      *     seedersPath: string,
      *     seedersNamespace: string
@@ -63,7 +63,7 @@ final class DatabaseBootstrapper
         $manager = Bootstrap::init(
             DatabaseConfig::toPackageConfig($config),
             $this->logger,
-            $config['useDebugPanel']
+            enableDebugPanel: $this->enableDebugPanel()
         );
 
         DB::setManager($manager);
@@ -104,7 +104,6 @@ final class DatabaseBootstrapper
      *     default: string,
      *     connections: array<string, array<string, mixed>>,
      *     debug: bool,
-     *     useDebugPanel: bool,
      *     migrationsPath: string,
      *     seedersPath: string,
      *     seedersNamespace: string
@@ -120,5 +119,10 @@ final class DatabaseBootstrapper
         $this->databaseConfig = DatabaseConfig::merge($this->app, $this->config->getArray(DatabaseConfig::KEY, []));
 
         return $this->databaseConfig;
+    }
+
+    private function enableDebugPanel(): bool
+    {
+        return $this->config->getBool(AppConfig::KEY . '.useDebugPanel', AppConfig::defaults()['useDebugPanel']);
     }
 }
