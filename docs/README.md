@@ -8,11 +8,13 @@ If you want a complete starter application built on top of this framework, use [
 
 1. [Getting Started](#getting-started)
 2. [Tutorials](#tutorials)
-3. [Console](#console)
-4. [API Reference](#api-reference)
-5. [Architecture](#architecture)
-6. [Recipes](#recipes)
-7. [Developer](#developer)
+3. [Basics](#basics)
+4. [Console](#console)
+5. [API Reference](#api-reference)
+6. [Architecture](#architecture)
+7. [Security](#security)
+8. [Recipes](#recipes)
+9. [Developer](#developer)
 
 ---
 
@@ -26,6 +28,8 @@ New to Marwa? Start here:
 | [Installation](getting-started/installation.md) | Install and configure | 5 min |
 | [Quick Start](getting-started/quick-start.md) | Build your first app | 5 min |
 | [Project Structure](getting-started/project-structure.md) | Directory layout | 3 min |
+| [Configuration](getting-started/configuration.md) | App configuration | 3 min |
+| [Starter Kits](getting-started/starter-kits.md) | Quick project setup | 2 min |
 
 Starter application:
 
@@ -52,6 +56,23 @@ Step-by-step guides for common tasks:
 | [Notifications](tutorials/notifications.md) | Notifications |
 | [HTTP Client](tutorials/http-client.md) | HTTP requests |
 | [DebugBar](tutorials/debugbar.md) | Debug toolbar |
+
+---
+
+## Basics
+
+Core concepts and features:
+
+| Guide | Description |
+|-------|-------------|
+| [Routing](basics/routing.md) | Define application routes |
+| [Middleware](basics/middleware.md) | HTTP middleware |
+| [Requests](basics/requests.md) | Handle incoming requests |
+| [Responses](basics/responses.md) | Build HTTP responses |
+| [CSRF Protection](basics/csrf-protection.md) | CSRF token handling |
+| [Session](basics/session.md) | Session management |
+| [Logging](basics/logging.md) | Application logging |
+| [URL Generation](basics/url-generation.md) | Generate URLs |
 
 ---
 
@@ -93,6 +114,20 @@ How the framework works:
 | [Architecture](architecture.md) | Design overview |
 | [Boot Flow](architecture/boot-flow.md) | Bootstrap flow |
 | [Design Principles](architecture/design.md) | Design decisions |
+| [Service Container](architecture/service-container.md) | DI container |
+| [Service Providers](architecture/service-providers.md) | Service providers |
+
+---
+
+## Security
+
+Security features and best practices:
+
+| Guide | Description |
+|-------|-------------|
+| [Authentication](security/authentication.md) | User authentication |
+| [Authorization](security/authorization.md) | Access control |
+| [Security Best Practices](security/security-best-practices.md) | Security checklist |
 
 ---
 
