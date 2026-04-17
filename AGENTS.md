@@ -1,19 +1,115 @@
 # Repository Guidelines
+<!-- Last scope wins. Folder AGENTS.md overrides this. Keep <500 lines. Review monthly. -->
 
-## Project Structure & Module Organization
-This repository is a Composer package for the `Marwa\\Framework\\` namespace. Core code lives in `src/`, organized by responsibility: `Adapters/`, `Contracts/`, `Facades/`, `Middlewares/`, `Providers/`, `Console/`, `Exceptions/`, and `Supports/`. Route definitions are in `routes/web.php`, and Twig view templates live in `resources/views/`. The executable CLI entrypoint is `marwa`. A `tests/` directory is referenced by autoload and analysis config but is not present yet; add new test files there.
+## Project
 
-## Build, Test, and Development Commands
-Install dependencies with `composer install`. Run the test suite with `composer test`, which executes `php vendor/bin/testify` using `phpunit.config.php`. Run static analysis with `composer stan` to analyze `src/` and `tests/` at PHPStan level 6. For local manual checks, common commands are `php marwa` for the CLI and `php -S localhost:8000 -t public` when validating framework integration in a host app.
+Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modular web apps, console tools, and reusable runtime services.
 
-## Coding Style & Naming Conventions
-Follow the existing PHP style in `src/`: `declare(strict_types=1);`, PSR-4 namespaces, typed properties, and explicit return types. Use 4-space indentation. Keep class names PascalCase, interfaces suffixed with `Interface`, exceptions suffixed with `Exception`, and service providers suffixed with `ServiceProvider`. Prefer small, single-purpose classes in the matching domain folder, for example `src/Middlewares/RequestIdMiddleware.php`.
+## Structure
 
-## Testing Guidelines
-Place tests in `tests/` and use either `*Test.php` or `*_test.php`, matching `phpunit.config.php`. Add tests alongside any behavior change in routing, bootstrapping, middleware, or adapters. Run `composer test` before opening a PR, then run `composer stan` to catch type and contract regressions.
+- Namespace: `Marwa\Framework\`
+- Core: `src/`
+- Top-level `src/` folders: `Adapters/`, `Bootstrappers/`, `Config/`, `Console/`, `Contracts/`, `Controllers/`, `Database/`, `Exceptions/`, `Facades/`, `Mail/`, `Middlewares/`, `Navigation/`, `Notifications/`, `Providers/`, `Queue/`, `Scheduling/`, `Security/`, `Stubs/`, `Supports/`, `Validation/`, `View/`, `Views/`
+- Key files: `src/Application.php`, `src/HttpKernel.php`
+- Routes: `routes/web.php`
+- CLI entrypoint: `marwa`
+- Tests: `tests/`
 
-## Commit & Pull Request Guidelines
-Recent commits use short, imperative subjects such as `Update Composer Package Name` and `Update Event Library`. Keep commits focused and descriptive; one logical change per commit is preferred. Pull requests should explain the problem, summarize the approach, list verification steps, and link related issues. Include sample CLI output or request/response examples when behavior changes are user-facing.
+## Commands
 
-## Configuration Tips
-Copy `.env.example` to `.env` in a consuming app before bootstrapping the framework. Avoid committing secrets. When adding new environment keys or config-dependent services, document the expected variables in `README.MD` or the relevant integration docs.
+- `composer install` - install dependencies
+- `composer test` - run PHPUnit
+- `composer stan` - run PHPStan level 6
+- `php marwa` - run the CLI
+- `php -S localhost:8000 -t public` - local manual check
+
+## Style
+
+- `declare(strict_types=1);`
+- PSR-1, PSR-12, PSR-4
+- 4-space indentation
+- Typed properties and explicit return types
+- PascalCase classes
+- `*Interface`, `*Exception`, `*ServiceProvider`
+- Prefer small, single-purpose classes
+- Keep files small: max 200 lines/class, 20 lines/method
+- Use constants and enums for finite states
+
+## Engineering Principles
+
+- KISS, DRY, SOLID
+- Understand context before coding
+- Prefer composition over inheritance
+- Keep architecture modular and decoupled
+- Write production-ready, maintainable, scalable code
+- Prefer clarity over cleverness
+- Align with project architecture
+- Edit existing code over creating duplicates
+- Maintain backward compatibility
+- Keep changes minimal and scoped
+
+## Testing
+
+- Add tests in `tests/`
+- Use `*Test.php` or `*_test.php`
+- Cover routing, bootstrapping, middleware, and adapters
+- Run `composer test`, then `composer stan`
+- Aim for 80% minimum coverage
+- Every public service method needs unit tests
+
+## Commit & PR
+
+- Use short, imperative commit subjects
+- Keep commits focused: one logical change per commit
+- PRs should explain the problem, approach, and verification
+- Link related issues
+- Include CLI output or request/response examples when user-facing behavior changes
+
+## Configuration
+
+- Copy `.env.example` to `.env` in consuming apps
+- Never commit secrets
+- Document new env keys in `README.MD` or the relevant docs
+
+## Never
+
+- Never change `vendor/*`
+- Never expose secrets or passwords
+- Suggest changes to vendor code instead of editing it
+
+## Error Handling
+
+- Use centralized exception handling
+- Log critical errors
+- Fail gracefully with meaningful responses
+
+## Performance
+
+- Optimize for readability first
+- Avoid premature optimization
+- Cache where necessary
+
+## Security
+
+- Validate all inputs
+- Sanitize all outputs
+- Use prepared statements
+- Never expose secrets
+
+## Documentation
+
+- Update `docs/*` when code changes require it
+- Keep explanations useful
+- Add section anchors for navigation
+- Add examples
+- Add diagrams only when they help
+
+## Versioning
+
+- Version: `v1.0.0`
+- Updated: `[DATE]`
+
+## Change Log
+
+- `[DATE]` - Initial setup
+- `[DATE]` - Updated workflows
