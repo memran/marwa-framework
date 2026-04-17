@@ -57,11 +57,12 @@ $app = new Application(__DIR__ . '/..');
 $app->bootstrap();
 ```
 
-1. **AppBootstrapper** - Loads configuration
-2. **ProviderBootstrapper** - Boots service providers
-3. **ErrorHandlerBootstrapper** - Sets up error handling
-4. **DatabaseBootstrapper** - Initializes database connection
-5. **ModuleBootstrapper** - Loads modules
+1. **ErrorHandlerBootstrapper** - Registers a minimal handler before config loading
+2. **AppBootstrapper** - Loads configuration
+3. **ProviderBootstrapper** - Boots service providers
+4. **ErrorHandlerBootstrapper** - Applies config-driven logger, debugbar, and renderer settings
+5. **DatabaseBootstrapper** - Initializes database connection
+6. **ModuleBootstrapper** - Loads modules
 
 ### Phase 3: Request Handling
 
@@ -122,7 +123,7 @@ classDiagram
 | 3 | Cache, HTTP, Mail | Request services |
 | 4 | Notifications | Notification channels |
 | 5 | Session, Security | Web services |
-| 6 | Error Handler | Error handling |
+| 6 | Error Handler | Early handler registration and config-aware tuning |
 | 7 | Database | Database connection |
 | 8 | Providers | Custom providers |
 | 9 | Modules | Module loading |

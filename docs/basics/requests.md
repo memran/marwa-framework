@@ -223,7 +223,7 @@ if (str_contains($contentType, 'multipart/form-data')) {
 
 use Marwa\Framework\Facades\Router;
 use Marwa\Router\Response;
-use Marwa\Framework\Validation\ValidationException;
+use Marwa\Support\Validation\ValidationException;
 
 Router::post('/register', function() {
     try {
@@ -243,6 +243,34 @@ Router::post('/register', function() {
         ], 422);
     }
 })->register();
+```
+
+### Custom Rule Example
+
+```php
+use App\Validation\Rules\StrongPasswordRule;
+use Marwa\Framework\Validation\RequestValidator;
+use Marwa\Support\Validation\RuleRegistry;
+
+$registry = app(RuleRegistry::class);
+$registry->register('strong_password', StrongPasswordRule::class);
+
+$validator = app(RequestValidator::class);
+
+$data = $validator->validateInputWithCustomRules(
+    [
+        'password' => 'Secret123!@#',
+        'password_confirmation' => 'Secret123!@#',
+    ],
+    [
+        'password' => 'required|strong_password|confirmed',
+    ],
+    [],
+    [],
+    [
+        'strong_password' => StrongPasswordRule::class,
+    ]
+);
 ```
 
 ## Helper Functions

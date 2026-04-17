@@ -19,8 +19,8 @@ if (!function_exists('validate_request')) {
         array $attributes = [],
         ?\Psr\Http\Message\ServerRequestInterface $request = null
     ): array {
-        /** @var \Marwa\Framework\Validation\RequestValidator $validator */
-        $validator = app(\Marwa\Framework\Validation\RequestValidator::class);
+        /** @var \Marwa\Framework\Adapters\Validation\RequestValidatorAdapter $validator */
+        $validator = app(\Marwa\Framework\Adapters\Validation\RequestValidatorAdapter::class);
 
         return $validator->validateRequest($request ?? request(), $rules, $messages, $attributes);
     }
@@ -32,7 +32,7 @@ if (!function_exists('old')) {
      */
     function old(?string $key = null, mixed $default = null): mixed
     {
-        $data = session(\Marwa\Framework\Validation\ValidationException::OLD_INPUT_KEY, []);
+        $data = session('_old_input', []);
 
         if (!is_array($data)) {
             $data = [];

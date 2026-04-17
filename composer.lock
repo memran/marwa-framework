@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a556a85528330ac5fee5e7ff7ac75a1",
+    "content-hash": "aa0feabe7423d730266344883bdf46e6",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -1263,20 +1263,20 @@
         },
         {
             "name": "memran/marwa-entity",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/memran/marwa-entity.git",
-                "reference": "f3d557a42ff12d7faa8c1d87ac52efedd5a764a8"
+                "reference": "d60951225855ffacaed6c76ff7e9679813c8d61c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/memran/marwa-entity/zipball/f3d557a42ff12d7faa8c1d87ac52efedd5a764a8",
-                "reference": "f3d557a42ff12d7faa8c1d87ac52efedd5a764a8",
+                "url": "https://api.github.com/repos/memran/marwa-entity/zipball/d60951225855ffacaed6c76ff7e9679813c8d61c",
+                "reference": "d60951225855ffacaed6c76ff7e9679813c8d61c",
                 "shasum": ""
             },
             "require": {
-                "memran/marwa-support": "^1.2.1",
+                "memran/marwa-support": "^1.3.1",
                 "php": ">=8.2",
                 "psr/container": "^2.0",
                 "psr/http-factory": "^1.0",
@@ -1286,7 +1286,7 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.66",
-                "phpstan/phpstan": "^1.12",
+                "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^11.0"
             },
             "type": "library",
@@ -1309,9 +1309,9 @@
             ],
             "support": {
                 "issues": "https://github.com/memran/marwa-entity/issues",
-                "source": "https://github.com/memran/marwa-entity/tree/v1.0.0"
+                "source": "https://github.com/memran/marwa-entity/tree/v1.1.0"
             },
-            "time": "2026-03-30T08:05:45+00:00"
+            "time": "2026-04-17T20:39:34+00:00"
         },
         {
             "name": "memran/marwa-error-handler",
@@ -1569,27 +1569,28 @@
         },
         {
             "name": "memran/marwa-support",
-            "version": "v1.3.0",
+            "version": "v1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/memran/marwa-support.git",
-                "reference": "baca88f9f534d88ae6715f9a0316c2dc63e643af"
+                "reference": "8992562f589a435f0fe26217dc61ddad9c49b121"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/memran/marwa-support/zipball/baca88f9f534d88ae6715f9a0316c2dc63e643af",
-                "reference": "baca88f9f534d88ae6715f9a0316c2dc63e643af",
+                "url": "https://api.github.com/repos/memran/marwa-support/zipball/8992562f589a435f0fe26217dc61ddad9c49b121",
+                "reference": "8992562f589a435f0fe26217dc61ddad9c49b121",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "ext-openssl": "*",
-                "php": "^8.2"
+                "php": "^8.2",
+                "psr/http-message": "^2.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.66",
-                "phpstan/phpstan": "^1.12",
+                "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^9.6.33"
             },
             "type": "library",
@@ -1618,9 +1619,9 @@
             ],
             "support": {
                 "issues": "https://github.com/memran/marwa-support/issues",
-                "source": "https://github.com/memran/marwa-support/tree/v1.3.0"
+                "source": "https://github.com/memran/marwa-support/tree/v1.3.1"
             },
-            "time": "2026-04-13T23:02:51+00:00"
+            "time": "2026-04-17T13:42:09+00:00"
         },
         {
             "name": "memran/marwa-view",

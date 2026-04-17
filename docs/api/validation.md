@@ -2,25 +2,9 @@
 
 ## `Marwa\Framework\Validation\RequestValidator`
 
-Main validator class for validating request data against rule strings or custom callables.
+Backward-compatible framework entrypoint for the support-backed validator.
 
-### Constructor
-
-```php
-public function __construct(
-    ?RuleRegistry $registry = null,
-    ?InputNormalizer $normalizer = null,
-    ?ValueAccessor $accessor = null,
-    ?MessageFormatter $formatter = null,
-    ?TypeCoercer $coercer = null,
-    ?TypeValidators $typeValidators = null,
-    ?ComparisonValidators $comparisonValidators = null,
-    ?DateValidators $dateValidators = null,
-    ?TransformProcessor $transforms = null
-)
-```
-
-All parameters are optional with sensible defaults.
+Use `new RequestValidator()` or resolve it from the container. Internally it delegates to `Marwa\Support\Validation\RequestValidator`.
 
 ### Methods
 
@@ -107,9 +91,11 @@ $data = $validator->validateInputWithCustomRules(
 );
 ```
 
+For the full custom-rule walkthrough, see [Validation tutorial](../tutorials/validation.md).
+
 ---
 
-## `Marwa\Framework\Validation\RuleRegistry`
+## `Marwa\Support\Validation\RuleRegistry`
 
 Manages registration and resolution of validation rules.
 
@@ -186,8 +172,8 @@ The `RuleRegistry` automatically registers these rules on construction:
 | Rule | Class |
 |------|-------|
 | required | `RequiredRule` |
-| present | `PresentRule` |
-| filled | `FilledRule` |
+| present | handled by `RequestValidator` |
+| filled | handled by `RequestValidator` |
 | string | `StringRule` |
 | integer | `IntegerRule` |
 | numeric | `NumericRule` |
@@ -208,14 +194,14 @@ The `RuleRegistry` automatically registers these rules on construction:
 | date | `DateRule` |
 | date_format | `DateFormatRule` |
 | regex | `RegexRule` |
-| default | `DefaultRule` |
-| trim | `TrimRule` |
-| lowercase | `LowercaseRule` |
-| uppercase | `UppercaseRule` |
+| default | handled by `RequestValidator` |
+| trim | handled by `RequestValidator` |
+| lowercase | handled by `RequestValidator` |
+| uppercase | handled by `RequestValidator` |
 
 ---
 
-## `Marwa\Framework\Validation\ValidationRule\Contracts\RuleInterface`
+## `Marwa\Support\Validation\Contracts\RuleInterface`
 
 Interface for custom validation rules.
 
@@ -260,7 +246,7 @@ Returns the parsed rule parameters.
 
 ---
 
-## `Marwa\Framework\Validation\ValidationRule\AbstractRule`
+## `Marwa\Support\Validation\AbstractRule`
 
 Base class for creating custom rules. Provides common functionality.
 
@@ -311,7 +297,7 @@ Formats error message with placeholders.
 ### Example Custom Rule
 
 ```php
-use Marwa\Framework\Validation\ValidationRule\AbstractRule;
+use Marwa\Support\Validation\AbstractRule;
 
 final class StrongPasswordRule extends AbstractRule
 {
@@ -418,7 +404,7 @@ public function store(StorePostRequest $request): Response
 
 ---
 
-## `Marwa\Framework\Validation\ValidationException`
+## `Marwa\Support\Validation\ValidationException`
 
 Thrown when validation fails.
 
@@ -426,9 +412,6 @@ Thrown when validation fails.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `ERROR_BAG_KEY` | `string` | Session key for errors (`'errors'`) |
-| `OLD_INPUT_KEY` | `string` | Session key for old input (`'_old_input'`) |
-
 ### Methods
 
 #### `errors()`

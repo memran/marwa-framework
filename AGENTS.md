@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-<!-- Last scope wins. Folder AGENTS.md overrides this. Keep <500 lines. Review monthly. -->
+<!-- Last scope wins. Folder AGENTS.md overrides this. Keep under 500 lines. Review monthly. -->
 
 ## Project
 
@@ -10,18 +10,73 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 
 - Namespace: `Marwa\Framework\`
 - Core: `src/`
-- Top-level `src/` folders: `Adapters/`, `Bootstrappers/`, `Config/`, `Console/`, `Contracts/`, `Controllers/`, `Database/`, `Exceptions/`, `Facades/`, `Mail/`, `Middlewares/`, `Navigation/`, `Notifications/`, `Providers/`, `Queue/`, `Scheduling/`, `Security/`, `Stubs/`, `Supports/`, `Validation/`, `View/`, `Views/`
+- Main folders: `Adapters/`, `Bootstrappers/`, `Config/`, `Console/`, `Contracts/`, `Controllers/`, `Database/`, `Exceptions/`, `Facades/`, `Mail/`, `Middlewares/`, `Navigation/`, `Notifications/`, `Providers/`, `Queue/`, `Scheduling/`, `Security/`, `Stubs/`, `Supports/`, `Validation/`, `View/`, `Views/`
 - Key files: `src/Application.php`, `src/HttpKernel.php`
 - Routes: `routes/web.php`
 - CLI entrypoint: `marwa`
 - Tests: `tests/`
-- Helpers: `src/Supports/Helpers.php` (re-exports modular helpers from `src/Supports/Helpers/`)
-- Validation: `src/Validation/` with `ValidationRule/` (27 rule classes) and `Helpers/` (8 helper classes)
-- DB Library: `memran\marwa-db`
-- Support Library: `memran\marwa-support`
+- Helpers: `src/Supports/Helpers.php` re-exports modular helpers from `src/Supports/Helpers/`
+- Validation: `Marwa\Support\Validation` is the canonical validation engine; `src/Validation/` keeps backward-compatible framework adapters
+- DB library: `memran\marwa-db`
+- Support library: `memran\marwa-support`
 - Debugbar: `memran\marwa-debugbar`
 - View: `memran\marwa-view`
 - Module: `memran\marwa-module`
+- Entity: `memran\marwa-entity` is the source of truth for schema and validation across controllers, requests, models, migrations, and views
+- Events: `memran\marwa-event`
+- Router : `memran\marwa-router`
+- Logger : `memran\marwa-logger`
+- Error handler: `memran\marwa-error-handler`
+
+## Marwa Module Library
+
+`marwa-module` is the modular unit of the system. Each module must be self-contained and feature-based.
+
+### Structure
+
+Modules may contain controllers, models, views, routes, config, migrations, resources, policies, supports, actions, entities, widgets, and services.
+
+### Registration
+
+Each module must provide a manifest with name, dependencies, permissions, widgets, routes, migrations, menu, and status.
+
+### Dependency Rules
+
+- Declare dependencies explicitly
+- Load independent modules before dependent modules
+
+### Agent Rules
+
+- Build features as modules, not core
+- Keep modules decoupled and reusable
+- Avoid cross-module tight coupling
+- Use manifests for integrations
+
+## Marwa-Support Library
+
+Use `marwa-support` utility classes for common operations. Do not write custom helpers when an equivalent exists.
+
+### Available Classes
+
+`Arr`, `CSRF`, `Collection`, `Crypt`, `Date`, `File`, `Finder`, `Hash`, `Helper`, `Html`, `Json`, `Number`, `Obj`, `Random`, `Sanitizer`, `Security`, `Str`, `Url`, `Validation`, `Validator`, `XSS`
+
+### Usage Examples
+
+```php
+Str::slug($title);
+Arr::get($data, 'user.name');
+Validator::make($input, $rules);
+Hash::make($password);
+Url::to('/dashboard');
+```
+
+### Agent Instructions
+
+- Pick the required utility first, then use the matching class
+- Avoid mixing utilities unnecessarily
+- Validate and sanitize input with `Validator`, `Sanitizer`, `XSS`, or `Security`
+- Use `Collection` for array transformations
+- Use `Str`, `Arr`, and `Obj` for data handling
 
 ## Commands
 
@@ -40,7 +95,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - PascalCase classes
 - `*Interface`, `*Exception`, `*ServiceProvider`
 - Prefer small, single-purpose classes
-- Keep files small: prefer max 200 lines/class, 20 lines/method
+- Keep files small: max 200 lines per class, 20 lines per method
 - Use constants and enums for finite states
 
 ## Engineering Principles
@@ -52,11 +107,16 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Write production-ready, maintainable, scalable code
 - Prefer clarity over cleverness
 - Align with project architecture
-- Edit existing code over creating duplicates
+- Edit existing code instead of creating duplicates
 - Maintain backward compatibility
 - Keep changes minimal and scoped
 - Validate all inputs
-- Use composer packages by creating adapter
+- Use composer packages by creating adapters
+- Choose the correct class for the responsibility
+- Keep code clean and minimal
+- Avoid duplicating utility logic
+- Check before writing code to avoid duplicate code
+- Every package has agents.md and README.md for Learning
 
 ## Testing
 
@@ -70,7 +130,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 ## Commit & PR
 
 - Use short, imperative commit subjects
-- Keep commits focused: one logical change per commit
+- Keep commits focused on one logical change
 - PRs should explain the problem, approach, and verification
 - Link related issues
 - Include CLI output or request/response examples when user-facing behavior changes
@@ -86,6 +146,7 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Never change `vendor/*`
 - Never expose secrets or passwords
 - Suggest changes to vendor code instead of editing it
+- Never run raw SQL operations
 
 ## Error Handling
 
@@ -101,7 +162,8 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 
 ## Documentation
 
-- Update `docs/*` when code changes require it
+- Documentation lives in `docs/*`
+- Update docs when code changes require it
 - Keep explanations useful
 - Add section anchors for navigation
 - Add examples
@@ -110,19 +172,20 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 ## Versioning
 
 - Version: `v1.0.0`
-- Updated: `2026-04-17`
+- Updated: `2026-04-18`
 
 ## Change Log
 
-- `2026-04-17` - Refactored Helpers.php into modular files:
-  - Extracted 8 helper categories into `src/Supports/Helpers/` directory
-  - `Helpers.php` reduced from 544 to 16 lines (re-exports only)
-  - New files: Paths, Container, SessionRequest, Services, Security, ValidationResponse, ViewDebug, Utilities
-  - 100% backward compatible
-- `2026-04-17` - Refactored Validation system:
-  - Extracted validation rules into `src/Validation/ValidationRule/` directory
+- `2026-04-18` - Cleaned wording, removed duplication, and aligned validation guidance with the support-backed engine
+- `2026-04-17` - Refactored Helpers.php into modular files
+  - Extracted 8 helper categories into `src/Supports/Helpers/`
+  - `Helpers.php` reduced from 544 to 16 lines
+  - New files: `Paths`, `Container`, `SessionRequest`, `Services`, `Security`, `ValidationResponse`, `ViewDebug`, `Utilities`
+  - Backward compatible
+- `2026-04-17` - Refactored validation system
+  - Extracted validation rules into `src/Validation/ValidationRule/`
   - Created `RuleRegistry` for rule management with custom rule support
   - Extracted helper classes to `src/Validation/Helpers/`
-  - Reduced `RequestValidator.php` from 687 to 245 lines (64% reduction)
+  - Reduced `RequestValidator.php` from 687 to 245 lines
   - Added support for custom validation rules via constructor or method injection
 - `2026-04-17` - Updated workflows

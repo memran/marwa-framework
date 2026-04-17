@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
+use Marwa\Framework\Adapters\Validation\ValidationExceptionResponder;
 use Marwa\Framework\Tests\Fixtures\Controllers\InspectableController;
-use Marwa\Framework\Validation\FormRequest;
-use Marwa\Framework\Validation\RequestValidator;
-use Marwa\Framework\Validation\ValidationException;
 use Marwa\Router\Http\Input;
 use Marwa\Router\Http\RequestFactory;
 use PHPUnit\Framework\TestCase;
@@ -125,10 +124,10 @@ final class ControllerSupportTest extends TestCase
         $controller->withInputValue(['title' => '']);
         $controller->withErrorsValue(['title' => 'The title field is required.']);
 
-        self::assertSame(['title' => ''], session(ValidationException::OLD_INPUT_KEY));
+        self::assertSame(['title' => ''], session('_old_input'));
         self::assertSame([
             'title' => ['The title field is required.'],
-        ], session(ValidationException::ERROR_BAG_KEY));
+        ], session('errors'));
         self::assertSame(['title' => ''], old());
         self::assertSame('', old('title'));
     }
@@ -147,6 +146,8 @@ final class ControllerSupportTest extends TestCase
 
     public function testValidatedValueCanConsumeAFormRequest(): void
     {
+        $app = new Application($this->basePath);
+
         $request = RequestFactory::fromArrays(
             [
                 'REQUEST_METHOD' => 'POST',
@@ -157,7 +158,7 @@ final class ControllerSupportTest extends TestCase
             ['name' => ' Alice ']
         );
 
-        $formRequest = new class ($request, new RequestValidator()) extends FormRequest {
+        $formRequest = new class ($request, $app->make(\Marwa\Framework\Adapters\Validation\RequestValidatorAdapter::class)) extends FormRequestAdapter {
             public function rules(): array
             {
                 return ['name' => 'trim|required|string'];

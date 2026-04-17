@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Marwa\Framework\Middlewares;
 
 use League\Route\Http\Exception\{MethodNotAllowedException, NotFoundException};
-use Marwa\Entity\Http\ValidationException as EntityValidationException;
+use Marwa\Framework\Adapters\Validation\ValidationExceptionResponder;
 use Marwa\Framework\Facades\Config;
 use Marwa\Framework\Facades\View;
-use Marwa\Framework\Validation\ValidationException;
 use Marwa\Router\Response;
+use Marwa\Support\Validation\ValidationException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\{MiddlewareInterface, RequestHandlerInterface};
@@ -28,9 +28,7 @@ final class RouterMiddleware implements MiddlewareInterface
             debugger()?->mark('end');
             return $response;
         } catch (ValidationException $exception) {
-            return $exception->toResponse($request);
-        } catch (EntityValidationException $exception) {
-            return $this->renderEntityValidation($request, $exception);
+            return $this->renderValidation($request, $exception);
         } catch (NotFoundException $ex) {
             return $this->render404($request);
         } catch (MethodNotAllowedException $e) {
@@ -112,31 +110,8 @@ final class RouterMiddleware implements MiddlewareInterface
 HTML;
     }
 
-    private function renderEntityValidation(ServerRequestInterface $request, EntityValidationException $exception): ResponseInterface
+    private function renderValidation(ServerRequestInterface $request, ValidationException $exception): ResponseInterface
     {
-        $session = session();
-        if ($session !== null) {
-            $session->flash(ValidationException::ERROR_BAG_KEY, $exception->errors()->all());
-            $parsedBody = $request->getParsedBody();
-
-            $session->flash(ValidationException::OLD_INPUT_KEY, array_merge(
-                $request->getQueryParams(),
-                is_array($parsedBody) ? $parsedBody : []
-            ));
-        }
-
-        if (stripos($request->getHeaderLine('Accept'), 'application/json') !== false) {
-            return Response::json([
-                'message' => $exception->getMessage(),
-                'errors' => $exception->errors()->all(),
-            ], 422);
-        }
-
-        $target = $request->getHeaderLine('Referer');
-        if (trim($target) === '') {
-            $target = (string) $request->getUri();
-        }
-
-        return Response::redirect($target !== '' ? $target : '/', 302);
+        return (new ValidationExceptionResponder())->toResponse($exception, $request);
     }
 }

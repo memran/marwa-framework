@@ -308,43 +308,87 @@ declare(strict_types=1);
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
-use Marwa\Framework\Validation\RequestValidator;
-use Marwa\Framework\Validation\ValidationException;
+use Marwa\Framework\Adapters\Validation\RequestValidatorAdapter;
+use Marwa\Support\Validation\ValidationException;
+
+final class StrongPasswordRule extends \Marwa\Support\Validation\AbstractRule
+{
+    public function name(): string
+    {
+        return 'strong_password';
+    }
+
+    public function validate(mixed $value, array $context): bool
+    {
+        return is_string($value)
+            && strlen($value) >= 12
+            && preg_match('/[A-Z]/', $value)
+            && preg_match('/[a-z]/', $value)
+            && preg_match('/[0-9]/', $value)
+            && preg_match('/[^A-Za-z0-9]/', $value);
+    }
+
+    public function message(string $field, array $attributes): string
+    {
+        return $this->formatMessage(
+            'The :attribute must be at least 12 characters and include upper, lower, number, and symbol.',
+            $field,
+            $attributes
+        );
+    }
+}
 
 final class ValidationTest extends TestCase
 {
     public function testValidDataPasses(): void
     {
         // Arrange
-        $validator = new RequestValidator([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-        ]);
+        $validator = app(RequestValidatorAdapter::class);
 
         // Act
-        $result = $validator->validate([
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-        ]);
+        $result = $validator->validateInputWithCustomRules(
+            [
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+                'password' => 'Secret123!@#',
+                'password_confirmation' => 'Secret123!@#',
+            ],
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'password' => 'required|strong_password|confirmed',
+            ],
+            [],
+            [],
+            [
+                'strong_password' => StrongPasswordRule::class,
+            ]
+        );
 
         // Assert
-        $this->assertTrue($result);
+        $this->assertSame('John Doe', $result['name']);
+        $this->assertSame('john@example.com', $result['email']);
     }
 
     public function testInvalidDataFails(): void
     {
         // Arrange
-        $validator = new RequestValidator([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-        ]);
+        $validator = app(RequestValidatorAdapter::class);
 
         // Act & Assert
         $this->expectException(ValidationException::class);
-        $validator->validate([
-            'name' => 'John',
-            // missing email
-        ]);
+        $validator->validateInputWithCustomRules(
+            [
+                'name' => 'John',
+            ],
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+            ],
+            [],
+            [],
+            []
+        );
     }
 }
 ```

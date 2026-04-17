@@ -114,9 +114,9 @@ PHP
 
         self::assertSame([
             ApplicationStarted::class,
+            ErrorHandlerBootstrapped::class,
             ApplicationBootstrapping::class,
             ProvidersBootstrapped::class,
-            ErrorHandlerBootstrapped::class,
             AppBooted::class,
             RequestHandlingStarted::class,
             RequestHandled::class,

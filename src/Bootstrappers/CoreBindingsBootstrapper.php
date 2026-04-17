@@ -9,6 +9,7 @@ use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
+use Marwa\Framework\Adapters\Validation\RequestValidatorAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Config\LoggerConfig;
@@ -40,10 +41,9 @@ use Marwa\Framework\Supports\Http;
 use Marwa\Framework\Supports\Mailer;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Supports\Storage;
-use Marwa\Framework\Validation\RequestValidator;
-use Marwa\Framework\Validation\RuleRegistry;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Router\Contract\ValidatorInterface as RouterValidatorInterface;
+use Marwa\Support\Validation\RuleRegistry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -121,10 +121,16 @@ final class CoreBindingsBootstrapper
         });
 
         $container->addShared(RuleRegistry::class);
-        $container->addShared(RequestValidator::class);
 
         $container->addShared(RouterValidatorInterface::class, function () use ($container) {
-            return $container->get(RequestValidator::class);
+            return $container->get(RequestValidatorAdapter::class);
+        });
+
+        $container->addShared(RequestValidatorAdapter::class, function () use ($container) {
+            return new RequestValidatorAdapter(
+                new \Marwa\Support\Validation\RequestValidator($container->get(RuleRegistry::class)),
+                $container->get(RuleRegistry::class)
+            );
         });
 
         $container->addShared(Security::class)

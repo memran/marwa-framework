@@ -10,21 +10,36 @@ use Marwa\Framework\Application;
 
 final class ErrorHandlerBootstrapper
 {
-    private bool $booted = false;
+    private bool $earlyBooted = false;
+    private bool $configured = false;
 
     public function __construct(
         private Application $app,
         private ErrorHandlerAdapter $adapter
     ) {}
 
-    public function bootstrap(): void
+    public function bootstrapEarly(): void
     {
-        if ($this->booted) {
+        if ($this->earlyBooted) {
             return;
         }
 
-        $handler = $this->adapter->boot();
+        $handler = $this->adapter->bootEarly();
         $this->app->dispatch(new ErrorHandlerBootstrapped(enabled: $handler !== null));
-        $this->booted = true;
+        $this->earlyBooted = true;
+    }
+
+    public function bootstrap(): void
+    {
+        if ($this->configured) {
+            return;
+        }
+
+        if (!$this->earlyBooted) {
+            $this->bootstrapEarly();
+        }
+
+        $this->adapter->boot();
+        $this->configured = true;
     }
 }

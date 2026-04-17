@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests\Fixtures\Controllers;
 
-use Marwa\Entity\Validation\ErrorBag;
 use Marwa\Framework\Controllers\Controller;
-use Marwa\Framework\Validation\FormRequest;
+use Marwa\Support\Validation\ErrorBag;
+use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,7 +40,7 @@ final class InspectableController extends Controller
     /**
      * @return array<string, mixed>
      */
-    public function validatedValue(FormRequest $request): array
+    public function validatedValue(FormRequestAdapter $request): array
     {
         return $this->validated($request);
     }

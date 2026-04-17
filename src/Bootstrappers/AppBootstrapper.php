@@ -36,6 +36,7 @@ final class AppBootstrapper
             return $this->appConfig;
         }
 
+        $this->errorHandlerBootstrapper->bootstrapEarly();
         $this->app->dispatch(new ApplicationBootstrapping(basePath: $this->app->basePath()));
 
         $cacheFile = BootstrapConfig::defaults($this->app)['configCache'];

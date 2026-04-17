@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Controllers;
 
 use JsonSerializable;
-use Marwa\Entity\Validation\ErrorBag;
-use Marwa\Framework\Validation\FormRequest;
-use Marwa\Framework\Validation\ValidationException;
+use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
+use Marwa\Support\Validation\ErrorBag;
 use Marwa\Router\Http\Input;
 use Marwa\Router\Response;
 use Psr\Http\Message\ResponseInterface;
@@ -54,9 +53,9 @@ abstract class Controller
     /**
      * @return array<string, mixed>
      */
-    protected function validated(FormRequest $request): array
+    protected function validated(FormRequestAdapter $request): array
     {
-        return $request->validated();
+        return $request->validate();
     }
 
     /**
@@ -136,7 +135,7 @@ abstract class Controller
      */
     protected function withInput(?array $input = null): static
     {
-        session()->flash(ValidationException::OLD_INPUT_KEY, $input ?? Input::all());
+        session()->flash('_old_input', $input ?? Input::all());
 
         return $this;
     }
@@ -147,7 +146,7 @@ abstract class Controller
     protected function withErrors(array|ErrorBag $errors): static
     {
         $payload = $errors instanceof ErrorBag ? $errors->all() : $this->normalizeErrors($errors);
-        session()->flash(ValidationException::ERROR_BAG_KEY, $payload);
+        session()->flash('errors', $payload);
 
         return $this;
     }

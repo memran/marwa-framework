@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\ProviderBootstrapper;
+use Marwa\ErrorHandler\ErrorHandler;
 use Marwa\Framework\Tests\Fixtures\Providers\CountingServiceProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -96,5 +98,29 @@ PHP
 
         self::assertTrue($appConfig['debugbar']);
         self::assertSame(['cached'], $appConfig['collectors']);
+    }
+
+    public function testErrorHandlerIsRegisteredBeforeAppConfigLoad(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/app.php',
+            <<<'PHP'
+<?php
+
+throw new RuntimeException('config load failed');
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $bootstrapper = $app->make(AppBootstrapper::class);
+
+        try {
+            $bootstrapper->bootstrap();
+            self::fail('Expected configuration load failure.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('config load failed', $exception->getMessage());
+        }
+
+        self::assertInstanceOf(ErrorHandler::class, $app->make(ErrorHandlerAdapter::class)->handler());
     }
 }
