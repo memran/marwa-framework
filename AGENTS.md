@@ -1,4 +1,5 @@
 # Repository Guidelines
+
 <!-- Last scope wins. Folder AGENTS.md overrides this. Keep <500 lines. Review monthly. -->
 
 ## Project
@@ -14,6 +15,12 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Routes: `routes/web.php`
 - CLI entrypoint: `marwa`
 - Tests: `tests/`
+- Helper: `src/Supports/Helpers.php`
+- DB Library: memran\marwa-db
+- Support utilities Libaray: memran\marwa-support
+- Debugbar : memran\marwa-debugbar
+- View: memran\marwa-view
+- Module: memran\marwa-module
 
 ## Commands
 
@@ -47,6 +54,8 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Edit existing code over creating duplicates
 - Maintain backward compatibility
 - Keep changes minimal and scoped
+- Validate all inputs
+- Use composer packages by creating adapter
 
 ## Testing
 
@@ -88,13 +97,6 @@ Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modula
 - Optimize for readability first
 - Avoid premature optimization
 - Cache where necessary
-
-## Security
-
-- Validate all inputs
-- Sanitize all outputs
-- Use prepared statements
-- Never expose secrets
 
 ## Documentation
 
