@@ -6,56 +6,38 @@ If you want a full application starter instead of assembling the framework packa
 
 ## Prerequisites
 
-- **PHP 8.4+**
+- **PHP 8.2+**
 - **Composer** (package manager)
 - **Terminal/Command Line** access
 
-## What's Inside
+## Guides
 
 | Guide | Description | Time |
 |-------|-------------|------|
 | [Installation](installation.md) | Install and configure the framework | 2 min |
-| [Quick Start](quick-start.md) | Build your first working app | 5 min |
+| [Quick Start](../tutorials/quick-start.md) | Build your first working app | 5 min |
 | [Project Structure](project-structure.md) | Understand the directory layout | 3 min |
+| [HTTP Entry Point](http-entry-point.md) | Complete public/index.php examples | 5 min |
+| [Complete Tutorial](complete-tutorial.md) | Step-by-step blog application | 15 min |
 
-## Installation Steps
+## Quick Start
 
 ### Recommended: Start from the Starter App
 
 ```bash
-git clone https://github.com/memran/marwa-php.git
-cd marwa-php
+git clone https://github.com/memran/marwa-php.git myapp
+cd myapp
 composer install
 cp .env.example .env
+php -S localhost:8000 -t public
 ```
-
-Use this path if you want a complete working app structure with bootstrap, routes, config, resources, and developer tooling already in place.
 
 ### Alternative: Install the Framework Package Directly
 
-### Step 1: Install the Framework
-
 ```bash
 composer require memran/marwa-framework
+cp vendor/memran/marwa-framework/.env.example .env
 ```
-
-### Step 2: Create Environment File
-
-```bash
-cp .env.example .env
-```
-
-### Step 3: Verify Installation
-
-```bash
-php marwa
-```
-
-You should see the list of available commands.
-
-## First Application
-
-Once installed, follow the [Quick Start](quick-start.md) guide to create your first application.
 
 ## Need Help?
 
