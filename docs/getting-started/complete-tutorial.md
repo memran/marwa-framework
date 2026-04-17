@@ -452,7 +452,7 @@ class Post extends Model
     </header>
     
     <main>
-        {% block content %}{% endblock %}
+        <content>{&#37; block content &#37;}{&#37; endblock &#37;}</content>
     </main>
     
     <footer>
@@ -465,75 +465,75 @@ class Post extends Model
 **Create `myblog/resources/views/posts/index.twig`:**
 
 ```twig
-{% extends "layouts/main.twig" %}
+&#123;% extends "layouts/main.twig" %&#125;
 
-{% block content %}
+&#123;% block content %&#125;
     <h2>All Posts</h2>
     
-    {% for post in posts %}
+    &#123;% for post in posts %&#125;
         <article class="post">
-            <h3><a href="/posts/{{ post.id }}">{{ post.title }}</a></h3>
-            <p>By {{ post.author }} on {{ post.created_at }}</p>
-            <p>{{ post.content|slice(0, 100) }}...</p>
+            <h3><a href="/posts/&#123;&#123; post.id &#125;&#125;">&#123;&#123; post.title &#125;&#125;</a></h3>
+            <p>By &#123;&#123; post.author &#125;&#125; on &#123;&#123; post.created_at &#125;&#125;</p>
+            <p>&#123;&#123; post.content|slice(0, 100) &#125;&#125;...</p>
         </article>
-    {% else %}
+    &#123;% else %&#125;
         <p>No posts found.</p>
-    {% endfor %}
-{% endblock %}
+    &#123;% endfor %&#125;
+&#123;% endblock %&#125;
 ```
 
 **Create `myblog/resources/views/posts/show.twig`:**
 
 ```twig
-{% extends "layouts/main.twig" %}
+&#123;% extends "layouts/main.twig" %&#125;
 
-{% block content %}
+&#123;% block content %&#125;
     <article class="post">
-        <h2>{{ post.title }}</h2>
-        <p>By {{ post.author }} on {{ post.created_at }}</p>
-        <div>{{ post.content }}</div>
+        <h2>&#123;&#123; post.title &#125;&#125;</h2>
+        <p>By &#123;&#123; post.author &#125;&#125; on &#123;&#123; post.created_at &#125;&#125;</p>
+        <div>&#123;&#123; post.content &#125;&#125;</div>
     </article>
     
     <a href="/">← Back to all posts</a>
-{% endblock %}
+&#123;% endblock %&#125;
 ```
 
 **Create `myblog/resources/views/contact.twig`:**
 
 ```twig
-{% extends "layouts/main.twig" %}
+&#123;% extends "layouts/main.twig" %&#125;
 
-{% block content %}
+&#123;% block content %&#125;
     <h2>Contact Us</h2>
     
-    {% if errors %}
+    &#123;% if errors %&#125;
         <div class="error">
             <ul>
-                {% for error in errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
+                &#123;% for error in errors %&#125;
+                    <li>&#123;&#123; error &#125;&#125;</li>
+                &#123;% endfor %&#125;
             </ul>
         </div>
-    {% endif %}
+    &#123;% endif %&#125;
     
     <form method="POST" action="/contact/submit">
         <p>
             <label>Name:</label><br>
-            <input type="text" name="name" value="{{ old('name')|default('') }}">
+            <input type="text" name="name" value="&#123;&#123; old('name')|default('') &#125;&#125;">
         </p>
         <p>
             <label>Email:</label><br>
-            <input type="email" name="email" value="{{ old('email')|default('') }}">
+            <input type="email" name="email" value="&#123;&#123; old('email')|default('') &#125;&#125;">
         </p>
         <p>
             <label>Message:</label><br>
-            <textarea name="message" rows="5">{{ old('message')|default('') }}</textarea>
+            <textarea name="message" rows="5">&#123;&#123; old('message')|default('') &#125;&#125;</textarea>
         </p>
         <p>
             <button type="submit">Send</button>
         </p>
     </form>
-{% endblock %}
+&#123;% endblock %&#125;
 ```
 
 ---
