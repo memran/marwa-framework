@@ -274,10 +274,20 @@ Read the active module runtime from the application.
 ### `menu(): \Marwa\Framework\Navigation\MenuRegistry`
 
 ```php
+menu()->add([
+    'name' => 'dashboard',
+    'label' => 'Dashboard',
+    'url' => '/dashboard',
+    'order' => 10,
+    'visible' => static fn (): bool => user()?->hasPermission('dashboard.view') === true,
+]);
+
 $mainMenu = menu()->tree();
 ```
 
 Returns the shared menu registry.
+
+Menu visibility is presentation-only. Backend access should still be enforced by controller guards, policies, or route middleware.
 
 ### `router(): mixed`
 

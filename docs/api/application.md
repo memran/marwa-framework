@@ -145,6 +145,7 @@ $menu->add([
     'label' => 'Dashboard',
     'url' => '/dashboard',
     'order' => 10,
+    'visible' => static fn (): bool => user()?->hasPermission('dashboard.view') === true,
 ]);
 
 $tree = $menu->tree();
@@ -152,3 +153,5 @@ $tree = $menu->tree();
 
 Short description:
 Collects normalized menu items for the main application navigation. Module providers can register menu items during boot and views can consume the final `mainMenu` tree.
+
+Menu visibility is presentation-only. Always enforce backend access with controller guards, policies, or route middleware.

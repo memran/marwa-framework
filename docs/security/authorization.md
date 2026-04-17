@@ -1,315 +1,430 @@
 # Authorization
 
-Authorization determines what an authenticated user can do. Marwa Framework doesn't include built-in authorization, but this guide shows how to implement common patterns.
+Marwa Framework provides a production-ready authorization system based on Policy Classes, Permission Strings, and RBAC (Role-Based Access Control).
 
-## Role-Based Access Control
+## Architecture
 
-### User Model with Roles
+### Framework Core (Owned by Marwa)
+
+- `Gate` - Authorization service
+- `PolicyRegistry` - Policy resolver
+- `AuthorizationException` - 403-style exception
+- `authorize()` helper function
+- Controller trait integration
+- Optional middleware
+
+### Modules/Apps (Owned by Application)
+
+- Policy classes
+- Permission definitions
+- Model-to-policy mapping
+- RBAC data usage
+
+---
+
+## Quick Start
+
+### 1. User Model Implementation
+
+Your User model must implement `UserInterface` or have these methods:
 
 ```php
 // app/Models/User.php
-class User extends Model
+use Marwa\Framework\Authorization\Contracts\UserInterface;
+
+class User extends Model implements UserInterface
 {
-    protected $fillable = ['name', 'email', 'password', 'role'];
-
-    public function isAdmin(): bool
+    public function hasPermission(string $permission): bool
     {
-        return $this->role === 'admin';
-    }
+        // Check direct permissions
+        if (in_array($permission, $this->permissions ?? [], true)) {
+            return true;
+        }
 
-    public function isEditor(): bool
-    {
-        return in_array($this->role, ['admin', 'editor']);
+        // Check role-based permissions
+        foreach ($this->roles ?? [] as $role) {
+            $rolePermissions = $this->getRolePermissions($role);
+            if (in_array($permission, $rolePermissions, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasRole(string $role): bool
     {
-        return $this->role === $role;
-    }
-}
-```
-
-### Authorization Service
-
-```php
-// app/Services/Authorizer.php
-class Authorizer
-{
-    public function __construct(
-        private Authenticator $auth
-    ) {}
-
-    public function allows(string $ability, ?object $resource = null): bool
-    {
-        $user = $this->auth->user();
-
-        if ($user === null) {
-            return false;
-        }
-
-        return $this->checkPermission($user, $ability, $resource);
+        return in_array($role, $this->roles ?? [], true);
     }
 
-    public function denies(string $ability, ?object $resource = null): bool
+    public function isAdmin(): bool
     {
-        return !$this->allows($ability, $resource);
+        return $this->hasRole('admin');
     }
 
-    private function checkPermission(User $user, string $ability, ?object $resource): bool
+    private function getRolePermissions(string $role): array
     {
-        return match ($ability) {
-            'view-dashboard' => true,
-            'manage-users' => $user->isAdmin(),
-            'edit-posts' => $user->isEditor() || $user->id === $resource?->user_id,
-            'delete-posts' => $user->isAdmin() || $user->id === $resource?->user_id,
-            'publish-posts' => $user->isAdmin(),
-            default => false,
+        return match ($role) {
+            'admin' => ['*'],
+            'editor' => ['blog.post.*', 'blog.category.*'],
+            'author' => ['blog.post.create', 'blog.post.update', 'blog.post.view'],
+            default => [],
         };
     }
 }
 ```
 
-### Authorization Middleware
+### 2. Register Policy
 
 ```php
-// app/Middleware/Authorize.php
-class Authorize implements \Psr\Http\Server\MiddlewareInterface
+// app/Providers/AppServiceProvider.php
+
+use Marwa\Framework\Authorization\Gate;
+use Marwa\Framework\Authorization\PolicyRegistry;
+
+public function register(): void
 {
-    public function __construct(
-        private Authorizer $authorizer
-    ) {}
+    $gate = app(Gate::class);
+    $registry = app(PolicyRegistry::class);
 
-    public function process(
-        \Psr\Http\Message\ServerRequestInterface $request,
-        \Psr\Http\Server\RequestHandlerInterface $handler
-    ): \Psr\Http\Message\ResponseInterface {
-        $ability = $request->getAttribute('ability');
+    // Manual registration
+    $registry->register(Post::class, PostPolicy::class);
+    $registry->register(User::class, UserPolicy::class);
+}
+```
 
-        if ($ability && $this->authorizer->denies($ability)) {
-            return Response::forbidden('Access denied');
-        }
+---
 
-        return $handler->handle($request);
+## Permission Naming Format
+
+```
+{module}.{resource}.{action}
+```
+
+**Examples:**
+
+- `blog.post.viewAny` - List all posts
+- `blog.post.view` - View a specific post
+- `blog.post.create` - Create new post
+- `blog.post.update` - Update a post
+- `blog.post.delete` - Delete a post
+- `blog.post.publish` - Custom ability
+
+---
+
+## Policy Classes
+
+### Basic Policy
+
+```php
+// app/Policies/PostPolicy.php
+use Marwa\Framework\Authorization\Policy;
+use Marwa\Framework\Authorization\Contracts\UserInterface;
+
+class PostPolicy extends Policy
+{
+    public function viewAny(UserInterface $user): bool
+    {
+        return $user->hasPermission('blog.post.viewAny');
+    }
+
+    public function view(UserInterface $user, Post $post): bool
+    {
+        // Allow if user has permission OR is owner
+        return $user->hasPermission('blog.post.view') 
+            || $this->isOwner($user, $post);
+    }
+
+    public function create(UserInterface $user): bool
+    {
+        return $user->hasPermission('blog.post.create');
+    }
+
+    public function update(UserInterface $user, Post $post): bool
+    {
+        // Admin or owner can update
+        return $user->hasPermission('blog.post.update') 
+            || $this->isOwner($user, $post);
+    }
+
+    public function delete(UserInterface $user, Post $post): bool
+    {
+        return $user->hasPermission('blog.post.delete');
+    }
+
+    public function publish(UserInterface $user, Post $post): bool
+    {
+        return $user->hasPermission('blog.post.publish');
     }
 }
 ```
 
-### Using in Controllers
+### Using in Controller
 
 ```php
 // app/Controllers/PostController.php
-class PostController
+use Marwa\Framework\Controllers\Controller;
+use Marwa\Framework\Controllers\Concerns\AuthorizesRequests;
+
+class PostController extends Controller
 {
-    public function __construct(
-        private Authorizer $authorizer
-    ) {}
+    use AuthorizesRequests;
 
-    public function edit(int $id): mixed
+    public function index(): ResponseInterface
     {
-        $post = Post::findOrFail($id);
-
-        if ($this->authorizer->denies('edit-posts', $post)) {
-            return Response::forbidden('Cannot edit this post');
-        }
-
-        return view('posts/edit', ['post' => $post]);
+        $this->authorize('viewAny', Post::class);
+        // or: $this->authorizeClass('blog.post.viewAny');
+        
+        $posts = Post::all();
+        return $this->view('posts.index', ['posts' => $posts]);
     }
 
-    public function delete(int $id): mixed
+    public function show(int $id): ResponseInterface
     {
         $post = Post::findOrFail($id);
+        $this->authorize('view', $post);
 
-        $this->authorize('delete-posts', $post);
+        return $this->view('posts.show', ['post' => $post]);
+    }
+
+    public function store(Request $request): ResponseInterface
+    {
+        $this->authorize('create', Post::class);
+
+        $post = Post::create($request->all());
+        return $this->redirect('/posts/' . $post->id);
+    }
+
+    public function update(Request $request, int $id): ResponseInterface
+    {
+        $post = Post::findOrFail($id);
+        
+        // Throws AuthorizationException on failure
+        $this->authorize('update', $post);
+
+        $post->update($request->all());
+        return $this->json($post);
+    }
+
+    public function destroy(int $id): ResponseInterface
+    {
+        $post = Post::findOrFail($id);
+        $this->authorize('delete', $post);
 
         $post->delete();
-
-        return redirect('/posts');
+        return $this->json(['success' => true]);
     }
 }
 ```
 
-## Gate Pattern
+---
+
+## Using Helper Functions
 
 ```php
-// app/Services/Gate.php
-class Gate
-{
-    private array $abilities = [];
+// Direct authorization check (returns bool)
+can('viewAny', Post::class);  // true/false
+can('update', $post);          // true/false
 
-    public function define(string $ability, callable $callback): self
-    {
-        $this->abilities[$ability] = $callback;
+// Throws exception on failure
+authorize('viewAny', Post::class);
+authorize('update', $post);
 
-        return $this;
-    }
+// Gate facade
+gate()->allows('viewAny', Post::class);
+gate()->denies('delete', $post);
 
-    public function allows(string $ability, array $arguments = []): bool
-    {
-        $callback = $this->abilities[$ability] ?? fn () => false;
-
-        return (bool) $callback(...$arguments);
-    }
-
-    public function denies(string $ability, array $arguments = []): bool
-    {
-        return !$this->allows($ability, $arguments);
-    }
-}
-
-// Register abilities in a service provider
+// Using before callback
 $gate = app(Gate::class);
-
-$gate->define('edit-post', function (User $user, Post $post) {
-    return $user->isAdmin() || $user->id === $post->user_id;
-});
-
-$gate->define('delete-post', function (User $user, Post $post) {
-    return $user->isAdmin();
-});
-
-$gate->define('manage-users', function (User $user) {
-    return $user->isAdmin();
+$gate->before(function ($user, $ability, $resource) {
+    if ($user->isAdmin()) {
+        return true; // Skip policy check for admins
+    }
+    return null; // Continue to policy check
 });
 ```
 
-## Route Protection
+---
 
-### Middleware Registration
-
-```php
-// config/app.php
-'middlewares' => [
-    // ...
-    App\Middleware\Authenticate::class,
-    App\Middleware\Authorize::class,
-],
-```
+## Middleware
 
 ### Route-Level Authorization
 
 ```php
 // routes/web.php
+use Marwa\Framework\Middlewares\AuthorizeMiddleware;
 
-// Admin only routes
-Route::group(['middleware' => 'ability:manage-users'], function () {
-    Route::get('/admin/users', [UserController::class, 'index']);
-    Route::post('/admin/users', [UserController::class, 'store']);
-});
+// Via middleware parameter
+Route::get('/posts', [PostController::class, 'index'])
+    ->middleware('ability:blog.post.viewAny');
 
-// Editor routes
-Route::group(['middleware' => 'ability:edit-posts'], function () {
-    Route::get('/posts/create', [PostController::class, 'create']);
-    Route::post('/posts', [PostController::class, 'store']);
-});
-
-// Resource-based authorization
 Route::get('/posts/{post}/edit', [PostController::class, 'edit'])
-    ->middleware('can:edit-posts,post');
+    ->middleware('ability:blog.post.update,post');
+
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+    ->middleware('ability:blog.post.delete,post');
 ```
 
-## Policy Classes
+### Global Middleware
 
 ```php
-// app/Policies/PostPolicy.php
-class PostPolicy
+// config/app.php
+'middlewares' => [
+    // ...
+    Marwa\Framework\Middlewares\AuthorizeMiddleware::class,
+],
+```
+
+---
+
+## Module Manifest Integration
+
+```json
 {
-    public function view(User $user, Post $post): bool
-    {
-        return $post->published || $user->isEditor();
-    }
-
-    public function create(User $user): bool
-    {
-        return $user->isEditor();
-    }
-
-    public function update(User $user, Post $post): bool
-    {
-        return $user->isAdmin() || $user->id === $post->user_id;
-    }
-
-    public function delete(User $user, Post $post): bool
-    {
-        return $user->isAdmin();
-    }
-
-    public function publish(User $user, Post $post): bool
-    {
-        return $user->isAdmin();
-    }
-}
-
-// app/Services/PolicyRegistry.php
-class PolicyRegistry
-{
-    private array $policies = [
-        Post::class => PostPolicy::class,
-        User::class => UserPolicy::class,
-    ];
-
-    public function getPolicy(object $model): ?string
-    {
-        return $this->policies[get_class($model)] ?? null;
-    }
-
-    public function authorize(User $user, string $action, object $model): bool
-    {
-        $policy = $this->getPolicy($model);
-
-        if ($policy === null) {
-            return false;
-        }
-
-        $method = $this->toMethod($action);
-
-        return (new $policy())->{$method}($user, $model);
-    }
-
-    private function toMethod(string $action): string
-    {
-        return lcfirst(str_replace('-', '', ucwords($action, '-')));
-    }
+  "name": "blog",
+  "version": "1.0.0",
+  "policies": {
+    "Post": "Modules\\Blog\\Policies\\PostPolicy",
+    "Category": "Modules\\Blog\\Policies\\CategoryPolicy"
+  },
+  "permissions": [
+    "blog.post.viewAny",
+    "blog.post.view",
+    "blog.post.create",
+    "blog.post.update",
+    "blog.post.delete",
+    "blog.post.publish",
+    "blog.category.viewAny",
+    "blog.category.create",
+    "blog.category.update",
+    "blog.category.delete"
+  ],
+  "menu": {
+    "name": "blog",
+    "label": "Blog",
+    "url": "/admin/blog",
+    "permission": "blog.post.viewAny"
+  }
 }
 ```
 
-## API Authorization
+---
 
-For API endpoints:
+## Auto-Registration from Config
 
 ```php
-// API Authorization Response
-class ApiAuthorizer
-{
-    public function __construct(
-        private Authorizer $authorizer
-    ) {}
-
-    public function authorizeOrFail(string $ability, ?object $resource = null): void
-    {
-        if ($this->authorizer->denies($ability, $resource)) {
-            throw new HttpException(403, 'Forbidden');
-        }
-    }
-}
-
-// In API controller
-public function update(Request $request, int $id): mixed
-{
-    $post = Post::findOrFail($id);
-
-    app(ApiAuthorizer::class)->authorizeOrFail('update', $post);
-
-    $post->update($request->all());
-
-    return Response::json($post);
-}
+// Load policies from config
+$registry = app(PolicyRegistry::class);
+$registry->loadFromConfig(config('auth.policies', []));
 ```
+
+```php
+// config/auth.php
+<?php
+
+return [
+    'policies' => [
+        Post::class => App\Policies\PostPolicy::class,
+        User::class => App\Policies\UserPolicy::class,
+    ],
+    
+    'permissions' => [
+        'admin' => ['*'],
+        'editor' => [
+            'blog.post.viewAny',
+            'blog.post.create',
+            'blog.post.update',
+            'blog.category.viewAny',
+            'blog.category.create',
+        ],
+        'author' => [
+            'blog.post.viewAny',
+            'blog.post.create',
+            'blog.post.update:own',
+        ],
+    ],
+];
+```
+
+---
+
+## RBAC Structure
+
+```
+User
+├── id
+├── name
+├── email
+├── roles []           // e.g., ['admin', 'editor']
+├── permissions []     // e.g., ['blog.post.create']
+└── methods:
+    ├── hasPermission(string $permission): bool
+    ├── hasRole(string $role): bool
+    └── isAdmin(): bool
+
+Permission Format: {module}.{resource}.{action}
+Role → Permissions Mapping: Config-based or DB-driven
+```
+
+---
+
+## Gate Resource Helper
+
+```php
+$gate = app(Gate::class);
+
+$gate->resource('post', Post::class);
+// Equivalent to defining:
+// - post.viewAny
+// - post.view
+// - post.create
+// - post.update
+// - post.delete
+
+// Custom abilities
+$gate->resource('post', Post::class, [
+    'viewAny', 'view', 'create', 'update', 'delete', 'publish'
+]);
+```
+
+---
 
 ## Best Practices
 
-1. **Always check authorization** - Never assume a user can perform an action
-2. **Defense in depth** - Check at controller and database level
-3. **Fail securely** - Deny access by default
-4. **Log authorization failures** - Track potential security issues
-5. **Separate concerns** - Use policies for complex authorization logic
-6. **Test authorization rules** - Ensure users can only access what they should
+1. **Backend authorization must never rely only on menu visibility**
+2. **Use policy methods for complex authorization logic**
+3. **Prefer permission strings for simple checks**
+4. **Keep framework core thin - business rules in modules**
+5. **Use explicit code over magic**
+6. **Test authorization rules thoroughly**
+
+---
+
+## Exception Handling
+
+```php
+use Marwa\Framework\Exceptions\AuthorizationException;
+
+try {
+    $this->authorize('delete', $post);
+} catch (AuthorizationException $e) {
+    // $e->getAbility() - the action (e.g., 'delete')
+    // $e->getResource() - the resource (e.g., Post instance)
+    return $this->forbidden('Cannot delete this post');
+}
+```
+
+---
+
+## Facades
+
+```php
+// Gate facade
+Gate::allows('viewAny', Post::class);
+Gate::denies('delete', $post);
+
+// Auth facade
+Auth::user();           // Get current user
+Auth::check();          // Is authenticated?
+Auth::id();             // Current user ID
+```

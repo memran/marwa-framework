@@ -23,9 +23,14 @@
 - `forbidden(string $message = 'Forbidden'): ResponseInterface`
 - `abortIf(bool $condition, string $message = 'Forbidden', int $status = 403): ?ResponseInterface`
 - `abortUnless(bool $condition, string $message = 'Forbidden', int $status = 403): ?ResponseInterface`
-- `authorize(bool $condition, string $message = 'Forbidden'): ?ResponseInterface`
+- `authorize(string $ability, mixed $resource = null): bool`
+- `authorizeTo(string $ability, mixed $resource = null): void`
+- `can(string $ability, mixed $resource = null): bool`
+- `cannot(string $ability, mixed $resource = null): bool`
 
 `back()` only honors safe referrers. Relative URLs are allowed, and absolute URLs must match the current request origin. Unsafe or missing referrers fall back to the current request URI, then `/`.
+
+Policy-based authorization is provided by `Marwa\Framework\Controllers\Concerns\AuthorizesRequests`, which the base controller includes.
 
 ## Usage
 

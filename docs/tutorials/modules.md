@@ -213,6 +213,7 @@ final class BlogServiceProvider implements ModuleServiceProviderInterface
             'label' => 'Blog',
             'url' => '/blog',
             'order' => 20,
+            'visible' => static fn (): bool => user()?->hasPermission('blog.post.view') === true,
         ]);
 
         $menu->add([
@@ -221,6 +222,7 @@ final class BlogServiceProvider implements ModuleServiceProviderInterface
             'url' => '/blog/posts',
             'parent' => 'blog',
             'order' => 10,
+            'visible' => static fn (): bool => user()?->hasPermission('blog.post.view') === true,
         ]);
     }
 }
@@ -235,6 +237,8 @@ Supported menu item fields:
 - `order`: optional integer sort order
 - `icon`: optional icon token or class name
 - `visible`: optional boolean or callable visibility rule
+
+Use `visible` for menu presentation only. Backend access should still be enforced by your controller, policy, or route authorization layer.
 
 Behavior:
 

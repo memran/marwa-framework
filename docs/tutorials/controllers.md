@@ -14,7 +14,8 @@ Extend the base controller when your class handles HTTP requests and you want ac
 - `json()` and `response()` for direct responses
 - `redirect()` and `back()` for navigation flows
 - `flash()`, `withInput()`, and `withErrors()` for session-backed form UX
-- `authorize()`, `abortIf()`, and `abortUnless()` for simple guard clauses
+- `abortIf()` and `abortUnless()` for simple guard clauses
+- `authorize()`, `authorizeTo()`, `can()`, and `cannot()` for policy-based authorization
 
 If a class does not need HTTP concerns, keep it as a regular service instead of making it a controller.
 
@@ -209,14 +210,25 @@ $title = $this->old('title', '');
 
 ## Authorization And Guard Clauses
 
-The controller does not implement a full policy system by itself, but it does provide lightweight response helpers for common permission checks.
+The base controller provides lightweight guard helpers for common response flow and includes `Marwa\Framework\Controllers\Concerns\AuthorizesRequests` for policy-based authorization.
 
-Use `authorize()` when a condition must be true:
+Use `authorize()` when you need policy-based access control:
+
+```php
+public function edit(Post $post): ResponseInterface
+{
+    $this->authorize('update', $post);
+
+    return $this->view('posts/edit', ['post' => $post]);
+}
+```
+
+Use `abortUnless()` when a condition must be true:
 
 ```php
 public function edit(int $id): ResponseInterface
 {
-    if ($response = $this->authorize(user()?->isAdmin() === true)) {
+    if ($response = $this->abortUnless(user()?->isAdmin() === true)) {
         return $response;
     }
 
@@ -239,11 +251,9 @@ These helpers return `null` when execution may continue, or a ready-made `Respon
 This example combines the most common helpers in one controller method:
 
 ```php
-public function update(int $id): ResponseInterface
+public function update(Post $post): ResponseInterface
 {
-    if ($response = $this->authorize(user()?->can('posts.update') === true)) {
-        return $response;
-    }
+    $this->authorize('update', $post);
 
     $data = $this->validate([
         'title' => 'required|string|min:3',
@@ -254,7 +264,7 @@ public function update(int $id): ResponseInterface
 
     $this->flash('success', 'Post updated successfully.');
 
-    return $this->redirect('/posts/' . $id);
+    return $this->redirect('/posts/' . $post->id);
 }
 ```
 

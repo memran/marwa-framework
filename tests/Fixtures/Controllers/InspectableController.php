@@ -92,11 +92,6 @@ final class InspectableController extends Controller
         return $this->flash($key, $value);
     }
 
-    public function authorizeValue(bool $condition, string $message = 'Forbidden'): ?ResponseInterface
-    {
-        return $this->authorize($condition, $message);
-    }
-
     public function abortUnlessValue(bool $condition, string $message = 'Forbidden', int $status = 403): ?ResponseInterface
     {
         return $this->abortUnless($condition, $message, $status);

@@ -9,6 +9,7 @@ declare(strict_types=1);
  * Each function is defined in its respective file under Helpers/ directory.
  */
 
+require_once __DIR__ . '/Helpers/Authorization.php';
 require_once __DIR__ . '/Helpers/Paths.php';
 require_once __DIR__ . '/Helpers/Container.php';
 require_once __DIR__ . '/Helpers/SessionRequest.php';

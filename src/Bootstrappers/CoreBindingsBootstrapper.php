@@ -11,6 +11,10 @@ use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
 use Marwa\Framework\Adapters\Logger\LoggerAdapter;
 use Marwa\Framework\Adapters\Validation\RequestValidatorAdapter;
 use Marwa\Framework\Application;
+use Marwa\Framework\Authorization\Gate;
+use Marwa\Framework\Authorization\PolicyRegistry;
+use Marwa\Framework\Authorization\AuthManager;
+use Marwa\Framework\Authorization\Contracts\GateInterface;
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Console\CommandDiscovery;
@@ -234,6 +238,8 @@ final class CoreBindingsBootstrapper
             $container->get(CommandDiscovery::class),
             $container->get(ConsoleApplication::class)
         ));
+
+        $this->registerAuthorization($container);
     }
 
     private function registerLogger(Container $container, Application $app): void
@@ -254,5 +260,32 @@ final class CoreBindingsBootstrapper
         } else {
             $container->addShared(LoggerInterface::class, new NullLogger());
         }
+    }
+
+    private function registerAuthorization(Container $container): void
+    {
+        $container->addShared(PolicyRegistry::class);
+
+        $container->addShared(Gate::class, function () use ($container) {
+            $gate = new Gate($container->get(PolicyRegistry::class));
+
+            $gate->before(function ($user, $ability, $resource) {
+                if ($user !== null && method_exists($user, 'isAdmin') && $user->isAdmin()) {
+                    return true;
+                }
+
+                return null;
+            });
+
+            return $gate;
+        });
+
+        $container->addShared(GateInterface::class, function () use ($container) {
+            return $container->get(Gate::class);
+        });
+
+        $container->addShared(AuthManager::class, function () use ($container) {
+            return new AuthManager($container->get(Gate::class));
+        });
     }
 }

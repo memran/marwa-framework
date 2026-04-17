@@ -6,6 +6,7 @@ namespace Marwa\Framework\Controllers;
 
 use JsonSerializable;
 use Marwa\Framework\Adapters\Validation\FormRequestAdapter;
+use Marwa\Framework\Controllers\Concerns\AuthorizesRequests;
 use Marwa\Router\Http\Input;
 use Marwa\Router\Response;
 use Marwa\Support\Str;
@@ -16,6 +17,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 abstract class Controller
 {
+    use AuthorizesRequests;
+
     protected function request(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
@@ -182,11 +185,6 @@ abstract class Controller
         }
 
         return $this->abortResponse($message, $status);
-    }
-
-    protected function authorize(bool $condition, string $message = 'Forbidden'): ?ResponseInterface
-    {
-        return $this->abortUnless($condition, $message, 403);
     }
 
     /**

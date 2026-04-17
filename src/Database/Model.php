@@ -56,7 +56,7 @@ abstract class Model extends BaseModel
 
         $pageData['data'] = array_map(
             static fn (array|object $row): static => new static(
-                static::normalizeAttributes(is_array($row) ? $row : (array) $row),
+                static::normalizeAttributes((array) $row),
                 true
             ),
             $pageData['data']

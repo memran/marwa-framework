@@ -131,15 +131,14 @@ final class ControllerSupportTest extends TestCase
         self::assertSame('', old('title'));
     }
 
-    public function testControllerAuthorizationHelpersReturnResponses(): void
+    public function testControllerGuardHelpersReturnResponses(): void
     {
         new Application($this->basePath);
         $controller = new InspectableController();
 
-        self::assertNull($controller->authorizeValue(true));
-        self::assertInstanceOf(ResponseInterface::class, $controller->authorizeValue(false));
-        self::assertSame(403, $controller->authorizeValue(false)->getStatusCode());
         self::assertSame(401, $controller->abortIfValue(true, 'Unauthorized', 401)->getStatusCode());
+        self::assertInstanceOf(ResponseInterface::class, $controller->abortUnlessValue(false));
+        self::assertSame(403, $controller->abortUnlessValue(false)->getStatusCode());
         self::assertNull($controller->abortUnlessValue(true));
     }
 

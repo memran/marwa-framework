@@ -62,10 +62,13 @@ final class BlogServiceProvider implements ModuleServiceProviderInterface
             'name' => 'blog',
             'label' => 'Blog',
             'url' => '/blog',
+            'visible' => static fn (): bool => user()?->hasPermission('blog.post.view') === true,
         ]);
     }
 }
 ```
+
+Menu visibility is presentation-only. Backend access should still be enforced by controller guards, policies, or route middleware.
 
 ## Registering Providers
 
