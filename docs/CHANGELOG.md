@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Permission Middleware:
   - Added `PermissionMiddleware` for route-level permission checks
+  - Added middleware descriptor normalization: `[Class::class, 'arg1']` support in bootstrap
 
 - Config Merging:
   - Added `ConfigMerger` for additive config list merging
