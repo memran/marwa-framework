@@ -42,6 +42,12 @@ final class ModulePathResolver
     public function resolveMigrationPaths(Module $module, array $moduleConfig): array
     {
         $paths = [];
+        $basePath = $module->basePath();
+
+        $conventionalPath = $basePath . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations';
+        if (is_dir($conventionalPath)) {
+            $paths[] = $conventionalPath;
+        }
 
         foreach ($module->migrations() as $migrationPath) {
             $normalizedPath = $this->normalizePath($migrationPath);

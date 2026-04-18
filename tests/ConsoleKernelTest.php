@@ -334,7 +334,7 @@ PHP
         self::assertSame(0, $tester->execute([]));
 
         $display = $tester->getDisplay();
-        self::assertSame(1, substr_count($display, 'Migrating directory:'));
+        self::assertSame(2, substr_count($display, 'Migrating directory:'));
         self::assertStringContainsString('Module migrations completed. Total: 2', $display);
 
         $pdo = new \PDO('sqlite:' . $this->databaseFile);
