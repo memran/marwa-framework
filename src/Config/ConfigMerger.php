@@ -153,3 +153,4 @@ final class ConfigMerger
         return 'replace';
     }
 }
+

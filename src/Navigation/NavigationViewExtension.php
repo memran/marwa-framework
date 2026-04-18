@@ -52,3 +52,4 @@ final class NavigationViewExtension extends AbstractViewExtension
         return new self($mainMenu ?? null);
     }
 }
+

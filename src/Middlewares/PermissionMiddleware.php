@@ -73,3 +73,4 @@ final class PermissionMiddleware implements MiddlewareInterface
         return $request->getAttribute($attributeName);
     }
 }
+
