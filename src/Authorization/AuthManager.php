@@ -53,4 +53,66 @@ class AuthManager
 
         return null;
     }
+
+    public function login(UserInterface $user): self
+    {
+        $this->setUser($user);
+
+        return $this;
+    }
+
+    public function logout(): self
+    {
+        $this->setUser(null);
+
+        return $this;
+    }
+
+    public function authenticate(string $email, string $password): bool
+    {
+        $userModel = $this->gate->getUser();
+
+        if ($userModel === null) {
+            return false;
+        }
+
+        $className = $userModel::class;
+
+        if (!in_array(Authenticatable::class, class_uses($className), true)) {
+            return false;
+        }
+
+        if (!method_exists($className, 'authenticate')) {
+            return false;
+        }
+
+        $user = $className::authenticate($email, $password);
+
+        if ($user === null) {
+            return false;
+        }
+
+        $this->setUser($user);
+
+        return true;
+    }
+
+    public function using(?string $className): self
+    {
+        if ($className === null) {
+            return $this;
+        }
+
+        if (!class_exists($className)) {
+            return $this;
+        }
+
+        if (!in_array(UserInterface::class, class_implements($className), true)) {
+            return $this;
+        }
+
+        $this->gate->setUser(new $className());
+
+        return $this;
+    }
 }
