@@ -347,17 +347,8 @@ final class ModuleBootstrapper
         }
 
         $viewPathValue = $module->path('views');
-        if (is_array($viewPathValue)) {
-            foreach ($viewPathValue as $p) {
-                if (is_string($p) && is_dir($p)) {
-                    $paths[] = $p;
-                }
-            }
-        } else {
-            $viewPathString = is_string($viewPathValue) ? $viewPathValue : null;
-            if ($viewPathString !== null && is_dir($viewPathString)) {
-                $paths[] = $viewPathString;
-            }
+        if ($viewPathValue !== null && is_dir($viewPathValue)) {
+            $paths[] = $viewPathValue;
         }
 
         return array_values(array_unique($paths));
@@ -378,7 +369,7 @@ final class ModuleBootstrapper
     {
         $cachePath = $this->config->getString('view.cachePath');
 
-        if (is_string($cachePath) && is_dir($cachePath)) {
+        if ($cachePath !== '' && is_dir($cachePath)) {
             $files = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS)
             );

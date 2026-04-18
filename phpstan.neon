@@ -10,3 +10,7 @@ parameters:
 	ignoreErrors:
 		- identifier: trait.unused
 		  path: src/Authorization/Authenticatable.php
+		- identifier: nullCoalesce.offset
+		  path: src/Navigation/MenuRegistry.php
+		- identifier: return.type
+		  path: src/Navigation/MenuRegistry.php

@@ -35,8 +35,8 @@ final class NavigationRenderer
         return $this->currentUrl === $url || Str::startsWith($this->currentUrl, rtrim($url, '/') . '/');
     }
 
-    /**
-     * @return list<array{name:string,label:string,url:string,icon:?string,isActive:bool,children:list<array{name:string,label:string,url:string,icon:?string,isActive:bool}>}>
+/**
+     * @return list<array{name:string,label:string,url:string,icon:?string,isActive:bool,permission:?string,roles:?array<mixed>,children:list<array{name:string,label:string,url:string,icon:?string,isActive:bool}>}>
      */
     public function tree(): array
     {
@@ -46,17 +46,16 @@ final class NavigationRenderer
 
         $items = $this->registry->tree();
 
-        $filtered = array_filter($items, fn (array $item): bool => $this->isAuthorized($item));
+        $mapped = array_map(fn (array $item): array => $this->mapTreeItem($item), $items);
 
-        $mapped = array_map(fn (array $item): array => $this->mapTreeItem($item), $filtered);
+        $filtered = array_filter($mapped, fn (array $item): bool => $this->isAuthorized($item));
 
-        return array_values($mapped);
+        return array_values($filtered);
     }
 
     /**
      * Check if menu item is authorized for current user.
-     */
-    /**
+     *
      * @param array{name:string,label:string,url:string,icon:?string,isActive:bool,permission:?string,roles:?array<mixed>,children:list<mixed>} $item
      */
     private function isAuthorized(array $item): bool
@@ -70,7 +69,7 @@ final class NavigationRenderer
             }
         }
 
-        if ($roles !== null && is_array($roles)) {
+        if (is_array($roles) && $roles !== []) {
             if (!$this->hasRole($roles)) {
                 return false;
             }
@@ -300,8 +299,8 @@ final class NavigationRenderer
     }
 
     /**
-     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,children:list<array{name:string,label:string,url:string,icon:?string}>} $item
-     * @return array{name:string,label:string,url:string,icon:?string,isActive:bool,children:list<array{name:string,label:string,url:string,icon:?string,isActive:bool}>}
+     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,children:list<array{name:string,label:string,url:string,icon:?string}>} $item
+     * @return array{name:string,label:string,url:string,icon:?string,isActive:bool,permission:?string,roles:?array<mixed>,children:list<array{name:string,label:string,url:string,icon:?string,isActive:bool}>}
      */
     private function mapTreeItem(array $item): array
     {
@@ -314,6 +313,8 @@ final class NavigationRenderer
             'url' => $item['url'],
             'icon' => $item['icon'],
             'isActive' => $this->isActive($item['url']),
+            'permission' => $item['permission'] ?? null,
+            'roles' => $item['roles'] ?? null,
             'children' => array_map(fn (array $child): array => $this->mapTreeChild($child), $children),
         ];
     }

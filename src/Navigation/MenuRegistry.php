@@ -11,15 +11,7 @@ use Marwa\Support\Url;
 final class MenuRegistry
 {
     /**
-     * @var array<string, array{
-     *     name:string,
-     *     label:string,
-     *     url:string,
-     *     parent:?string,
-     *     order:int,
-     *     icon:?string,
-     *     visible:bool|callable
-     * }>
+     * @var array<string, array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,visible:bool|callable}>
      */
     private array $items = [];
 
@@ -51,7 +43,7 @@ final class MenuRegistry
     }
 
     /**
-     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string}>
+     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>}>
      */
     public function all(): array
     {
@@ -83,7 +75,7 @@ final class MenuRegistry
     }
 
     /**
-     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,children:list<array<string, mixed>>}>
+     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,children:list<mixed>}>
      */
     public function tree(): array
     {
@@ -122,7 +114,9 @@ final class MenuRegistry
 
         foreach ($visibleItems as $name => $item) {
             if (isset($tree[$name])) {
-                $tree[$name] = $item;
+                $current = $item;
+                $current['children'] = (array) ($item['children'] ?? []);
+                $tree[$name] = $current;
             }
         }
 
@@ -134,15 +128,8 @@ final class MenuRegistry
 
     /**
      * @param array<string, mixed> $item
-     * @return array{
-     *     name:string,
-     *     label:string,
-     *     url:string,
-     *     parent:?string,
-     *     order:int,
-     *     icon:?string,
-     *     visible:bool|callable
-     * }
+     * @return array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,visible:bool|callable}
+     *
      */
     private function normalizeItem(array $item): array
     {
@@ -152,6 +139,11 @@ final class MenuRegistry
         $parent = $this->normalizeNullableString(Arr::get($item, 'parent'));
         $icon = $this->normalizeNullableString(Arr::get($item, 'icon'));
         $order = Arr::get($item, 'order', 0);
+        $permission = $this->normalizeNullableString(Arr::get($item, 'permission'));
+        $roles = Arr::get($item, 'roles');
+        if ($roles !== null && !is_array($roles)) {
+            $roles = null;
+        }
         $visible = Arr::get($item, 'visible', true);
 
         if ($name === '') {
@@ -204,6 +196,8 @@ final class MenuRegistry
             'parent' => $parent !== '' ? $parent : null,
             'order' => $order,
             'icon' => $icon !== '' ? $icon : null,
+            'permission' => $permission !== '' ? $permission : null,
+            'roles' => $roles,
             'visible' => $visible,
         ];
     }
@@ -225,18 +219,17 @@ final class MenuRegistry
     }
 
     /**
-     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,visible:bool|callable} $item
-     * @return array{name:string,label:string,url:string,parent:?string,order:int,icon:?string}
+     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,visible:bool|callable} $item
+     * @return array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>}
      */
     private function toPublicItem(array $item): array
     {
         unset($item['visible']);
-
         return $item;
     }
 
     /**
-     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,visible:bool|callable} $item
+     * @param array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,visible:bool|callable} $item
      */
     private function isVisible(array $item): bool
     {
