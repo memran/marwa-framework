@@ -18,17 +18,17 @@ final class NavigationViewExtension extends AbstractViewExtension
     {
         $this->renderer = new NavigationRenderer($this->menuRegistry);
 
-        $this->addFunction('main_menu', fn(): string => $this->renderer()->renderMainMenu());
+        $this->addFunction('main_menu', fn (): string => $this->renderer()->renderMainMenu());
 
-        $this->addFunction('menu_tree', fn(): array => $this->renderer()->tree());
+        $this->addFunction('menu_tree', fn (): array => $this->renderer()->tree());
 
-        $this->addFunction('menu_item', fn(array $item): string => $this->renderer()->renderMenuItem($item));
+        $this->addFunction('menu_item', fn (array $item): string => $this->renderer()->renderMenuItem($item));
 
-        $this->addFunction('menu_section', fn(array $section): string => $this->renderer()->renderSection($section));
+        $this->addFunction('menu_section', fn (array $section): string => $this->renderer()->renderSection($section));
 
-        $this->addFunction('menu_sections', fn(array $sections): string => $this->renderer()->renderSections($sections));
+        $this->addFunction('menu_sections', fn (array $sections): string => $this->renderer()->renderSections($sections));
 
-        $this->addFunction('is_menu_active', fn(string $url): bool => $this->renderer()->isActive($url));
+        $this->addFunction('is_menu_active', fn (string $url): bool => $this->renderer()->isActive($url));
     }
 
     public function renderer(): NavigationRenderer

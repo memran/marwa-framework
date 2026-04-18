@@ -46,7 +46,7 @@ final class NavigationRenderer
 
         $items = $this->registry->tree();
 
-        return array_map(fn(array $item): array => $this->mapTreeItem($item), $items);
+        return array_map(fn (array $item): array => $this->mapTreeItem($item), $items);
     }
 
     /**
@@ -226,7 +226,7 @@ final class NavigationRenderer
             'url' => $item['url'],
             'icon' => $item['icon'],
             'isActive' => $this->isActive($item['url']),
-            'children' => array_map(fn(array $child): array => $this->mapTreeChild($child), $children),
+            'children' => array_map(fn (array $child): array => $this->mapTreeChild($child), $children),
         ];
     }
 
