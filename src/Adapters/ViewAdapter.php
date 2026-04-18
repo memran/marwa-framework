@@ -18,35 +18,42 @@ use Twig\Extension\AbstractExtension;
 
 final class ViewAdapter
 {
-    protected View $engine;
+    protected ?View $engine = null;
     private ?ThemeBuilder $themeBuilder = null;
+
+    private string $viewsPath = '';
+    private string $cachePath = '';
+    private bool $debug = false;
+    private string $sharedPath = '';
 
     public function __construct(private Application $app, private Config $config)
     {
         $this->config->loadIfExists(ViewConfigContract::KEY . '.php');
         $defaults = ViewConfigContract::defaults($this->app);
 
-        $viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
-        $cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
-        $this->ensureDirectory($viewsPath);
-        $this->ensureDirectory($cachePath);
+        $this->viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
+        $this->cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
+        $this->ensureDirectory($this->viewsPath);
+        $this->ensureDirectory($this->cachePath);
 
-        $cacheEnabled = $this->config->getArray(ViewConfigContract::KEY . '.cache', $defaults['cache']);
-        $isCacheEnabled = (bool) ($cacheEnabled['enabled'] ?? true);
+        $this->debug = $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']);
+        $this->sharedPath = $this->config->getString(ViewConfigContract::KEY . '.sharedPath', $defaults['sharedPath']);
+    }
 
-        $finalCachePath = $isCacheEnabled ? $cachePath : $cachePath;
+    private function ensureEngine(): void
+    {
+        if ($this->engine !== null) {
+            return;
+        }
 
         $viewConfig = new ViewConfig(
-            viewsPath: $viewsPath,
-            cachePath: $finalCachePath,
-            debug: $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']),
+            viewsPath: $this->viewsPath,
+            cachePath: $this->cachePath,
+            debug: $this->debug,
         );
 
-        $this->createViewEngine($viewConfig);
-
-        // Register Shared namespace by default
-        $sharedPath = $this->config->getString(ViewConfigContract::KEY . '.sharedPath', $defaults['sharedPath']);
-        $this->addNamespace('Shared', $sharedPath);
+        $this->engine = $this->createViewEngine($viewConfig);
+        $this->addNamespace('Shared', $this->sharedPath);
     }
 
     /**
@@ -106,11 +113,15 @@ final class ViewAdapter
 
     public function getView(): View
     {
+        $this->ensureEngine();
+
         return $this->engine;
     }
 
     public function engine(): View
     {
+        $this->ensureEngine();
+
         return $this->engine;
     }
 
@@ -136,16 +147,19 @@ final class ViewAdapter
 
     public function share(string $namespace, mixed $value): void
     {
+        $this->ensureEngine();
         $this->engine->share($namespace, $value);
     }
 
     public function addNamespace(string $namespace, string $path): void
     {
+        $this->ensureEngine();
         $this->engine->addNamespace($namespace, $path);
     }
 
     public function exists(string $template): bool
     {
+        $this->ensureEngine();
         $twig = $this->twig();
         $loader = $twig->getLoader();
 
@@ -157,6 +171,8 @@ final class ViewAdapter
      */
     public function render(string $tplname, array $params = []): ResponseInterface
     {
+        $this->ensureEngine();
+
         return Response::html($this->engine->render($tplname, $params));
     }
 
@@ -201,6 +217,7 @@ final class ViewAdapter
 
     private function twig(): \Twig\Environment
     {
+        $this->ensureEngine();
         $reflection = new \ReflectionObject($this->engine);
         $property = $reflection->getProperty('twig');
 

@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Module Enhancements:
   - Added module dependency validation
   - Module seeder support (`module:seed` command)
-  - Manifest-driven view namespace registration
+  - Manifest-driven view namespace registration (fixed lazy-load for Twig extensions)
 
 - Database:
   - Added DBForge for database management

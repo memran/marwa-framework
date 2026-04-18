@@ -341,21 +341,17 @@ modules/Blog/resources/views/index.twig
 
 The generator stub already includes the `paths.views` entry in new module manifests, so this works out of the box.
 
-### Known Issue: Custom Twig Extensions
+### Module View Extensions (Fixed)
 
-In some configurations, module templates using manifest-registered namespaces may not have access to custom Twig functions (e.g., `csrf_field()`, `session()`) until the view adapter is fully initialized. This happens because view extensions are loaded before module view namespaces are registered.
+Previously, module templates using manifest-registered namespaces might lose access to custom Twig functions (e.g., `csrf_field()`, `session()`). This is now fixed by lazy-loading the view engine. The framework now loads Twig extensions after module namespaces are registered, so custom Twig functions work seamlessly in module templates.
 
-**Workaround**: If your module templates need custom Twig functions, add the namespace manually in your service provider's `boot()` method:
+You no longer need manual `addNamespace()` in service providers - just use the manifest:
 
 ```php
-public function boot($app): void
-{
-    $view = $app->make(FrameworkView::class);
-    $view->addNamespace('blog', module_path('blog', 'resources/views'));
-}
+'paths' => [
+    'views' => 'resources/views',
+],
 ```
-
-This workaround ensures the view adapter is fully bootstrapped when the namespace is registered. The framework team is working on a solution to make manifest-driven namespaces work seamlessly with all view extensions in a future release.
 
 ## Commands
 
