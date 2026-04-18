@@ -78,6 +78,28 @@ if (!function_exists('public_path')) {
     }
 }
 
+if (!function_exists('asset')) {
+    function asset(string $path): string
+    {
+        static $baseUrl = null;
+
+        if ($baseUrl === null) {
+            $request = request();
+            if ($request !== null) {
+                $uri = $request->getUri();
+                $scheme = $uri->getScheme();
+                $host = $uri->getHost();
+                $port = $uri->getPort();
+                $baseUrl = $scheme . '://' . $host . ($port && !in_array($port, [80, 443]) ? ':' . $port : '');
+            } else {
+                $baseUrl = '';
+            }
+        }
+
+        return $baseUrl . '/assets/' . ltrim($path, '/');
+    }
+}
+
 if (!function_exists('bootstrap_path')) {
     function bootstrap_path(string $path = ''): string
     {
