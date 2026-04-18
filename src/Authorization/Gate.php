@@ -189,28 +189,33 @@ class Gate implements GateInterface
     }
 
     /**
-     * Resolve policy from module Policies folder.
+     * Resolve policy from module Policies folder using module registry.
      */
     private function resolvePolicyFromModule(string $modelClass): ?string
     {
         $modelName = (new \ReflectionClass($modelClass))->getShortName();
-        $policyName = $modelName . 'Policy.php';
         $policyClassName = $modelName . 'Policy';
 
-        // Extract module name from model namespace
-        // App\Models\User -> Users module
-        // App\Modules\Users\Models\User -> Users module
+        // Get module slug from model namespace
         $moduleSlug = $this->extractModuleSlug($modelClass);
 
-        if ($moduleSlug === null) {
+        // Try to find module via application module registry
+        $module = $this->findModule($moduleSlug);
+
+        if ($module === null) {
             return null;
         }
 
-        // Try to find policy in module Policies folder
-        $policyPath = base_path('modules' . DIRECTORY_SEPARATOR . $moduleSlug . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . $policyName);
+        // Get custom policy path from manifest if configured
+        $policiesPath = $module->path('policies') ?? 'Policies';
+
+        // Build policy path using module's basePath()
+        $policyPath = $module->basePath() . DIRECTORY_SEPARATOR . $policiesPath . DIRECTORY_SEPARATOR . $policyClassName . '.php';
 
         if (file_exists($policyPath)) {
-            $policyNamespace = 'App\\Modules\\' . ucfirst($moduleSlug) . '\\Policies\\' . $policyClassName;
+            // Try to construct namespace from module
+            $moduleName = ucfirst($moduleSlug);
+            $policyNamespace = "App\\Modules\\{$moduleName}\\Policies\\{$policyClassName}";
 
             if (class_exists($policyNamespace)) {
                 return $policyNamespace;
@@ -221,31 +226,77 @@ class Gate implements GateInterface
     }
 
     /**
+     * Find module by slug from application module registry.
+     */
+    private function findModule(?string $slug): ?object
+    {
+        if ($slug === null) {
+            return null;
+        }
+
+        $modules = $this->getModuleRegistry();
+
+        if (isset($modules[$slug])) {
+            return $modules[$slug];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get module registry from application.
+     *
+     * @return array<string, object>
+     */
+    private function getModuleRegistry(): array
+    {
+        static $modules = null;
+
+        if ($modules === null) {
+            $app = $this->getApplication();
+            if ($app !== null && method_exists($app, 'modules')) {
+                $modules = $app->modules();
+            }
+        }
+
+        return $modules ?? [];
+    }
+
+    /**
+     * Get Application instance.
+     */
+    private function getApplication(): ?object
+    {
+        static $app = null;
+
+        if ($app === null) {
+            global $app;
+        }
+
+        return $app;
+    }
+
+    /**
      * Extract module slug from model class namespace.
      */
     private function extractModuleSlug(string $modelClass): ?string
     {
-        // App\Models\User -> users
-        // App\Modules\Users\Models\User -> users
-        // Modules\Users\Models\User -> users
-
         $matches = [];
 
-        if (preg_match('/Modules?\\\\([A-Za-z]+)/', $modelClass, $matches)) {
+        // App\Modules\Users\Models\User -> users
+        if (preg_match('/\\\\Modules\\\\([A-Za-z]+)\\\\Models\\\\/', $modelClass, $matches)) {
             return strtolower($matches[1]);
         }
 
-        if (preg_match('/\\\\Modules?\\\\([A-Za-z]+)/', $modelClass, $matches)) {
-            return strtolower($matches[1]);
-        }
-
-        // Try parent namespace check
-        // If model is in app namespace, return null (global)
-        if (str_starts_with($modelClass, 'App\\')) {
-            // Check if in global app/Policies
-            $globalPolicyPath = base_path('app' . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . (new \ReflectionClass($modelClass))->getShortName() . 'Policy.php');
-            if (file_exists($globalPolicyPath)) {
-                return 'app';
+        // App\Models\User -> check for app/Policies
+        if (str_starts_with($modelClass, 'App\\Models\\')) {
+            $app = $this->getApplication();
+            if ($app !== null) {
+                $modelName = (new \ReflectionClass($modelClass))->getShortName();
+                $globalPolicyPath = base_path('app' . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . $modelName . 'Policy.php');
+                if (file_exists($globalPolicyPath)) {
+                    return 'app';
+                }
             }
         }
 
