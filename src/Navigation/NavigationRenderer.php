@@ -239,8 +239,8 @@ final class NavigationRenderer
         return [
             'name' => $child['name'],
             'label' => $child['label'],
-            'url' => $child['url'],
-'icon' => $child['icon'],
+'url' => $child['url'],
+            'icon' => $child['icon'],
             'isActive' => $this->isActive($child['url']),
         ];
     }

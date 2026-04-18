@@ -142,11 +142,11 @@ final class ConfigMerger
             return 'remove';
         }
 
-        if (str_starts_with($item, self::PREPEND_PREFIX)) {
+if (str_starts_with($item, self::PREPEND_PREFIX)) {
             return 'prepend';
         }
 
-if (str_starts_with($item, self::APPEND_PREFIX)) {
+        if (str_starts_with($item, self::APPEND_PREFIX)) {
             return 'append';
         }
 

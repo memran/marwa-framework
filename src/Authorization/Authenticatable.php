@@ -105,9 +105,9 @@ trait Authenticatable
             return null;
         }
 
-        $hash = $user->getPasswordHash();
+$hash = $user->getPasswordHash();
 
-if ($hash === null || !password_verify($password, $hash)) {
+        if ($hash === null || !password_verify($password, $hash)) {
             return null;
         }
 

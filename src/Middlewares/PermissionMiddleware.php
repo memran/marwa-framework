@@ -64,11 +64,11 @@ final class PermissionMiddleware implements MiddlewareInterface
 
         $segment = substr($middleware, strpos($middleware, '@') + 1);
 
-        if ($segment === '') {
+if ($segment === '') {
             return null;
         }
 
-$attributeName = trim($segment);
+        $attributeName = trim($segment);
 
         return $request->getAttribute($attributeName);
     }

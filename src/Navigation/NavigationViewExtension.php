@@ -45,9 +45,9 @@ final class NavigationViewExtension extends AbstractViewExtension
         return $this;
     }
 
-    public static function createWithGlobals(): self
+public static function createWithGlobals(): self
     {
-global $mainMenu;
+        global $mainMenu;
 
         return new self($mainMenu ?? null);
     }
