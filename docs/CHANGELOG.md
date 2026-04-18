@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Navigation System:
   - Added `NavigationRenderer` and `NavigationViewExtension` for first-class menu rendering in Twig
+  - Menu role-based visibility with `permission` and `roles` fields
 
 - Permission Middleware:
   - Added `PermissionMiddleware` for route-level permission checks
@@ -26,6 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added module dependency validation
   - Module seeder support (`module:seed` command)
   - Manifest-driven view namespace registration (fixed lazy-load for Twig extensions)
+  - Module config isolation: `modules/{slug}.config` from `config/` files and manifest
+  - Module config from manifest `config` key (highest priority)
+  - Module events system: `ModuleLoaded` event dispatched per module
+  - Module listeners registration via manifest `listeners` key
+  - Module migrations auto-discovery from `database/migrations/` directory
+  - Module asset publishing via `module:publish` command and `asset()` helper
+  - Module service provider hooks: `registered()`, `booting()`, `booted()`
+
+- Gate & Policies:
+  - Added `Gate::policy()` method for policy registration
+  - Module policy auto-discovery from `modules/{Module}/Policies/{Model}Policy.php`
+  - Global config fallback: `permissions.policies`
 
 - Database:
   - Added DBForge for database management
@@ -34,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added security risk logging and reporting (`security:report` command)
   - Added Kafka consumer command and notification channel
   - Added configurable session savePath with framework-managed default
+
+- Helpers:
+  - Added `module_config()` helper for module-specific config
+  - Added `asset()` helper for public asset URLs
 
 - Documentation improvements:
   - Getting Started section with installation and project structure guides

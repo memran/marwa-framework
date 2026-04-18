@@ -237,6 +237,34 @@ Supported menu item fields:
 - `order`: optional integer sort order
 - `icon`: optional icon token or class name
 - `visible`: optional boolean or callable visibility rule
+- `permission`: optional permission string for access control
+- `roles`: optional array of allowed roles
+
+### Role-Based Menu Visibility
+
+Menu items can be filtered based on user permissions or roles:
+
+```php
+$menu->add([
+    'name' => 'users',
+    'label' => 'Users',
+    'url' => '/users',
+    'permission' => 'users.view',  // Requires this permission
+]);
+
+$menu->add([
+    'name' => 'admin',
+    'label' => 'Admin',
+    'url' => '/admin',
+    'roles' => ['admin', 'superadmin'],  // Requires one of these roles
+]);
+```
+
+**How it works:**
+- `permission` - uses `Gate::allows()` to check user ability
+- `roles` - uses `user->hasRole()` to check role membership
+- Items without these fields are visible to everyone
+- If auth is not available, items are visible
 
 Use `visible` for menu presentation only. Backend access should still be enforced by your controller, policy, or route authorization layer.
 
@@ -353,6 +381,200 @@ You no longer need manual `addNamespace()` in service providers - just use the m
 ],
 ```
 
+## Module Config
+
+Modules can have isolated config that doesn't pollute global app config. The config is stored under `modules.{slug}.*` key.
+
+### Config Directory
+
+Modules can define config files in `modules/{Module}/config/`:
+
+```text
+modules/Users/
+  config/
+    settings.php
+    permissions.php
+```
+
+### Config Loading Order
+
+1. **Manifest config** (highest priority)
+2. **Module config files** - `modules/{Module}/config/*.php`
+
+### Usage
+
+```php
+// Get module config
+module_config('users.theme');           // from manifest or config file
+module_config('users.settings.per_page'); // nested config
+
+// Via global config
+config('modules.users.theme');
+```
+
+### Manifest Config
+
+In `manifest.php`:
+
+```php
+return [
+    'name' => 'Users Module',
+    'slug' => 'users',
+    'config' => [
+        'theme' => 'dark',
+        'per_page' => 20,
+    ],
+];
+```
+
+## Module Service Provider Hooks
+
+Module service providers can implement lifecycle hooks:
+
+```php
+class UsersServiceProvider extends ServiceProviderAdapter
+{
+    // Called after provider is registered (before boot)
+    public function registered(): void
+    {
+        // Add transient services here
+    }
+    
+    // Called right before boot() for all providers
+    public function booting(): void
+    {
+        // Configure before boot runs
+    }
+    
+    // Called after provider boot() completes
+    public function booted(): void
+    {
+        // Final setup here
+    }
+}
+```
+
+**Hook Execution Order:**
+1. `registered()` - each provider after register()
+2. `booting()` - all providers before any boot()
+3. `boot()` - each provider's boot method
+4. `booted()` - each provider after boot()
+
+## Module Events
+
+The framework dispatches events during module bootstrap:
+
+### ModuleLoaded Event
+
+Dispatched for each module during bootstrap:
+
+```php
+use Marwa\Framework\Adapters\Event\ModuleLoaded;
+
+$event = new ModuleLoaded(slug: 'users', name: 'Users Module');
+
+// Listen to specific module
+event()->listen(ModuleLoaded::class, function($event) {
+    if ($event->slug === 'users') {
+        // Handle users module loaded
+    }
+});
+
+// Listen to all modules
+event()->listen(ModuleLoaded::class, function($event) {
+    \Log::info("Module loaded: " . $event->slug);
+});
+```
+
+### Manifest Listeners
+
+Register event listeners via manifest:
+
+```php
+'listeners' => [
+    'boot' => [\App\Listeners\ModuleBootListener::class],
+    'loaded' => [\App\Listeners\ModuleLoadedListener::class],
+],
+```
+
+## Module Policies
+
+Policies for models can be auto-discovered from module's `Policies/` folder:
+
+```text
+modules/Users/
+  Models/
+    User.php
+  Policies/
+    UserPolicy.php
+```
+
+### Using Gate::policy()
+
+```php
+// Auto-discover from module
+$policy = gate()->policy(User::class);
+
+// Manual override
+gate()->policy(User::class, CustomUserPolicy::class);
+
+// Callable policy
+gate()->policy(User::class, function($user, $model) {
+    return $user->id === $model->user_id;
+});
+```
+
+### Resolution Order
+
+1. Previously registered via `Gate::policy()`
+2. Module Policies folder: `modules/{Module}/Policies/{Model}Policy.php`
+3. Global config: `permissions.policies['App\\Models\\User']`
+
+### Global Config Fallback
+
+In `config/permissions.php`:
+
+```php
+return [
+    'policies' => [
+        App\Models\User::class => App\Policies\GlobalUserPolicy::class,
+    ],
+];
+```
+
+## Asset Publishing
+
+Publish module assets to public directory:
+
+```bash
+# Publish all module assets
+php marwa module:publish
+
+# Publish specific module
+php marwa module:publish users
+
+# Preview without copying
+php marwa module:publish --dry-run
+```
+
+### Module Structure
+
+```
+modules/Users/
+  public/
+    js/app.js
+    css/style.css
+```
+
+Assets are copied to `public/assets/users/`.
+
+### Using in Views
+
+```twig
+<script src="{{ asset('users/js/app.js') }}"></script>
+<link href="{{ asset('users/css/style.css') }}">
+```
+
 ## Commands
 
 Module command discovery runs through:
@@ -402,10 +624,11 @@ Run module seeders:
 php marwa module:seed
 ```
 
-Migration discovery works in two ways:
+### Migration Discovery Order
 
-- explicit file list in manifest `migrations`
-- manifest `paths` entries matched by `migrationsPath` config, typically `database/migrations`
+1. **Conventional path**: `modules/{Module}/database/migrations/`
+2. **Manifest migrations**: `migrations` key
+3. **Manifest paths**: entries matched by `database/migrations` path
 
 Seeder discovery uses `seedersPath` config against manifest `paths` entries, typically `database/seeders`.
 
