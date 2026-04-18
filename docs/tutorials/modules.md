@@ -277,7 +277,7 @@ Module routes are loaded only when:
 
 ## Views
 
-If a module manifest defines `paths.views`, the framework registers that directory as a Twig namespace using the module slug.
+If a module manifest defines `paths.views`, the framework **automatically** registers that directory as a Twig namespace using the module slug. This is the **recommended default path** - you should not manually call `addNamespace()` in service providers.
 
 For a module with slug `blog`, render templates with the `@blog/...` convention:
 
@@ -300,6 +300,30 @@ the template path resolves to:
 ```text
 modules/Blog/resources/views/index.twig
 ```
+
+The generator stub already includes the `paths.views` entry in new module manifests, so this works out of the box.
+
+### Why Manifest-Driven Views?
+
+- **Zero configuration**: The framework handles namespace registration automatically
+- **Consistent naming**: Namespace always matches the module slug (`@blog/`, `@user/`, etc.)
+- **Single source of truth**: View paths are declared in one place alongside other module paths
+- **No duplicate wiring**: Each module author independently arriving at the same solution creates inconsistency
+
+### Anti-Pattern to Avoid
+
+Do **not** manually register view namespaces in service providers:
+
+```php
+// DON'T DO THIS - it's redundant and creates inconsistency
+public function boot($app): void
+{
+    $view = $app->make(FrameworkView::class);
+    $view->addNamespace('blog', module_path('blog', 'resources/views'));
+}
+```
+
+Instead, rely on the manifest - the framework already does this in `ModuleBootstrapper::registerModuleViews()`.
 
 ## Commands
 
