@@ -11,25 +11,13 @@ namespace Marwa\Framework\Adapters\Event;
  */
 abstract class AbstractEvent
 {
-    /**
-     * @var string
-     */
-    protected string $name;
+    public readonly string $name;
 
-    /**
-     * @param string|null $name
-     */
     public function __construct(?string $name = null)
     {
-        // default: use FQCN as event name
         $this->name = $name ?? static::class;
     }
 
-    /**
-     * Get the event name (used by dispatcher).
-     *
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;

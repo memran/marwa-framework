@@ -234,10 +234,10 @@ final class ModuleBootstrapper
             }
         }
 
-        $manifestConfig = $module->config();
-
-        if (is_array($manifestConfig)) {
-            foreach ($manifestConfig as $key => $value) {
+        $manifest = $module->manifest();
+        $configArray = $manifest['config'] ?? null;
+        if (is_array($configArray)) {
+            foreach ($configArray as $key => $value) {
                 $this->config->set($configKey . '.' . $key, $value);
             }
         }
@@ -255,7 +255,8 @@ final class ModuleBootstrapper
         $eventDispatcher = $this->container->get(\Psr\EventDispatcher\EventDispatcherInterface::class);
 
         foreach ($registry->all() as $module) {
-            $listeners = $module->manifest('listeners') ?? [];
+            $manifest = $module->manifest();
+            $listeners = $manifest['listeners'] ?? null;
 
             if (!is_array($listeners)) {
                 continue;
@@ -266,6 +267,7 @@ final class ModuleBootstrapper
                     $listenerClasses = [$listenerClasses];
                 }
 
+                /** @var string|mixed $listenerClass */
                 foreach ($listenerClasses as $listenerClass) {
                     if (is_string($listenerClass) && class_exists($listenerClass)) {
                         $eventDispatcher->listen($eventName, new $listenerClass());
@@ -288,7 +290,9 @@ final class ModuleBootstrapper
 
         foreach ($registry->all() as $module) {
             $slug = $module->slug();
-            $name = $module->manifest('name') ?? $slug;
+            $manifest = $module->manifest();
+            $nameValue = $manifest['name'] ?? $slug;
+            $name = is_string($nameValue) ? $nameValue : $slug;
 
             $eventDispatcher->dispatch(
                 new \Marwa\Framework\Adapters\Event\ModuleLoaded(slug: $slug, name: $name)
@@ -342,19 +346,17 @@ final class ModuleBootstrapper
             $paths[] = $conventionalPath;
         }
 
-        $manifestPath = $module->path('views');
-
-        if ($manifestPath !== null) {
-            $type = gettype($manifestPath);
-
-            if ($type === 'array') {
-                foreach ($manifestPath as $p) {
-                    if (is_string($p) && is_dir($p)) {
-                        $paths[] = $p;
-                    }
+        $viewPathValue = $module->path('views');
+        if (is_array($viewPathValue)) {
+            foreach ($viewPathValue as $p) {
+                if (is_string($p) && is_dir($p)) {
+                    $paths[] = $p;
                 }
-            } elseif ($type === 'string' && is_dir($manifestPath)) {
-                $paths[] = $manifestPath;
+            }
+        } else {
+            $viewPathString = is_string($viewPathValue) ? $viewPathValue : null;
+            if ($viewPathString !== null && is_dir($viewPathString)) {
+                $paths[] = $viewPathString;
             }
         }
 

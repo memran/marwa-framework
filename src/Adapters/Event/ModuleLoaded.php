@@ -8,13 +8,11 @@ use DateTimeImmutable;
 
 final class ModuleLoaded extends AbstractEvent
 {
-    public readonly DateTimeImmutable $time;
-
     public function __construct(
         public readonly string $slug,
-        public readonly string $name
+        string $name,
+        public readonly DateTimeImmutable $time = new DateTimeImmutable()
     ) {
-        parent::__construct();
-        $this->time = new DateTimeImmutable();
+        parent::__construct($name);
     }
 }

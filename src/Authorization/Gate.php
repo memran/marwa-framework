@@ -156,7 +156,7 @@ class Gate implements GateInterface
         if ($policyClass !== null) {
             if (is_callable($policyClass)) {
                 $this->registry->register($modelClass, $policyClass);
-            } elseif (is_string($policyClass) && class_exists($policyClass)) {
+            } else {
                 $this->registry->register($modelClass, $policyClass);
             }
             return $this;

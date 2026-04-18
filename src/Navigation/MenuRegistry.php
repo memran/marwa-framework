@@ -83,7 +83,7 @@ final class MenuRegistry
     }
 
     /**
-     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,children:list<array<string, mixed>>}>
+     * @return list<array{name:string,label:string,url:string,parent:?string,order:int,icon:?string,permission:?string,roles:?array<mixed>,children:list<array<string, mixed>>}>
      */
     public function tree(): array
     {

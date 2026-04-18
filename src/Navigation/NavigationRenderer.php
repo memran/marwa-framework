@@ -56,6 +56,9 @@ final class NavigationRenderer
     /**
      * Check if menu item is authorized for current user.
      */
+    /**
+     * @param array{name:string,label:string,url:string,icon:?string,isActive:bool,permission:?string,roles:?array<mixed>,children:list<mixed>} $item
+     */
     private function isAuthorized(array $item): bool
     {
         $permission = $item['permission'] ?? null;
@@ -99,6 +102,9 @@ final class NavigationRenderer
 
     /**
      * Check if user has required role(s).
+     */
+    /**
+     * @param list<string> $roles
      */
     private function hasRole(array $roles): bool
     {
