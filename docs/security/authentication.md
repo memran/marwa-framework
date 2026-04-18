@@ -282,6 +282,89 @@ class ApiAuthController
 }
 ```
 
+## Framework Authentication (AuthManager)
+
+The framework provides `AuthManager` and `Authenticatable` trait for built-in authentication flow.
+
+### Using the Authenticatable Trait
+
+Add the trait to your User model:
+
+```php
+// app/Models/User.php
+use Marwa\Framework\Authorization\Authenticatable;
+use Marwa\Framework\Authorization\Contracts\UserInterface;
+
+class User extends Model implements UserInterface
+{
+    use Authenticatable;
+
+    // Must implement these methods when using the trait
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public static function findByEmail(string $email): ?self
+    {
+        return static::where('email', $email)->first();
+    }
+}
+```
+
+### Using AuthManager
+
+```php
+// Login with credentials
+$auth = app(\Marwa\Framework\Authorization\AuthManager::class);
+
+if ($auth->authenticate($email, $password)) {
+    // User is now logged in
+    $user = $auth->user();
+}
+
+// Manual login
+$user = User::find($id);
+$auth->login($user);
+
+// Logout
+$auth->logout();
+
+// Check auth state
+if ($auth->check()) {
+    $user = $auth->user();
+    $id = $auth->id();
+}
+
+if ($auth->guest()) {
+    // Redirect to login
+}
+```
+
+### AuthManager Methods
+
+| Method | Description |
+|-------|-------------|
+| `setUser(?UserInterface $user)` | Set the authenticated user |
+| `user(): ?UserInterface` | Get the current user |
+| `check(): bool` | Check if authenticated |
+| `guest(): bool` | Check if guest (not authenticated) |
+| `id(): ?int` | Get current user ID |
+| `login(UserInterface $user)` | Log user in |
+| `logout()` | Log user out |
+| `authenticate(string $email, string $password)` | Authenticate with credentials |
+| `using(?string $className)` | Set user model class |
+
 ## Security Considerations
 
 1. **Hash passwords** - Always use `password_hash()` and `password_verify()`

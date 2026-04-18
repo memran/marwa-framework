@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Framework Authentication Flow:
+  - Added `Authenticatable` trait for User models with `login()`, `logout()`, and `user()` methods
+  - Added `AuthManager` for login/logout state management with Gate integration
+
+- Navigation System:
+  - Added `NavigationRenderer` and `NavigationViewExtension` for first-class menu rendering in Twig
+
+- Permission Middleware:
+  - Added `PermissionMiddleware` for route-level permission checks
+
+- Config Merging:
+  - Added `ConfigMerger` for additive config list merging
+
+- Module Enhancements:
+  - Added module dependency validation
+  - Module seeder support (`module:seed` command)
+  - Manifest-driven view namespace registration
+
+- Database:
+  - Added DBForge for database management
+
+- Security:
+  - Added security risk logging and reporting (`security:report` command)
+  - Added Kafka consumer command and notification channel
+  - Added configurable session savePath with framework-managed default
+
 - Documentation improvements:
   - Getting Started section with installation and project structure guides
   - Quick Start guide with Mermaid diagrams

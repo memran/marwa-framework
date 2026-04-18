@@ -249,6 +249,44 @@ Behavior:
 
 The framework shares the final menu tree to views as `mainMenu`, and you can also resolve it manually with `menu()->tree()`.
 
+### Rendering the Menu
+
+Use `NavigationRenderer` to render the menu in your views:
+
+```php
+// In controller
+$renderer = app(\Marwa\Framework\Navigation\NavigationRenderer::class);
+$renderer->setCurrentUrl(request()->getUri()->getPath());
+
+$menuHtml = $renderer->renderMainMenu();
+
+return view('layout', ['mainMenu' => $menuHtml]);
+```
+
+Or get the structured menu data for custom rendering:
+
+```php
+$menuData = $renderer->tree();
+// Returns:
+// [
+//     [
+//         'name' => 'blog',
+//         'label' => 'Blog',
+//         'url' => '/blog',
+//         'icon' => 'bi bi-book',
+//         'isActive' => true,
+//         'children' => [...],
+//     ],
+// ]
+```
+
+The renderer provides:
+- `renderMainMenu()` - Full menu HTML
+- `renderMenu(array $items)` - Custom menu items
+- `renderSections(array $sections)` - Sidebar sections
+- `renderDropdown(array $item)` - Dropdown menu
+- `renderMenuItem(array $item)` - Single menu item
+
 ## Routes
 
 The module bootstrapper automatically loads route files declared in the manifest under `routes.http` and `routes.api`.
