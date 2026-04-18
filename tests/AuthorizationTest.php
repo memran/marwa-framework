@@ -50,7 +50,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return false;
@@ -74,7 +74,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return true;
@@ -99,7 +99,7 @@ final class AuthorizationTest extends TestCase
 
         $gate = new Gate($registry);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return true;
@@ -124,7 +124,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return false;
@@ -146,7 +146,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $adminUser = new class implements UserInterface {
+        $adminUser = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return false;
@@ -225,7 +225,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $user1 = new class implements UserInterface {
+        $user1 = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return true;
@@ -237,7 +237,7 @@ final class AuthorizationTest extends TestCase
             }
         };
 
-        $user2 = new class implements UserInterface {
+        $user2 = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return false;
@@ -261,7 +261,7 @@ final class AuthorizationTest extends TestCase
         $registry = new PolicyRegistry();
         $gate = new Gate($registry);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public function hasPermission(string $permission): bool
             {
                 return $permission === 'test.ability';
@@ -285,7 +285,7 @@ final class AuthorizationTest extends TestCase
         $gate = new Gate($registry);
         $auth = new AuthManager($gate);
 
-        $user = new class implements UserInterface {
+        $user = new class () implements UserInterface {
             public int $id = 1;
 
             public function hasPermission(string $permission): bool
