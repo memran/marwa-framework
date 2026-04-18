@@ -303,6 +303,11 @@ final class Application
             }
 
             $provider->register($this);
+
+            if (method_exists($provider, 'registered')) {
+                $provider->registered($this);
+            }
+
             $this->moduleServiceProviders[$class] = $provider;
 
             return;
@@ -323,7 +328,16 @@ final class Application
                 continue;
             }
 
+            if (method_exists($provider, 'booting')) {
+                $provider->booting($this);
+            }
+
             $provider->boot($this);
+
+            if (method_exists($provider, 'booted')) {
+                $provider->booted($this);
+            }
+
             $this->bootedModuleServiceProviders[$class] = true;
         }
     }
