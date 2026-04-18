@@ -35,7 +35,7 @@ final class NavigationRenderer
         return $this->currentUrl === $url || Str::startsWith($this->currentUrl, rtrim($url, '/') . '/');
     }
 
-/**
+    /**
      * @return list<array{name:string,label:string,url:string,icon:?string,isActive:bool,permission:?string,roles:?array<mixed>,children:list<array{name:string,label:string,url:string,icon:?string,isActive:bool}>}>
      */
     public function tree(): array
