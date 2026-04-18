@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Navigation;
 
-use Marwa\Framework\View\Extension\AbstractViewExtension;
+use Marwa\Framework\Views\Extension\AbstractViewExtension;
 
 final class NavigationViewExtension extends AbstractViewExtension
 {
@@ -12,7 +12,8 @@ final class NavigationViewExtension extends AbstractViewExtension
 
     public function __construct(
         private ?MenuRegistry $menuRegistry = null
-    ) {}
+    ) {
+    }
 
     public function register(): void
     {
@@ -45,11 +46,10 @@ final class NavigationViewExtension extends AbstractViewExtension
         return $this;
     }
 
-public static function createWithGlobals(): self
+    public static function createWithGlobals(): self
     {
         global $mainMenu;
 
         return new self($mainMenu ?? null);
     }
 }
-

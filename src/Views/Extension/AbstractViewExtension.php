@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Marwa\Framework\View\Extension;
+namespace Marwa\Framework\Views\Extension;
 
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;

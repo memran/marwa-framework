@@ -101,11 +101,11 @@ trait Authenticatable
     {
         $user = static::findByEmail($email);
 
-        if ($user === null) {
+if ($user === null) {
             return null;
         }
 
-$hash = $user->getPasswordHash();
+        $hash = $user->getPasswordHash();
 
         if ($hash === null || !password_verify($password, $hash)) {
             return null;

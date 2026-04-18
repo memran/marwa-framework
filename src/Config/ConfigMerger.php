@@ -138,11 +138,11 @@ final class ConfigMerger
      */
     public static function operation(string $item): string
     {
-        if (str_starts_with($item, self::REMOVE_PREFIX)) {
+if (str_starts_with($item, self::REMOVE_PREFIX)) {
             return 'remove';
         }
 
-if (str_starts_with($item, self::PREPEND_PREFIX)) {
+        if (str_starts_with($item, self::PREPEND_PREFIX)) {
             return 'prepend';
         }
 
