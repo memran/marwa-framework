@@ -11,8 +11,6 @@ use Marwa\Framework\Authorization\Contracts\UserInterface;
  *
  * Use this trait in classes that implement UserInterface
  * to add role/permission checks and authentication methods.
- *
- * @phpstan-trait
  */
 
 trait Authenticatable
