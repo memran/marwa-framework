@@ -46,7 +46,89 @@ final class NavigationRenderer
 
         $items = $this->registry->tree();
 
-        return array_map(fn (array $item): array => $this->mapTreeItem($item), $items);
+        $filtered = array_filter($items, fn (array $item): bool => $this->isAuthorized($item));
+
+        $mapped = array_map(fn (array $item): array => $this->mapTreeItem($item), $filtered);
+
+        return array_values($mapped);
+    }
+
+    /**
+     * Check if menu item is authorized for current user.
+     */
+    private function isAuthorized(array $item): bool
+    {
+        $permission = $item['permission'] ?? null;
+        $roles = $item['roles'] ?? null;
+
+        if ($permission !== null) {
+            if (!$this->can($permission)) {
+                return false;
+            }
+        }
+
+        if ($roles !== null && is_array($roles)) {
+            if (!$this->hasRole($roles)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check permission via Gate.
+     */
+    private function can(string $permission): bool
+    {
+        static $gate = null;
+
+        if ($gate === null) {
+            global $app;
+            if ($app instanceof \Marwa\Framework\Application) {
+                $gate = $app->make(\Marwa\Framework\Authorization\Gate::class);
+            }
+        }
+
+        if ($gate === null) {
+            return true;
+        }
+
+        return $gate->allows($permission);
+    }
+
+    /**
+     * Check if user has required role(s).
+     */
+    private function hasRole(array $roles): bool
+    {
+        static $auth = null;
+
+        if ($auth === null) {
+            global $app;
+            if ($app instanceof \Marwa\Framework\Application) {
+                $auth = $app->make(\Marwa\Framework\Authorization\AuthManager::class);
+            }
+        }
+
+        if ($auth === null) {
+            return true;
+        }
+
+        $user = $auth->user();
+        if ($user === null) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole')) {
+            foreach ($roles as $role) {
+                if ($user->hasRole($role)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

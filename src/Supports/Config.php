@@ -261,7 +261,7 @@ final class Config
             if ($i === count($keys) - 1) {
                 $current[$k] = $value;
             } else {
-                if (!isset($current[$k]) {
+                if (!isset($current[$k])) {
                     $current[$k] = [];
                 }
                 $current = &$current[$k];
