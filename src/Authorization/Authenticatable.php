@@ -111,7 +111,7 @@ trait Authenticatable
             return null;
         }
 
-        return $user;
+return $user;
     }
 }
 

@@ -49,7 +49,7 @@ final class NavigationViewExtension extends AbstractViewExtension
     {
         global $mainMenu;
 
-        return new self($mainMenu ?? null);
+return new self($mainMenu ?? null);
     }
 }
 

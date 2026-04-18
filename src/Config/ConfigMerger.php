@@ -150,7 +150,7 @@ final class ConfigMerger
             return 'append';
         }
 
-        return 'replace';
+return 'replace';
     }
 }
 

@@ -70,7 +70,7 @@ final class PermissionMiddleware implements MiddlewareInterface
 
         $attributeName = trim($segment);
 
-        return $request->getAttribute($attributeName);
+return $request->getAttribute($attributeName);
     }
 }
 
