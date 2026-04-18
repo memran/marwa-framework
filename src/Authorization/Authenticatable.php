@@ -101,7 +101,7 @@ trait Authenticatable
     {
         $user = static::findByEmail($email);
 
-if ($user === null) {
+        if ($user === null) {
             return null;
         }
 
@@ -114,5 +114,3 @@ if ($user === null) {
         return $user;
     }
 }
-
-

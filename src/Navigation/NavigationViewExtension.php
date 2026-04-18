@@ -12,8 +12,7 @@ final class NavigationViewExtension extends AbstractViewExtension
 
     public function __construct(
         private ?MenuRegistry $menuRegistry = null
-    ) {
-    }
+    ) {}
 
     public function register(): void
     {
