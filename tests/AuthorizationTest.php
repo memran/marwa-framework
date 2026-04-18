@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
-use Marwa\Framework\Application;
 use Marwa\Framework\Authorization\AuthManager;
-use Marwa\Framework\Authorization\Gate;
-use Marwa\Framework\Authorization\PolicyRegistry;
-use Marwa\Framework\Authorization\Policy;
-use Marwa\Framework\Authorization\Contracts\GateInterface;
 use Marwa\Framework\Authorization\Contracts\UserInterface;
+use Marwa\Framework\Authorization\Gate;
+use Marwa\Framework\Authorization\Policy;
+use Marwa\Framework\Authorization\PolicyRegistry;
 use Marwa\Framework\Exceptions\AuthorizationException;
 use PHPUnit\Framework\TestCase;
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Authorization;
 
-use Marwa\Framework\Exceptions\AuthorizationException;
 use Marwa\Framework\Authorization\Contracts\GateInterface;
 use Marwa\Framework\Authorization\Contracts\UserInterface;
+use Marwa\Framework\Exceptions\AuthorizationException;
 
 class Gate implements GateInterface
 {

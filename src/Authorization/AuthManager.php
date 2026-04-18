@@ -12,8 +12,7 @@ class AuthManager
 
     public function __construct(
         protected Gate $gate
-    ) {
-    }
+    ) {}
 
     public function setUser(?UserInterface $user): self
     {
