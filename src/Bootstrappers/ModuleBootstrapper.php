@@ -211,14 +211,32 @@ final class ModuleBootstrapper
         $view = $this->container->get(FrameworkView::class);
 
         foreach ($registry->all() as $module) {
-            $viewsPath = $module->path('views');
+            $viewsPath = $this->resolveModuleViewsPath($module);
 
-            if (!is_string($viewsPath) || !is_dir($viewsPath)) {
+            if ($viewsPath === null) {
                 continue;
             }
 
             $view->addNamespace($this->moduleNamespace($module->slug()), $viewsPath);
         }
+    }
+
+    private function resolveModuleViewsPath(\Marwa\Module\Module $module): ?string
+    {
+        $basePath = $module->basePath();
+
+        $viewsPath = $basePath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
+
+        if (is_dir($viewsPath)) {
+            return $viewsPath;
+        }
+
+        $manifestPath = $module->path('views');
+        if (is_string($manifestPath) && is_dir($manifestPath)) {
+            return $manifestPath;
+        }
+
+        return null;
     }
 
     private function loadModuleRoutes(ModuleRegistryInterface $registry): void
