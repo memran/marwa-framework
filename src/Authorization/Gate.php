@@ -139,6 +139,120 @@ class Gate implements GateInterface
     }
 
     /**
+     * Register a policy for a model class with auto-discovery.
+     *
+     * Resolution order:
+     * 1. Module Policies folder (modules/{Module}/Policies/{Model}Policy.php)
+     * 2. Global config (permissions.policies)
+     * 3. Registered via Gate::policy() before
+     *
+     * Usage:
+     *   gate()->policy(User::class);           // Auto-discover
+     *   gate()->policy(User::class, CustomPolicy::class); // Manual
+     */
+    public function policy(string $modelClass, string|callable|null $policyClass = null): mixed
+    {
+        // Register manually if provided
+        if ($policyClass !== null) {
+            if (is_callable($policyClass)) {
+                $this->registry->register($modelClass, $policyClass);
+            } elseif (is_string($policyClass) && class_exists($policyClass)) {
+                $this->registry->register($modelClass, $policyClass);
+            }
+            return $this;
+        }
+
+        // Auto-discover: first try module, then config, then registry
+        if ($this->registry->hasPolicy($modelClass)) {
+            return $this->registry->resolve($modelClass);
+        }
+
+        // Try module policy auto-discovery
+        $discoveredPolicy = $this->resolvePolicyFromModule($modelClass);
+        if ($discoveredPolicy !== null) {
+            $this->registry->register($modelClass, $discoveredPolicy);
+            return $this->registry->resolve($modelClass);
+        }
+
+        // Try global config fallback
+        $configPolicies = config('permissions.policies', []);
+        if (isset($configPolicies[$modelClass])) {
+            $policyFromConfig = $configPolicies[$modelClass];
+            if (is_string($policyFromConfig) && class_exists($policyFromConfig)) {
+                $this->registry->register($modelClass, $policyFromConfig);
+                return $this->registry->resolve($modelClass);
+            }
+        }
+
+        // Return null if not found - caller can handle
+        return null;
+    }
+
+    /**
+     * Resolve policy from module Policies folder.
+     */
+    private function resolvePolicyFromModule(string $modelClass): ?string
+    {
+        $modelName = (new \ReflectionClass($modelClass))->getShortName();
+        $policyName = $modelName . 'Policy.php';
+        $policyClassName = $modelName . 'Policy';
+
+        // Extract module name from model namespace
+        // App\Models\User -> Users module
+        // App\Modules\Users\Models\User -> Users module
+        $moduleSlug = $this->extractModuleSlug($modelClass);
+
+        if ($moduleSlug === null) {
+            return null;
+        }
+
+        // Try to find policy in module Policies folder
+        $policyPath = base_path('modules' . DIRECTORY_SEPARATOR . $moduleSlug . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . $policyName);
+
+        if (file_exists($policyPath)) {
+            $policyNamespace = 'App\\Modules\\' . ucfirst($moduleSlug) . '\\Policies\\' . $policyClassName;
+
+            if (class_exists($policyNamespace)) {
+                return $policyNamespace;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract module slug from model class namespace.
+     */
+    private function extractModuleSlug(string $modelClass): ?string
+    {
+        // App\Models\User -> users
+        // App\Modules\Users\Models\User -> users
+        // Modules\Users\Models\User -> users
+
+        $matches = [];
+
+        if (preg_match('/Modules?\\\\([A-Za-z]+)/', $modelClass, $matches)) {
+            return strtolower($matches[1]);
+        }
+
+        if (preg_match('/\\\\Modules?\\\\([A-Za-z]+)/', $modelClass, $matches)) {
+            return strtolower($matches[1]);
+        }
+
+        // Try parent namespace check
+        // If model is in app namespace, return null (global)
+        if (str_starts_with($modelClass, 'App\\')) {
+            // Check if in global app/Policies
+            $globalPolicyPath = base_path('app' . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . (new \ReflectionClass($modelClass))->getShortName() . 'Policy.php');
+            if (file_exists($globalPolicyPath)) {
+                return 'app';
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param string $ability
      */
     protected function defineResourceAbility(string $resourceName, string $ability, string $modelClass): void
