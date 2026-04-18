@@ -86,6 +86,8 @@ final class ModuleBootstrapper
         $this->registry = $this->resolveRegistry();
         $this->assertModuleDependencies($this->registry);
         $this->app->bootModuleServiceProviders();
+        $this->registerModuleListeners($this->registry);
+        $this->dispatchModuleEvents($this->registry);
         $this->loadModuleConfigs($this->registry);
         $this->shareMainMenu();
 
@@ -238,6 +240,59 @@ final class ModuleBootstrapper
             foreach ($manifestConfig as $key => $value) {
                 $this->config->set($configKey . '.' . $key, $value);
             }
+        }
+    }
+
+    /**
+     * Register module listeners from manifest.
+     */
+    private function registerModuleListeners(ModuleRegistryInterface $registry): void
+    {
+        if (!$this->container->has(\Psr\EventDispatcher\EventDispatcherInterface::class)) {
+            return;
+        }
+
+        $eventDispatcher = $this->container->get(\Psr\EventDispatcher\EventDispatcherInterface::class);
+
+        foreach ($registry->all() as $module) {
+            $listeners = $module->manifest('listeners') ?? [];
+
+            if (!is_array($listeners)) {
+                continue;
+            }
+
+            foreach ($listeners as $eventName => $listenerClasses) {
+                if (!is_array($listenerClasses)) {
+                    $listenerClasses = [$listenerClasses];
+                }
+
+                foreach ($listenerClasses as $listenerClass) {
+                    if (is_string($listenerClass) && class_exists($listenerClass)) {
+                        $eventDispatcher->listen($eventName, new $listenerClass());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Dispatch individual module events during bootstrap.
+     */
+    private function dispatchModuleEvents(ModuleRegistryInterface $registry): void
+    {
+        if (!$this->container->has(\Psr\EventDispatcher\EventDispatcherInterface::class)) {
+            return;
+        }
+
+        $eventDispatcher = $this->container->get(\Psr\EventDispatcher\EventDispatcherInterface::class);
+
+        foreach ($registry->all() as $module) {
+            $slug = $module->slug();
+            $name = $module->manifest('name') ?? $slug;
+
+            $eventDispatcher->dispatch(
+                new \Marwa\Framework\Adapters\Event\ModuleLoaded(slug: $slug, name: $name)
+            );
         }
     }
 
