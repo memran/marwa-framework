@@ -5,3 +5,8 @@ parameters:
 	paths:
 		- src
 		- tests
+	bootstrapFiles:
+		- src/Authorization/Authenticatable.php
+	ignoreErrors:
+		- identifier: trait.unused
+		  path: src/Authorization/Authenticatable.php
