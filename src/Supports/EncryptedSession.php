@@ -31,7 +31,8 @@ final class EncryptedSession implements SessionInterface
      *     secure: bool,
      *     httpOnly: bool,
      *     sameSite: string,
-     *     encrypt: bool
+     *     encrypt: bool,
+     *     savePath: string
      * }
      */
     private array $settings;
@@ -53,6 +54,8 @@ final class EncryptedSession implements SessionInterface
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
+
+        $this->configureSavePath();
 
         session_name($this->settings['name']);
         ini_set('session.use_strict_mode', '1');
@@ -256,6 +259,25 @@ final class EncryptedSession implements SessionInterface
         $bag = $_SESSION[self::SESSION_BAG] ?? [];
 
         return is_array($bag) ? array_filter($bag, 'is_string') : [];
+    }
+
+    private function configureSavePath(): void
+    {
+        $savePath = $this->settings['savePath'];
+
+        if ($savePath === '') {
+            $savePath = $this->app->basePath('storage/framework/sessions');
+        }
+
+        if (!is_dir($savePath)) {
+            @mkdir($savePath, 0755, true);
+        }
+
+        if (!is_dir($savePath) || !is_writable($savePath)) {
+            $savePath = ini_get('session.save_path') ?: sys_get_temp_dir();
+        }
+
+        ini_set('session.save_path', $savePath);
     }
 
     private function encryptPayload(mixed $value): string

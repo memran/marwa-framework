@@ -21,7 +21,8 @@ final class SessionConfig
      *     secure: bool,
      *     httpOnly: bool,
      *     sameSite: string,
-     *     encrypt: bool
+     *     encrypt: bool,
+     *     savePath: string
      * }
      */
     public static function defaults(Application $app): array
@@ -39,6 +40,7 @@ final class SessionConfig
             'httpOnly' => true,
             'sameSite' => 'Lax',
             'encrypt' => true,
+            'savePath' => '',
         ];
     }
 }
