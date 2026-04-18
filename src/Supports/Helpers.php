@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/Helpers/Authorization.php';
 require_once __DIR__ . '/Helpers/Paths.php';
 require_once __DIR__ . '/Helpers/Container.php';
+require_once __DIR__ . '/Helpers/ModuleConfig.php';
 require_once __DIR__ . '/Helpers/SessionRequest.php';
 require_once __DIR__ . '/Helpers/Services.php';
 require_once __DIR__ . '/Helpers/Security.php';

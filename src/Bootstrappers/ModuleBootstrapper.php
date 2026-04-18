@@ -86,6 +86,7 @@ final class ModuleBootstrapper
         $this->registry = $this->resolveRegistry();
         $this->assertModuleDependencies($this->registry);
         $this->app->bootModuleServiceProviders();
+        $this->loadModuleConfigs($this->registry);
         $this->shareMainMenu();
 
         if (!Runtime::isConsole()) {
@@ -200,6 +201,44 @@ final class ModuleBootstrapper
         $this->seederPaths = array_values(array_unique($paths));
 
         return $this->seederPaths;
+    }
+
+    private function loadModuleConfigs(ModuleRegistryInterface $registry): void
+    {
+        foreach ($registry->all() as $module) {
+            $this->loadModuleConfig($module);
+        }
+    }
+
+    private function loadModuleConfig(\Marwa\Module\Module $module): void
+    {
+        $slug = $module->slug();
+        $basePath = $module->basePath();
+        $configDir = $basePath . DIRECTORY_SEPARATOR . 'config';
+
+        if (!is_dir($configDir)) {
+            return;
+        }
+
+        $configKey = 'modules.' . $slug;
+
+        foreach (glob($configDir . '/*.php') as $file) {
+            $filename = basename($file, '.php');
+
+            $config = require $file;
+
+            if (is_array($config)) {
+                $this->config->set($configKey . '.' . $filename, $config);
+            }
+        }
+
+        $manifestConfig = $module->config();
+
+        if (is_array($manifestConfig)) {
+            foreach ($manifestConfig as $key => $value) {
+                $this->config->set($configKey . '.' . $key, $value);
+            }
+        }
     }
 
     private function registerModuleViews(ModuleRegistryInterface $registry): void

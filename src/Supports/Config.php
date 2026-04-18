@@ -248,4 +248,24 @@ final class Config
     {
         return $this->loadedFiles;
     }
+
+    /**
+     * Set a configuration value using dot notation.
+     */
+    public function set(string $key, mixed $value): void
+    {
+        $keys = explode('.', $key);
+        $current = &$this->items;
+
+        foreach ($keys as $i => $k) {
+            if ($i === count($keys) - 1) {
+                $current[$k] = $value;
+            } else {
+                if (!isset($current[$k]) {
+                    $current[$k] = [];
+                }
+                $current = &$current[$k];
+            }
+        }
+    }
 }
