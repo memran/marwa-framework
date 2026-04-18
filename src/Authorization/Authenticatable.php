@@ -107,11 +107,11 @@ trait Authenticatable
 
         $hash = $user->getPasswordHash();
 
-        if ($hash === null || !password_verify($password, $hash)) {
+if ($hash === null || !password_verify($password, $hash)) {
             return null;
         }
 
-return $user;
+        return $user;
     }
 }
 
