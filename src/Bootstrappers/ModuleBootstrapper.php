@@ -210,33 +210,89 @@ final class ModuleBootstrapper
 
         $view = $this->container->get(FrameworkView::class);
 
-        foreach ($registry->all() as $module) {
-            $viewsPath = $this->resolveModuleViewsPath($module);
+        if ($this->isDebug()) {
+            $this->clearTwigCacheIfDev();
+        }
 
-            if ($viewsPath === null) {
+        foreach ($registry->all() as $module) {
+            $namespace = $this->moduleNamespace($module->slug());
+            $viewPaths = $this->resolveModuleViewsPaths($module);
+
+            if (empty($viewPaths)) {
+                if ($this->isDebug()) {
+                    error_log("[ModuleViews] {$namespace}: no views path found");
+                }
                 continue;
             }
 
-            $view->addNamespace($this->moduleNamespace($module->slug()), $viewsPath);
+            foreach ($viewPaths as $path) {
+                $view->addNamespace($namespace, $path);
+            }
+
+            if ($this->isDebug()) {
+                error_log("[ModuleViews] {$namespace}: registered " . count($viewPaths) . " path(s)");
+            }
         }
     }
 
-    private function resolveModuleViewsPath(\Marwa\Module\Module $module): ?string
+    /**
+     * @return list<string>
+     */
+    private function resolveModuleViewsPaths(\Marwa\Module\Module $module): array
     {
+        $paths = [];
         $basePath = $module->basePath();
 
-        $viewsPath = $basePath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
-
-        if (is_dir($viewsPath)) {
-            return $viewsPath;
+        $conventionalPath = $basePath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
+        if (is_dir($conventionalPath)) {
+            $paths[] = $conventionalPath;
         }
 
         $manifestPath = $module->path('views');
-        if (is_string($manifestPath) && is_dir($manifestPath)) {
-            return $manifestPath;
+
+        if ($manifestPath !== null) {
+            $type = gettype($manifestPath);
+
+            if ($type === 'array') {
+                foreach ($manifestPath as $p) {
+                    if (is_string($p) && is_dir($p)) {
+                        $paths[] = $p;
+                    }
+                }
+            } elseif ($type === 'string' && is_dir($manifestPath)) {
+                $paths[] = $manifestPath;
+            }
         }
 
-        return null;
+        return array_values(array_unique($paths));
+    }
+
+    private function isDebug(): bool
+    {
+        static $debug = null;
+
+        if ($debug === null) {
+            $debug = $this->config->getBool('app.debug', false);
+        }
+
+        return $debug;
+    }
+
+    private function clearTwigCacheIfDev(): void
+    {
+        $cachePath = $this->config->getString('view.cachePath');
+
+        if (is_string($cachePath) && is_dir($cachePath)) {
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+
+            foreach ($files as $file) {
+                if ($file->isFile() && $file->getExtension() === 'php') {
+                    @unlink($file->getPathname());
+                }
+            }
+        }
     }
 
     private function loadModuleRoutes(ModuleRegistryInterface $registry): void
