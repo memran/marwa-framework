@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Marwa\Framework\Authorization\Contracts\GateInterface;
-use Marwa\Framework\Exceptions\AuthorizationException;
 
 if (!function_exists('authorize')) {
     function authorize(string $ability, mixed $resource = null): bool

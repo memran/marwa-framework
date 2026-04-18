@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Controllers\Concerns;
 
 use Marwa\Framework\Authorization\Contracts\GateInterface;
-use Marwa\Framework\Exceptions\AuthorizationException;
 
 trait AuthorizesRequests
 {
