@@ -69,6 +69,7 @@ final class Mailer implements MailerInterface
         $this->settings['driver'] = strtolower((string) $this->settings['driver']);
         $this->settings['charset'] = (string) $this->settings['charset'];
         $this->settings['from']['address'] = (string) $this->settings['from']['address'];
+        $this->validateEmail($this->settings['from']['address']);
         $this->settings['from']['name'] = (string) $this->settings['from']['name'];
         $this->settings['smtp']['host'] = (string) $this->settings['smtp']['host'];
         $this->settings['smtp']['port'] = (int) $this->settings['smtp']['port'];
@@ -293,7 +294,12 @@ final class Mailer implements MailerInterface
         if (is_string($address)) {
             $email = trim($address);
 
-            return $email !== '' ? [$email => $name] : [];
+            if ($email !== '') {
+                $this->validateEmail($email);
+                return [$email => $name];
+            }
+
+            return [];
         }
 
         $recipients = [];
@@ -306,6 +312,7 @@ final class Mailer implements MailerInterface
                     continue;
                 }
 
+                $this->validateEmail($email);
                 $recipients[$email] = null;
 
                 continue;
@@ -317,6 +324,7 @@ final class Mailer implements MailerInterface
                 continue;
             }
 
+            $this->validateEmail($email);
             $recipients[$email] = $value !== '' ? $value : null;
         }
 
@@ -401,6 +409,13 @@ final class Mailer implements MailerInterface
     private function mailTransport(): object
     {
         return \Swift_MailTransport::newInstance();
+    }
+
+    private function validateEmail(string $email): void
+    {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw new \InvalidArgumentException("Invalid email address: {$email}");
+        }
     }
 
     private function assertSwiftMailerAvailable(): void
