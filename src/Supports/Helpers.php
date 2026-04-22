@@ -19,3 +19,4 @@ require_once __DIR__ . '/Helpers/Security.php';
 require_once __DIR__ . '/Helpers/ValidationResponse.php';
 require_once __DIR__ . '/Helpers/ViewDebug.php';
 require_once __DIR__ . '/Helpers/Utilities.php';
+require_once __DIR__ . '/LegacyCompatibility.php';

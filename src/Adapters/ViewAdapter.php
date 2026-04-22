@@ -22,7 +22,7 @@ final class ViewAdapter
     private ?ThemeBuilder $themeBuilder = null;
 
     private string $viewsPath = '';
-    private string $cachePath = '';
+    private ?string $cachePath = null;
     private bool $debug = false;
     private string $sharedPath = '';
 
@@ -32,9 +32,17 @@ final class ViewAdapter
         $defaults = ViewConfigContract::defaults($this->app);
 
         $this->viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
-        $this->cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
         $this->ensureDirectory($this->viewsPath);
-        $this->ensureDirectory($this->cachePath);
+
+        $cacheEnabled = $this->config->getBool(
+            ViewConfigContract::KEY . '.cache.enabled',
+            $defaults['cache']['enabled']
+        );
+
+        if ($cacheEnabled) {
+            $this->cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
+            $this->ensureDirectory($this->cachePath);
+        }
 
         $this->debug = $this->config->getBool(ViewConfigContract::KEY . '.debug', $defaults['debug']);
         $this->sharedPath = $this->config->getString(ViewConfigContract::KEY . '.sharedPath', $defaults['sharedPath']);

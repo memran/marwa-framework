@@ -62,6 +62,7 @@ PHP
     protected function tearDown(): void
     {
         foreach ([
+            $this->basePath . '/config/view.php',
             $this->basePath . '/resources/views/themes/dark/views/welcome.twig',
             $this->basePath . '/resources/views/themes/dark/manifest.php',
             $this->basePath . '/resources/views/themes/default/views/welcome.twig',
@@ -72,6 +73,7 @@ PHP
             @unlink($file);
         }
 
+        $this->deleteDirectory($this->basePath . '/storage');
         @rmdir($this->basePath . '/resources/views/themes/dark/views');
         @rmdir($this->basePath . '/resources/views/themes/dark');
         @rmdir($this->basePath . '/resources/views/themes/default/views');
@@ -107,6 +109,28 @@ PHP
         self::assertSame('Dark Carol Marwa', trim($rendered));
     }
 
+    public function testCompiledTwigCacheIsWrittenWhenCachingIsEnabled(): void
+    {
+        $this->writeViewConfig(true);
+
+        $app = new Application($this->basePath);
+        $app->view()->render('welcome', ['name' => 'Alice']);
+
+        self::assertNotSame([], $this->cacheFiles());
+    }
+
+    public function testCompiledTwigCacheIsNotWrittenWhenCachingIsDisabled(): void
+    {
+        $this->writeViewConfig(false);
+
+        $app = new Application($this->basePath);
+        $app->view()->share('appName', 'Marwa');
+
+        self::assertTrue($app->view()->exists('welcome'));
+        self::assertSame('Default Alice Marwa', trim($app->view()->render('welcome', ['name' => 'Alice'])));
+        self::assertSame([], $this->cacheFiles());
+    }
+
     public function testFallbackThemeIsUsedWhenRequestedThemeCannotBeActivated(): void
     {
         $app = new Application($this->basePath);
@@ -115,5 +139,73 @@ PHP
 
         self::assertSame('default', $app->view()->theme());
         self::assertStringContainsString('Default Alice framework', $app->view()->render('welcome', ['name' => 'Alice']));
+    }
+
+    private function writeViewConfig(bool $cacheEnabled): void
+    {
+        $enabled = $this->boolToPhp($cacheEnabled);
+
+        file_put_contents($this->basePath . '/config/view.php', <<<PHP
+<?php
+
+return [
+    'cache' => [
+        'enabled' => {$enabled},
+    ],
+];
+PHP);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function cacheFiles(): array
+    {
+        $cacheDir = $this->basePath . '/storage/cache/views';
+
+        if (!is_dir($cacheDir)) {
+            return [];
+        }
+
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($cacheDir, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            $files[] = $file->getPathname();
+        }
+
+        sort($files);
+
+        return $files;
+    }
+
+    private function boolToPhp(bool $value): string
+    {
+        return $value ? 'true' : 'false';
+    }
+
+    private function deleteDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                @rmdir($item->getPathname());
+                continue;
+            }
+
+            @unlink($item->getPathname());
+        }
+
+        @rmdir($directory);
     }
 }

@@ -219,6 +219,14 @@ $html = view()->render('page', $data);
 view()->clearCache();
 ```
 
+If you disable compiled view caching after it has already been used, run a
+cache clear once to remove any stale compiled templates that were written
+before the change:
+
+```bash
+php marwa cache:clear
+```
+
 ### Configuration
 
 In `config/view.php`:

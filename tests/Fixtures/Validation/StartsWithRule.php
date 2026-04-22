@@ -13,6 +13,9 @@ final class StartsWithRule extends AbstractRule
         return 'starts_with';
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function validate(mixed $value, array $context): bool
     {
         if (!is_string($value)) {

@@ -17,9 +17,9 @@ final class ModulePathResolver
         $paths = [];
 
         foreach ($moduleConfig['commandPaths'] as $key) {
-            $path = $module->path($key);
+            $path = $this->normalizePath($module->path($key));
 
-            if (is_string($path) && is_dir($path)) {
+            if ($path !== null) {
                 $paths[] = $path;
             }
         }
@@ -27,7 +27,9 @@ final class ModulePathResolver
         foreach ($moduleConfig['commandConventions'] as $relativePath) {
             $path = $module->basePath() . DIRECTORY_SEPARATOR . trim($relativePath, DIRECTORY_SEPARATOR);
 
-            if (is_dir($path)) {
+            $path = $this->normalizePath($path);
+
+            if ($path !== null) {
                 $paths[] = $path;
             }
         }
@@ -45,7 +47,8 @@ final class ModulePathResolver
         $basePath = $module->basePath();
 
         $conventionalPath = $basePath . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations';
-        if (is_dir($conventionalPath)) {
+        $conventionalPath = $this->normalizePath($conventionalPath);
+        if ($conventionalPath !== null) {
             $paths[] = $conventionalPath;
         }
 
@@ -79,9 +82,9 @@ final class ModulePathResolver
         $paths = [];
 
         foreach ($moduleConfig['seedersPath'] as $key) {
-            $path = $module->path($key);
+            $path = $this->normalizePath($module->path($key));
 
-            if (is_string($path) && is_dir($path)) {
+            if ($path !== null) {
                 $paths[] = $path;
             }
         }
