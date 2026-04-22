@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
+use FilesystemIterator;
 use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use FilesystemIterator;
 
 final class CacheSupportTest extends TestCase
 {
