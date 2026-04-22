@@ -171,6 +171,16 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function htmlTemplate(string $template, array $data = []): self
+    {
+        $html = view($template, $data)->getBody()->__toString();
+
+        return $this->html($html);
+    }
+
     public function attach(string $path, ?string $name = null, string $mime = 'application/octet-stream'): self
     {
         if (!is_file($path) || !is_readable($path)) {
