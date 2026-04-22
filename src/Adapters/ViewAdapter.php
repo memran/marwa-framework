@@ -231,11 +231,6 @@ final class ViewAdapter
 
     private function disableCompiledTwigCache(ViewConfig $viewConfig): void
     {
-        $viewConfigReflection = new \ReflectionObject($viewConfig);
-        $cachePathProperty = $viewConfigReflection->getProperty('cachePath');
-        $cachePathProperty->setAccessible(true);
-        $cachePathProperty->setValue($viewConfig, null);
-
         $engineReflection = new \ReflectionObject($this->engine);
         $twigProperty = $engineReflection->getProperty('twig');
         $twigProperty->setAccessible(true);
