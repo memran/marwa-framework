@@ -265,10 +265,6 @@ final class EncryptedSession implements SessionInterface
     {
         $savePath = $this->settings['savePath'];
 
-        if ($savePath === '') {
-            $savePath = $this->app->basePath('storage/framework/sessions');
-        }
-
         if (!is_dir($savePath)) {
             @mkdir($savePath, 0755, true);
         }

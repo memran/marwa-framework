@@ -123,9 +123,39 @@ Url::to('/dashboard');
 - Add tests in `tests/`
 - Use `*Test.php` or `*_test.php`
 - Cover routing, bootstrapping, middleware, and adapters
-- Run `composer test`, then `composer stan`
+- Prefer `php vendor/bin/phpunit` for direct verification and `composer test` for the repo shortcut
+- Prefer `php vendor/bin/phpstan analyse --level 6 --memory-limit=1G --no-progress` for static analysis and `composer stan` for the repo shortcut
+- Run PHPUnit first, then PHPStan level 6 before considering a change complete
 - Aim for 80% minimum coverage
 - Every public service method needs unit tests
+- For PHPUnit tests:
+  - Use `declare(strict_types=1);` in every test file
+  - Prefer `final class ... extends TestCase`
+  - Keep tests isolated and deterministic
+  - Use temp directories under `sys_get_temp_dir()` for filesystem work
+  - Clean up in `tearDown()` for every file, directory, env var, and global created by the test
+  - Avoid network, time, randomness, and external services unless explicitly mocked
+  - Prefer explicit assertions:
+    - `assertSame()` for scalars and arrays
+    - `assertTrue()` / `assertFalse()` for booleans
+    - `assertNull()` / `assertNotNull()` for nullable values
+    - `assertInstanceOf()` for types
+    - `assertFileExists()` / `assertDirectoryExists()` for filesystem effects
+  - Test behavior, not implementation details
+  - Add a regression test whenever fixing a bug
+  - Keep assertions precise and minimal
+  - Do not depend on test order
+  - Do not allow warnings, risky tests, or stray output
+- For PHPStan:
+  - Treat level 6 as the minimum acceptable standard
+  - Prefer explicit typing: typed properties, explicit parameter types, explicit return types, and `declare(strict_types=1);`
+  - Avoid `mixed` unless a boundary truly requires it
+  - Use accurate array shapes in PHPDoc when a method returns structured arrays
+  - Add PHPDoc only when types cannot be expressed directly in code
+  - Prefer concrete types over generic containers
+  - Fix the source code rather than suppressing warnings
+  - Keep ignores narrowly scoped and documented when unavoidable
+  - Watch for nullable/union mismatches, missing return types, undefined array keys, invalid access, and iterable value ambiguity
 
 ## Commit & PR
 

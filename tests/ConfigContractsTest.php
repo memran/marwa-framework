@@ -172,6 +172,10 @@ final class ConfigContractsTest extends TestCase
         self::assertTrue($defaults['httpOnly']);
         self::assertSame('Lax', $defaults['sameSite']);
         self::assertTrue($defaults['encrypt']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $app->basePath('storage/session')),
+            str_replace('/', DIRECTORY_SEPARATOR, $defaults['savePath'])
+        );
     }
 
     public function testSecurityConfigExposesExpectedDefaults(): void

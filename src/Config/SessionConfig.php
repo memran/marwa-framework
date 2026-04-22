@@ -40,7 +40,7 @@ final class SessionConfig
             'httpOnly' => true,
             'sameSite' => 'Lax',
             'encrypt' => true,
-            'savePath' => '',
+            'savePath' => storage_path('session'),
         ];
     }
 }
