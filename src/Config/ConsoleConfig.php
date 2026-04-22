@@ -25,6 +25,7 @@ use Marwa\Framework\Console\Commands\ModuleMigrateCommand;
 use Marwa\Framework\Console\Commands\ModuleSeedCommand;
 use Marwa\Framework\Console\Commands\RouteCacheCommand;
 use Marwa\Framework\Console\Commands\RouteClearCommand;
+use Marwa\Framework\Console\Commands\RouteListCommand;
 use Marwa\Framework\Console\Commands\ScheduleRunCommand;
 use Marwa\Framework\Console\Commands\ScheduleTableCommand;
 use Marwa\Framework\Console\Commands\SecurityReportCommand;
@@ -63,6 +64,7 @@ final class ConsoleConfig
                 ScheduleTableCommand::class,
                 RouteCacheCommand::class,
                 RouteClearCommand::class,
+                RouteListCommand::class,
                 SecurityReportCommand::class,
                 ModuleCacheCommand::class,
                 ModuleClearCommand::class,

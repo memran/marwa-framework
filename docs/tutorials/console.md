@@ -72,6 +72,7 @@ php marwa bootstrap:clear
 php marwa config:cache
 php marwa key:generate --show-env
 php marwa route:cache
+php marwa route:list
 php marwa module:cache
 php marwa make:command CleanupCommand
 php marwa make:controller Admin/PostController --resource

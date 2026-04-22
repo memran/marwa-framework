@@ -161,6 +161,35 @@ PHP
         self::assertContains(\Marwa\Framework\Console\Commands\KafkaConsumeCommand::class, ConsoleConfig::defaults($app)['commands']);
     }
 
+    public function testRouteListCommandListsRoutesFromApplicationFiles(): void
+    {
+        mkdir($this->basePath . '/routes', 0777, true);
+        file_put_contents(
+            $this->basePath . '/routes/web.php',
+            <<<'PHP'
+<?php
+
+router()->get('/hello', static fn (): string => 'hello')->name('hello.index')->register();
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('route:list');
+        $tester = new CommandTester($command);
+        self::assertSame(0, $tester->execute([]));
+
+        $display = $tester->getDisplay();
+
+        self::assertStringContainsString('Registered routes:', $display);
+        self::assertStringContainsString('METHODS', $display);
+        self::assertStringContainsString('/hello', $display);
+        self::assertStringContainsString('hello.index', $display);
+        self::assertStringContainsString('GET', $display);
+    }
+
     public function testConsoleKernelAutoDiscoversModuleCommands(): void
     {
         $moduleFixture = __DIR__ . '/Fixtures/Modules';

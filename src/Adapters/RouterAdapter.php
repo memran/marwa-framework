@@ -45,6 +45,14 @@ final class RouterAdapter
     }
 
     /**
+     * @return array<int, array{methods:array<int,string>,path:string,name:?string,controller:?string,action:?string,domain:?string}>
+     */
+    public function routes(): array
+    {
+        return $this->router->routes();
+    }
+
+    /**
      * @param array<int, mixed> $arguments
      */
     public function __call(string $method, array $arguments): mixed
