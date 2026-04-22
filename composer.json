@@ -35,7 +35,7 @@
     "php": "^8.2",
     "guzzlehttp/guzzle": "^7.9",
     "memran/marwa-logger": "^1.0",
-    "memran/marwa-error-handler": "^1.1",
+    "memran/marwa-error-handler": "^1.2",
     "memran/marwa-view": "^1.0",
     "memran/marwa-debugbar": "^1.0",
     "memran/marwa-event": "^0.2",

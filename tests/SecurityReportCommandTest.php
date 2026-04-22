@@ -89,7 +89,7 @@ PHP
 
         $tester = new CommandTester($console->find('security:report'));
         self::assertSame(0, $tester->execute([
-            '--since-hours' => '48',
+            '--since-hours' => '72',
             '--prune-days' => '1',
         ]));
 
