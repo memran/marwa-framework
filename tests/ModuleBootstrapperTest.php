@@ -46,9 +46,9 @@ final class ModuleBootstrapperTest extends TestCase
         @rmdir($this->basePath . '/resources/views/themes');
         @rmdir($this->basePath . '/resources/views');
         @rmdir($this->basePath . '/resources');
-        @unlink($this->basePath . '/bootstrap/cache/modules.php');
-        @rmdir($this->basePath . '/bootstrap/cache');
-        @rmdir($this->basePath . '/bootstrap');
+        @unlink($this->basePath . '/storage/cache/modules.php');
+        @rmdir($this->basePath . '/storage/cache');
+        @rmdir($this->basePath . '/storage');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $GLOBALS['marwa_module_routes'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
         restore_error_handler();
@@ -79,8 +79,8 @@ final class ModuleBootstrapperTest extends TestCase
 
     public function testModuleRoutesAreSkippedWhenCompiledRouteCacheExists(): void
     {
-        mkdir($this->basePath . '/bootstrap/cache', 0777, true);
-        file_put_contents($this->basePath . '/bootstrap/cache/routes.php', '<?php return static function (): void {};');
+        mkdir($this->basePath . '/storage/cache', 0777, true);
+        file_put_contents($this->basePath . '/storage/cache/routes.php', '<?php return static function (): void {};');
 
         $app = new Application($this->basePath);
         $app->make(AppBootstrapper::class)->bootstrap();
@@ -288,7 +288,7 @@ PHP
 return [
     'enabled' => true,
     'paths' => ['{$modulePath}'],
-    'cache' => '{$this->basePath}/bootstrap/cache/modules.php',
+    'cache' => '{$this->basePath}/storage/cache/modules.php',
 ];
 PHP;
     }

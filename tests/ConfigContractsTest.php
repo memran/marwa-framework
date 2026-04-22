@@ -128,15 +128,15 @@ final class ConfigContractsTest extends TestCase
         $app = new Application($this->basePath);
 
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache/config.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/config.php'),
             str_replace('/', DIRECTORY_SEPARATOR, BootstrapConfig::defaults($app)['configCache'])
         );
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache/routes.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/routes.php'),
             str_replace('/', DIRECTORY_SEPARATOR, BootstrapConfig::defaults($app)['routeCache'])
         );
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/bootstrap/cache/modules.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/modules.php'),
             str_replace('/', DIRECTORY_SEPARATOR, ModuleConfig::defaults($app)['cache'])
         );
         self::assertSame(

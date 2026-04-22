@@ -20,9 +20,9 @@ final class BootstrapConfig
     public static function defaults(Application $app): array
     {
         return [
-            'configCache' => (string) env('APP_CONFIG_CACHE', $app->basePath('bootstrap/cache/config.php')),
-            'routeCache' => (string) env('APP_ROUTE_CACHE', $app->basePath('bootstrap/cache/routes.php')),
-            'moduleCache' => (string) env('APP_MODULE_CACHE', $app->basePath('bootstrap/cache/modules.php')),
+            'configCache' => (string) env('APP_CONFIG_CACHE', $app->basePath('storage/cache/config.php')),
+            'routeCache' => (string) env('APP_ROUTE_CACHE', $app->basePath('storage/cache/routes.php')),
+            'moduleCache' => (string) env('APP_MODULE_CACHE', $app->basePath('storage/cache/modules.php')),
         ];
     }
 }

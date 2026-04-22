@@ -44,9 +44,9 @@ PHP
 
     protected function tearDown(): void
     {
-        @unlink($this->basePath . '/bootstrap/cache/config.php');
-        @rmdir($this->basePath . '/bootstrap/cache');
-        @rmdir($this->basePath . '/bootstrap');
+        @unlink($this->basePath . '/storage/cache/config.php');
+        @rmdir($this->basePath . '/storage/cache');
+        @rmdir($this->basePath . '/storage');
         @unlink($this->basePath . '/config/app.php');
         @unlink($this->basePath . '/.env');
         @rmdir($this->basePath . '/config');
@@ -73,9 +73,9 @@ PHP
 
     public function testBootstrapUsesConfigCacheWhenAvailable(): void
     {
-        mkdir($this->basePath . '/bootstrap/cache', 0777, true);
+        mkdir($this->basePath . '/storage/cache', 0777, true);
         file_put_contents(
-            $this->basePath . '/bootstrap/cache/config.php',
+            $this->basePath . '/storage/cache/config.php',
             <<<'PHP'
 <?php
 
