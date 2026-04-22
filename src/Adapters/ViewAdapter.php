@@ -23,6 +23,7 @@ final class ViewAdapter
 
     private string $viewsPath = '';
     private ?string $cachePath = null;
+    private bool $cacheEnabled = true;
     private bool $debug = false;
     private string $sharedPath = '';
 
@@ -34,12 +35,12 @@ final class ViewAdapter
         $this->viewsPath = $this->config->getString(ViewConfigContract::KEY . '.viewsPath', $defaults['viewsPath']);
         $this->ensureDirectory($this->viewsPath);
 
-        $cacheEnabled = $this->config->getBool(
+        $this->cacheEnabled = $this->config->getBool(
             ViewConfigContract::KEY . '.cache.enabled',
             $defaults['cache']['enabled']
         );
 
-        if ($cacheEnabled) {
+        if ($this->cacheEnabled) {
             $this->cachePath = $this->config->getString(ViewConfigContract::KEY . '.cachePath', $defaults['cachePath']);
             $this->ensureDirectory($this->cachePath);
         }
@@ -56,11 +57,16 @@ final class ViewAdapter
 
         $viewConfig = new ViewConfig(
             viewsPath: $this->viewsPath,
-            cachePath: $this->cachePath,
+            cachePath: $this->cacheEnabled ? $this->cachePath : sys_get_temp_dir(),
             debug: $this->debug,
         );
 
         $this->engine = $this->createViewEngine($viewConfig);
+
+        if (!$this->cacheEnabled) {
+            $this->disableCompiledTwigCache($viewConfig);
+        }
+
         $this->addNamespace('Shared', $this->sharedPath);
     }
 
@@ -221,6 +227,21 @@ final class ViewAdapter
 
         return is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.php')
             || is_file($themePath . DIRECTORY_SEPARATOR . 'manifest.json');
+    }
+
+    private function disableCompiledTwigCache(ViewConfig $viewConfig): void
+    {
+        $viewConfigReflection = new \ReflectionObject($viewConfig);
+        $cachePathProperty = $viewConfigReflection->getProperty('cachePath');
+        $cachePathProperty->setAccessible(true);
+        $cachePathProperty->setValue($viewConfig, null);
+
+        $engineReflection = new \ReflectionObject($this->engine);
+        $twigProperty = $engineReflection->getProperty('twig');
+        $twigProperty->setAccessible(true);
+        /** @var \Twig\Environment $twig */
+        $twig = $twigProperty->getValue($this->engine);
+        $twig->setCache(false);
     }
 
     private function twig(): \Twig\Environment
