@@ -366,7 +366,11 @@ final class Mailer implements MailerInterface
         $this->assertSwiftMailerAvailable();
 
         if ($attachment['type'] === 'path') {
-            $swiftAttachment = \Swift_Attachment::fromPath($attachment['value'], $attachment['mime']);
+            if (method_exists(\Swift_Attachment::class, 'fromPath')) {
+                $swiftAttachment = \Swift_Attachment::fromPath($attachment['value'], $attachment['mime']);
+            } else {
+                $swiftAttachment = new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
+            }
             if (is_string($attachment['name']) && $attachment['name'] !== '') {
                 $swiftAttachment->setFilename($attachment['name']);
             }
@@ -374,13 +378,13 @@ final class Mailer implements MailerInterface
             return $swiftAttachment;
         }
 
-        return \Swift_Attachment::newInstance($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
+        return new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
     }
 
     private function smtpTransport(): object
     {
         $smtp = $this->settings['smtp'];
-        $transport = \Swift_SmtpTransport::newInstance($smtp['host'], $smtp['port'], $smtp['encryption']);
+        $transport = new \Swift_SmtpTransport($smtp['host'], $smtp['port'], $smtp['encryption']);
 
         if ($smtp['username'] !== null) {
             $transport->setUsername($smtp['username']);
@@ -403,12 +407,12 @@ final class Mailer implements MailerInterface
 
     private function sendmailTransport(): object
     {
-        return \Swift_SendmailTransport::newInstance($this->settings['sendmail']['path']);
+        return new \Swift_SendmailTransport($this->settings['sendmail']['path']);
     }
 
     private function mailTransport(): object
     {
-        return \Swift_MailTransport::newInstance();
+        return new \Swift_MailTransport();
     }
 
     private function validateEmail(string $email): void
