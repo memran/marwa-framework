@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Config;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Views\Extension\MailViewExtension;
 
 final class ViewConfig
 {
@@ -34,7 +35,9 @@ final class ViewConfig
             'cache' => [
                 'enabled' => true,
             ],
-            'extensions' => [],
+            'extensions' => [
+                MailViewExtension::class,
+            ],
             'themePath' => $app->basePath('resources/views/themes'),
             'activeTheme' => 'default',
             'fallbackTheme' => 'default',

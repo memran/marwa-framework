@@ -203,6 +203,20 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
+    public function attachFromStorage(string $path, ?string $name = null, ?string $disk = null): self
+    {
+        $storage = $this->app->make(\Marwa\Framework\Supports\Storage::class);
+        if ($disk !== null) {
+            $storage = $storage->disk($disk);
+        }
+
+        $content = $storage->get($path);
+        $mime = $storage->mimeType($path) ?: 'application/octet-stream';
+        $filename = $name ?? basename($path);
+
+        return $this->attachData($content, $filename, $mime);
+    }
+
     public function message(): object
     {
         $this->assertSwiftMailerAvailable();
