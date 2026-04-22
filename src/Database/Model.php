@@ -180,6 +180,24 @@ abstract class Model extends BaseModel
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        $attributes = parent::toArray();
+
+        foreach (static::$casts as $key => $cast) {
+            if (!isset($attributes[$key]) || !in_array($cast, ['json', 'array'], true)) {
+                continue;
+            }
+
+            $attributes[$key] = static::normalizeCastOutput($attributes[$key]);
+        }
+
+        return $attributes;
+    }
+
+    /**
      * @param array<string, mixed> $attributes
      */
     protected static function findFirstByAttributes(array $attributes): ?static
@@ -223,5 +241,42 @@ abstract class Model extends BaseModel
             'float' => (float) $value,
             default => $value,
         };
+    }
+
+    /**
+     * @return array<mixed>|scalar|null
+     */
+    protected static function normalizeCastOutput(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_map([static::class, 'normalizeCastOutput'], $value);
+        }
+
+        if (is_string($value)) {
+            try {
+                $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+
+                return is_array($decoded)
+                    ? array_map([static::class, 'normalizeCastOutput'], $decoded)
+                    : $decoded;
+            } catch (\JsonException) {
+                return $value;
+            }
+        }
+
+        if (is_object($value)) {
+            $decoded = json_decode(
+                json_encode($value, JSON_THROW_ON_ERROR) ?: 'null',
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+
+            return is_array($decoded)
+                ? array_map([static::class, 'normalizeCastOutput'], $decoded)
+                : $decoded;
+        }
+
+        return $value;
     }
 }
