@@ -66,12 +66,44 @@ final class CacheClearCommand extends AbstractCommand
 
         $this->config()->loadIfExists(CacheConfig::KEY . '.php');
         $config = array_replace_recursive(CacheConfig::defaults($this->app()), $this->config()->getArray(CacheConfig::KEY, []));
-        $path = $config['sqlite']['path'] ?? null;
+        $driver = (string) ($config['driver'] ?? 'file');
 
-        if ($path !== null && is_file($path)) {
-            unlink($path);
+        if ($driver === 'sqlite') {
+            $path = $config['sqlite']['path'] ?? null;
+
+            if ($path !== null && is_file($path)) {
+                unlink($path);
+            }
+        } else {
+            $path = (string) ($config['file']['path'] ?? '');
+
+            if ($path !== '' && is_dir($path)) {
+                $this->deleteDirectoryContents($path);
+            }
         }
 
         $output->writeln('<info>done</info>');
+    }
+
+    private function deleteDirectoryContents(string $directory): void
+    {
+        $entries = glob(rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*');
+
+        if ($entries === false) {
+            return;
+        }
+
+        foreach ($entries as $entry) {
+            if (is_dir($entry)) {
+                $this->deleteDirectoryContents($entry);
+                @rmdir($entry);
+
+                continue;
+            }
+
+            @unlink($entry);
+        }
+
+        @rmdir($directory);
     }
 }

@@ -81,6 +81,11 @@ final class ConfigContractsTest extends TestCase
         );
         self::assertSame('default', ViewConfig::defaults($app)['activeTheme']);
         self::assertSame('default', ViewConfig::defaults($app)['fallbackTheme']);
+        self::assertSame('file', CacheConfig::defaults($app)['driver']);
+        self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework'),
+            str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['file']['path'])
+        );
         self::assertSame(
             str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework.sqlite'),
             str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['sqlite']['path'])

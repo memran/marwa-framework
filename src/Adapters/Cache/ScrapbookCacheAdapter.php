@@ -27,6 +27,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     buffered: bool,
      *     transactional: bool,
      *     stampede: array{enabled: bool, sla: int},
+     *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null}
      * }|null
@@ -155,6 +156,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     buffered: bool,
      *     transactional: bool,
      *     stampede: array{enabled: bool, sla: int},
+     *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null}
      * }
@@ -198,9 +200,10 @@ final class ScrapbookCacheAdapter implements CacheInterface
 
         $store = match ($config['driver']) {
             'apcu', 'apc' => $this->buildApcStore(),
+            'file' => $this->buildFileStore($config['file']['path']),
             'memory', 'array' => new MemoryStore($this->resolveMemoryLimit($config['memory']['limit'])),
             'sqlite' => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
-            default => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
+            default => $this->buildFileStore($config['file']['path']),
         };
 
         if ($config['namespace'] !== '') {
@@ -248,6 +251,15 @@ final class ScrapbookCacheAdapter implements CacheInterface
         }
 
         return new Apc();
+    }
+
+    private function buildFileStore(string $path): KeyValueStore
+    {
+        if ($path === '') {
+            $path = $this->app->basePath('storage/cache/framework');
+        }
+
+        return new FileStore($path);
     }
 
     private function buildSqliteStore(string $path, string $table): KeyValueStore

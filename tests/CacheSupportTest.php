@@ -8,6 +8,9 @@ use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use FilesystemIterator;
 
 final class CacheSupportTest extends TestCase
 {
@@ -45,6 +48,28 @@ PHP
         @rmdir($this->basePath . '/config');
         @rmdir($this->basePath);
         unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
+    }
+
+    public function testCacheDefaultDriverPersistsValuesOnDisk(): void
+    {
+        $basePath = $this->createBasePathWithoutCacheConfig();
+        try {
+            $app = new Application($basePath);
+
+            $cache = $app->cache();
+
+            self::assertTrue($cache->put('disk-key', 'disk-value', 60));
+            self::assertSame('disk-value', $cache->get('disk-key'));
+
+            $cacheFiles = $this->collectFiles($basePath . '/storage/cache/framework');
+
+            self::assertNotEmpty($cacheFiles);
+
+            $app = new Application($basePath);
+            self::assertSame('disk-value', $app->cache()->get('disk-key'));
+        } finally {
+            $this->removeDirectory($basePath);
+        }
     }
 
     public function testCacheBindingAndHelperResolveTheScrapbookAdapter(): void
@@ -107,5 +132,64 @@ PHP
         $cache->put('draft', 'committed', 60);
         self::assertTrue($cache->commit());
         self::assertSame('committed', $cache->get('draft'));
+    }
+
+    private function createBasePathWithoutCacheConfig(): string
+    {
+        $basePath = sys_get_temp_dir() . '/marwa-cache-file-' . bin2hex(random_bytes(6));
+        mkdir($basePath, 0777, true);
+        mkdir($basePath . '/config', 0777, true);
+        file_put_contents($basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+
+        return $basePath;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function collectFiles(string $directory): array
+    {
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $files = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isFile()) {
+                $files[] = $item->getPathname();
+            }
+        }
+
+        sort($files, SORT_STRING);
+
+        return $files;
+    }
+
+    private function removeDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                @rmdir($item->getPathname());
+
+                continue;
+            }
+
+            @unlink($item->getPathname());
+        }
+
+        @rmdir($directory);
     }
 }

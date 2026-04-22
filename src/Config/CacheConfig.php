@@ -11,28 +11,32 @@ final class CacheConfig
     public const KEY = 'cache';
 
     /**
-     * @return array{
-     *     enabled: bool,
-     *     driver: string,
-     *     namespace: string,
-     *     buffered: bool,
-     *     transactional: bool,
-     *     stampede: array{enabled: bool, sla: int},
-     *     sqlite: array{path: string, table: string},
-     *     memory: array{limit: int|string|null}
-     * }
-     */
+ * @return array{
+ *     enabled: bool,
+ *     driver: string,
+ *     namespace: string,
+ *     buffered: bool,
+ *     transactional: bool,
+ *     stampede: array{enabled: bool, sla: int},
+ *     file: array{path: string},
+ *     sqlite: array{path: string, table: string},
+ *     memory: array{limit: int|string|null}
+ * }
+ */
     public static function defaults(Application $app): array
     {
         return [
             'enabled' => true,
-            'driver' => extension_loaded('pdo_sqlite') ? 'sqlite' : 'memory',
+            'driver' => 'file',
             'namespace' => 'default',
             'buffered' => true,
             'transactional' => false,
             'stampede' => [
                 'enabled' => false,
                 'sla' => 1000,
+            ],
+            'file' => [
+                'path' => $app->basePath('storage/cache/framework'),
             ],
             'sqlite' => [
                 'path' => $app->basePath('storage/cache/framework.sqlite'),
@@ -48,21 +52,25 @@ final class CacheConfig
      * @param array<string, mixed> $overrides
      * @return array{
      *     enabled: bool,
-     *     driver: string,
-     *     namespace: string,
-     *     buffered: bool,
-     *     transactional: bool,
-     *     stampede: array{enabled: bool, sla: int},
-     *     sqlite: array{path: string, table: string},
-     *     memory: array{limit: int|string|null}
-     * }
-     */
+ *     driver: string,
+ *     namespace: string,
+ *     buffered: bool,
+ *     transactional: bool,
+ *     stampede: array{enabled: bool, sla: int},
+ *     file: array{path: string},
+ *     sqlite: array{path: string, table: string},
+ *     memory: array{limit: int|string|null}
+ * }
+ */
     public static function merge(Application $app, array $overrides): array
     {
         $defaults = self::defaults($app);
         $stampede = is_array($overrides['stampede'] ?? null)
             ? array_replace($defaults['stampede'], $overrides['stampede'])
             : $defaults['stampede'];
+        $file = is_array($overrides['file'] ?? null)
+            ? array_replace($defaults['file'], $overrides['file'])
+            : $defaults['file'];
         $sqlite = is_array($overrides['sqlite'] ?? null)
             ? array_replace($defaults['sqlite'], $overrides['sqlite'])
             : $defaults['sqlite'];
@@ -83,6 +91,11 @@ final class CacheConfig
             'stampede' => [
                 'enabled' => (bool) ($stampede['enabled'] ?? $defaults['stampede']['enabled']),
                 'sla' => max(1, (int) ($stampede['sla'] ?? $defaults['stampede']['sla'])),
+            ],
+            'file' => [
+                'path' => is_string($file['path'] ?? null) && $file['path'] !== ''
+                    ? $file['path']
+                    : $defaults['file']['path'],
             ],
             'sqlite' => [
                 'path' => is_string($sqlite['path'] ?? null) && $sqlite['path'] !== ''
