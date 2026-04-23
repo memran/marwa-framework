@@ -11,7 +11,6 @@ use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Supports\Config;
 use Memran\MarwaDb\Database;
 use Memran\MarwaDb\Schema\Blueprint;
-use Memran\MarwaDb\Schema\ForeignId;
 use Psr\Log\LoggerInterface;
 
 final class DatabaseQueue implements QueueInterface

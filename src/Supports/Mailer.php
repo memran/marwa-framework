@@ -275,10 +275,10 @@ final class Mailer implements MailerInterface
             $email = $this->applyAttachment($email, $attachment);
         }
 
-        return $email;
+return $email;
     }
 
-/**
+    /**
      * @param array<string, string|null> $addresses
      */
     private function applyRecipients(Email $email, string $method, array $addresses): Email
