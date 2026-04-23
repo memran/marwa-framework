@@ -53,22 +53,6 @@ if (!function_exists('ensure_directory')) {
     }
 }
 
-if (!function_exists('json_safe_decode')) {
-    /**
-     * Decode a JSON string to an array with throw on error.
-     *
-     * @param string $json The JSON string to decode
-     * @param bool $associative Whether to return an associative array
-     * @param int $depth Maximum depth
-     * @return mixed The decoded value
-     * @throws \JsonException If the JSON cannot be decoded
-     */
-    function json_safe_decode(string $json, bool $associative = true, int $depth = 512): mixed
-    {
-        return \json_decode($json, $associative, $depth, JSON_THROW_ON_ERROR);
-    }
-}
-
 if (!function_exists('with')) {
     /**
      * Return the given value, optionally passing it to a callback.
