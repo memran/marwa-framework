@@ -159,6 +159,32 @@ final class RecordingMailer implements MailerInterface
             'createdAt' => time(),
         ]);
     }
+
+    public function queueAt(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, int $timestamp): QueuedJob
+    {
+        return QueuedJob::fromArray([
+            'id' => bin2hex(random_bytes(8)),
+            'name' => 'mail:send',
+            'queue' => $queue ?? 'default',
+            'payload' => ['mailable' => $mailable::class],
+            'attempts' => 0,
+            'availableAt' => $timestamp,
+            'createdAt' => time(),
+        ]);
+    }
+
+    public function queueRecurring(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, array $schedule): QueuedJob
+    {
+        return QueuedJob::fromArray([
+            'id' => bin2hex(random_bytes(8)),
+            'name' => 'mail:send',
+            'queue' => $queue ?? 'default',
+            'payload' => ['mailable' => $mailable::class, '_recurring' => $schedule],
+            'attempts' => 0,
+            'availableAt' => time(),
+            'createdAt' => time(),
+        ]);
+    }
 }
 
 final class RecordingHttpClient implements HttpClientInterface

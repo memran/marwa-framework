@@ -6,7 +6,9 @@ namespace Marwa\Framework\Supports;
 
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\MailConfig;
+use Marwa\Framework\Contracts\LoggerInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Exceptions\MailSendException;
 use Marwa\Framework\Mail\Mailable;
 use Marwa\Framework\Queue\MailJob;
 use Marwa\Framework\Queue\QueuedJob;
@@ -287,16 +289,54 @@ final class Mailer implements MailerInterface
         }
 
         $message = $this->message();
+        $recipientCount = count($message->getTo() ?? []) + count($message->getCc() ?? []) + count($message->getBcc() ?? []);
+        $subject = $message->getSubject() ?? '';
+
+        /** @var LoggerInterface $logger */
+        $logger = $this->app->make(LoggerInterface::class);
+        $logger->info('Attempting to send email', [
+            'subject' => $subject,
+            'recipients' => $recipientCount,
+        ]);
 
         if ($callback !== null) {
             $callback($message, $this);
         }
 
-        $mailer = new \Swift_Mailer($this->transport());
-        $sent = $mailer->send($message);
-        $this->reset();
+        try {
+            $transport = $this->transport();
+            $mailer = new \Swift_Mailer($transport);
+            $sent = $mailer->send($message);
 
-        return $sent;
+            if ($sent === 0) {
+                $logger->error('Email send failed: no recipients accepted', [
+                    'subject' => $subject,
+                    'recipients' => $recipientCount,
+                ]);
+                throw new MailSendException('Email could not be sent to any recipients.');
+            }
+
+            $logger->info('Email sent successfully', [
+                'subject' => $subject,
+                'sent' => $sent,
+                'recipients' => $recipientCount,
+            ]);
+
+            $this->reset();
+            return $sent;
+        } catch (\Swift_RfcComplianceException $e) {
+            $logger->error('Email send failed: RFC compliance error', [
+                'subject' => $subject,
+                'error' => $e->getMessage(),
+            ]);
+            throw new MailSendException('Email address does not comply with RFC standards: ' . $e->getMessage(), 0, $e);
+        } catch (\Exception $e) {
+            $logger->error('Email send failed: transport error', [
+                'subject' => $subject,
+                'error' => $e->getMessage(),
+            ]);
+            throw new MailSendException('Failed to send email due to transport error: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     public function queue(Mailable $mailable, ?string $queue = null, int $delaySeconds = 0): QueuedJob
@@ -306,6 +346,33 @@ final class Mailer implements MailerInterface
             $mailable->toQueuePayload(),
             $queue,
             $delaySeconds
+        );
+    }
+
+    /**
+     * Queue email to be sent at a specific timestamp
+     */
+    public function queueAt(Mailable $mailable, ?string $queue = null, int $timestamp): QueuedJob
+    {
+        return $this->app->queue()->pushAt(
+            MailJob::NAME,
+            $mailable->toQueuePayload(),
+            $queue,
+            $timestamp
+        );
+    }
+
+    /**
+     * Queue recurring email
+     * @param array{expression: string, timezone?: string} $schedule
+     */
+    public function queueRecurring(Mailable $mailable, ?string $queue = null, array $schedule): QueuedJob
+    {
+        return $this->app->queue()->pushRecurring(
+            MailJob::NAME,
+            $mailable->toQueuePayload(),
+            $queue,
+            $schedule
         );
     }
 

@@ -67,6 +67,29 @@ abstract class Mailable
     }
 
     /**
+     * Queue email to be sent at a specific timestamp
+     */
+    public function queueAt(?string $queue = null, int $timestamp): QueuedJob
+    {
+        /** @var MailerInterface $mailer */
+        $mailer = app(MailerInterface::class);
+
+        return $mailer->queueAt($this, $queue, $timestamp);
+    }
+
+    /**
+     * Queue recurring email
+     * @param array{expression: string, timezone?: string} $schedule
+     */
+    public function queueRecurring(?string $queue = null, array $schedule): QueuedJob
+    {
+        /** @var MailerInterface $mailer */
+        $mailer = app(MailerInterface::class);
+
+        return $mailer->queueRecurring($this, $queue, $schedule);
+    }
+
+    /**
      * @return array{class: class-string, data: array<string, mixed>}
      */
     public function toQueuePayload(): array
