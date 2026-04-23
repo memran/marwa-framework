@@ -23,6 +23,10 @@ use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\ModuleMigrateCommand;
 use Marwa\Framework\Console\Commands\ModuleSeedCommand;
+use Marwa\Framework\Console\Commands\QueueClearCommand;
+use Marwa\Framework\Console\Commands\QueueListCommand;
+use Marwa\Framework\Console\Commands\QueueTableCommand;
+use Marwa\Framework\Console\Commands\QueueWorkCommand;
 use Marwa\Framework\Console\Commands\RouteCacheCommand;
 use Marwa\Framework\Console\Commands\RouteClearCommand;
 use Marwa\Framework\Console\Commands\RouteListCommand;
@@ -60,6 +64,10 @@ final class ConsoleConfig
                 ConfigCacheCommand::class,
                 ConfigClearCommand::class,
                 GenerateKeyCommand::class,
+                QueueClearCommand::class,
+                QueueListCommand::class,
+                QueueTableCommand::class,
+                QueueWorkCommand::class,
                 ScheduleRunCommand::class,
                 ScheduleTableCommand::class,
                 RouteCacheCommand::class,

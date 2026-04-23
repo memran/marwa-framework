@@ -17,6 +17,7 @@ use Marwa\Framework\Authorization\Gate;
 use Marwa\Framework\Authorization\PolicyRegistry;
 use Marwa\Framework\Config\ConsoleConfig;
 use Marwa\Framework\Config\LoggerConfig;
+use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Console\CommandDiscovery;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
@@ -34,6 +35,7 @@ use Marwa\Framework\Contracts\ShellFactoryInterface;
 use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\NotificationManager;
+use Marwa\Framework\Queue\DatabaseQueue;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreResolver;
@@ -198,14 +200,28 @@ final class CoreBindingsBootstrapper
             $container->get(LoggerInterface::class)
         ));
 
+        $queueConfig = QueueConfig::defaults($app);
         $container->addShared(FileQueue::class, fn () => new FileQueue(
             $app,
             $container->get(Config::class),
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(QueueInterface::class, function () use ($container) {
-            return $container->get(FileQueue::class);
+        $container->addShared(DatabaseQueue::class, fn () => new DatabaseQueue(
+            $app,
+            $container->get(Config::class),
+            $container->get(LoggerInterface::class)
+        ));
+
+        $container->addShared(QueueInterface::class, function () use ($container, $app) {
+            $config = $container->get(Config::class);
+            $config->loadIfExists(QueueConfig::KEY . '.php');
+            $settings = QueueConfig::merge($app, $config->getArray(QueueConfig::KEY, []));
+
+            return match ($settings['driver']) {
+                'database' => $container->get(DatabaseQueue::class),
+                default => $container->get(FileQueue::class),
+            };
         });
 
         $container->addShared(ScheduleStoreResolver::class, fn () => new ScheduleStoreResolver(

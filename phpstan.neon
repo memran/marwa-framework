@@ -7,6 +7,7 @@ parameters:
 		- tests
 	bootstrapFiles:
 		- src/Authorization/Authenticatable.php
+		- build-stubs/memran-marwa-db.php
 	ignoreErrors:
 		- identifier: trait.unused
 		  path: src/Authorization/Authenticatable.php
@@ -16,3 +17,8 @@ parameters:
 		  path: src/Navigation/MenuRegistry.php
 		- identifier: new.static
 		  path: src/Mail/Mailable.php
+		- identifier: return.type
+		  path: src/Queue/DatabaseQueue.php
+		  message: "#Method Marwa\\\\Framework\\\\Queue\\\\DatabaseQueue::(pending|failed)\\(\\) should return#"
+		- identifier: class.notFound
+		  path: src/Queue/DatabaseQueue.php

@@ -15,9 +15,9 @@ use Marwa\Framework\Console\ConsoleKernel;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
 use Marwa\Framework\Contracts\MailerInterface;
+use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Contracts\SecurityInterface;
 use Marwa\Framework\Notifications\NotificationManager;
-use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Task;
 use Marwa\Framework\Supports\Storage;
@@ -225,9 +225,9 @@ final class Application
         $this->schedule()->register($task);
     }
 
-    public function queue(): FileQueue
+    public function queue(): QueueInterface
     {
-        return $this->container->get(FileQueue::class);
+        return $this->container->get(QueueInterface::class);
     }
 
     public function cache(): CacheInterface
