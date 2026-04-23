@@ -10,6 +10,8 @@ final class StorageConfig
 {
     public const KEY = 'storage';
 
+    public const STORAGE_BASE = 'storage/framework';
+
     /**
      * @return array{
      *     default: string,
@@ -30,6 +32,11 @@ final class StorageConfig
                     'driver' => 'local',
                     'root' => $app->basePath('storage/app/public'),
                     'visibility' => 'public',
+                ],
+                'framework' => [
+                    'driver' => 'local',
+                    'root' => $app->basePath(self::STORAGE_BASE),
+                    'visibility' => 'private',
                 ],
             ],
         ];

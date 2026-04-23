@@ -36,10 +36,10 @@ final class CacheConfig
                 'sla' => 1000,
             ],
             'file' => [
-                'path' => $app->basePath('storage/cache/framework'),
+                'path' => $app->basePath('storage/framework/cache'),
             ],
             'sqlite' => [
-                'path' => $app->basePath('storage/cache/framework.sqlite'),
+                'path' => $app->basePath('storage/framework/cache.sqlite'),
                 'table' => 'framework_cache',
             ],
             'memory' => [

@@ -23,7 +23,7 @@ final class QueueConfig
         return [
             'enabled' => true,
             'default' => 'default',
-            'path' => $app->basePath('storage/queue'),
+            'path' => $app->basePath('storage/framework/queue'),
             'retryAfter' => 90,
         ];
     }
