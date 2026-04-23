@@ -30,4 +30,9 @@ interface QueueInterface
      * Pop the next available job from the queue
      */
     public function pop(?string $queue = null, ?\DateTimeImmutable $now = null): ?QueuedJob;
+
+    /**
+     * Release a failed job back to the queue with optional delay
+     */
+    public function release(QueuedJob $job, int $delaySeconds = 0): QueuedJob;
 }

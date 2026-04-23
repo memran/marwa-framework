@@ -17,7 +17,8 @@ final class QueueConfig
      *     default: string,
      *     path: string,
      *     database: array{connection: string, table: string},
-     *     retryAfter: int
+     *     retryAfter: int,
+     *     tries: int|null
      * }
      */
     public static function defaults(Application $app): array
@@ -32,6 +33,7 @@ final class QueueConfig
                 'table' => 'jobs',
             ],
             'retryAfter' => 90,
+            'tries' => null,
         ];
     }
 
@@ -43,7 +45,8 @@ final class QueueConfig
      *     default: string,
      *     path: string,
      *     database: array{connection: string, table: string},
-     *     retryAfter: int
+     *     retryAfter: int,
+     *     tries: int|null
      * }
      */
     public static function merge(Application $app, array $overrides): array
@@ -70,7 +73,17 @@ final class QueueConfig
                     : $dbConfig['table'],
             ],
             'retryAfter' => max(1, (int) ($overrides['retryAfter'] ?? $defaults['retryAfter'])),
+            'tries' => self::resolveTries($overrides['tries'] ?? null, $defaults['tries']),
         ];
+    }
+
+    private static function resolveTries(?int $tries, ?int $default): ?int
+    {
+        if ($tries !== null && $tries > 0) {
+            return $tries;
+        }
+
+        return $default;
     }
 
     private static function resolveDriver(?string $driver, string $default): string
