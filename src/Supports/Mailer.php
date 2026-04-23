@@ -352,13 +352,13 @@ final class Mailer implements MailerInterface
     /**
      * Queue email to be sent at a specific timestamp
      */
-    public function queueAt(Mailable $mailable, ?string $queue = null, int $timestamp): QueuedJob
+    public function queueAt(Mailable $mailable, int $timestamp, ?string $queue = null): QueuedJob
     {
         return $this->app->queue()->pushAt(
             MailJob::NAME,
+            $timestamp,
             $mailable->toQueuePayload(),
-            $queue,
-            $timestamp
+            $queue
         );
     }
 
@@ -366,13 +366,13 @@ final class Mailer implements MailerInterface
      * Queue recurring email
      * @param array{expression: string, timezone?: string} $schedule
      */
-    public function queueRecurring(Mailable $mailable, ?string $queue = null, array $schedule): QueuedJob
+    public function queueRecurring(Mailable $mailable, array $schedule, ?string $queue = null): QueuedJob
     {
         return $this->app->queue()->pushRecurring(
             MailJob::NAME,
+            $schedule,
             $mailable->toQueuePayload(),
-            $queue,
-            $schedule
+            $queue
         );
     }
 
@@ -457,14 +457,7 @@ final class Mailer implements MailerInterface
         $this->assertSwiftMailerAvailable();
 
         if ($attachment['type'] === 'path') {
-            if (method_exists(\Swift_Attachment::class, 'fromPath')) {
-                $swiftAttachment = \Swift_Attachment::fromPath($attachment['value'], $attachment['mime']);
-            } else {
-                $swiftAttachment = new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
-            }
-            if (is_string($attachment['name']) && $attachment['name'] !== '') {
-                $swiftAttachment->setFilename($attachment['name']);
-            }
+            $swiftAttachment = new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
 
             return $swiftAttachment;
         }

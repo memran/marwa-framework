@@ -266,7 +266,7 @@ final class FileQueue implements QueueInterface
     /**
      * @param array<string, mixed> $payload
      */
-    public function pushAt(string $name, array $payload = [], ?string $queue = null, int $timestamp): QueuedJob
+    public function pushAt(string $name, int $timestamp, array $payload = [], ?string $queue = null): QueuedJob
     {
         return $this->push($name, $payload, $queue, max(0, $timestamp - time()));
     }
@@ -275,7 +275,7 @@ final class FileQueue implements QueueInterface
      * @param array<string, mixed> $payload
      * @param array{expression: string, timezone?: string} $schedule
      */
-    public function pushRecurring(string $name, array $payload = [], ?string $queue = null, array $schedule): QueuedJob
+    public function pushRecurring(string $name, array $schedule, array $payload = [], ?string $queue = null): QueuedJob
     {
         // For recurring jobs, we store the schedule in payload and let scheduler handle it
         $payload['_recurring'] = $schedule;

@@ -74,11 +74,11 @@ interface MailerInterface
     /**
      * Queue email to be sent at a specific timestamp
      */
-    public function queueAt(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, int $timestamp): \Marwa\Framework\Queue\QueuedJob;
+    public function queueAt(\Marwa\Framework\Mail\Mailable $mailable, int $timestamp, ?string $queue = null): \Marwa\Framework\Queue\QueuedJob;
 
     /**
      * Queue recurring email
      * @param array{expression: string, timezone?: string} $schedule
      */
-    public function queueRecurring(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, array $schedule): \Marwa\Framework\Queue\QueuedJob;
+    public function queueRecurring(\Marwa\Framework\Mail\Mailable $mailable, array $schedule, ?string $queue = null): \Marwa\Framework\Queue\QueuedJob;
 }

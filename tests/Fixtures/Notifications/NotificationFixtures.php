@@ -160,7 +160,7 @@ final class RecordingMailer implements MailerInterface
         ]);
     }
 
-    public function queueAt(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, int $timestamp): QueuedJob
+    public function queueAt(\Marwa\Framework\Mail\Mailable $mailable, int $timestamp, ?string $queue = null): QueuedJob
     {
         return QueuedJob::fromArray([
             'id' => bin2hex(random_bytes(8)),
@@ -173,7 +173,7 @@ final class RecordingMailer implements MailerInterface
         ]);
     }
 
-    public function queueRecurring(\Marwa\Framework\Mail\Mailable $mailable, ?string $queue = null, array $schedule): QueuedJob
+    public function queueRecurring(\Marwa\Framework\Mail\Mailable $mailable, array $schedule, ?string $queue = null): QueuedJob
     {
         return QueuedJob::fromArray([
             'id' => bin2hex(random_bytes(8)),
