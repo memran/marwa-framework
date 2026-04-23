@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
+use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
@@ -35,7 +36,6 @@ use Marwa\Framework\Contracts\ShellFactoryInterface;
 use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\NotificationManager;
-use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Queue\DatabaseQueue;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
