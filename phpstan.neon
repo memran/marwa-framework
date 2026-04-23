@@ -14,3 +14,5 @@ parameters:
 		  path: src/Navigation/MenuRegistry.php
 		- identifier: return.type
 		  path: src/Navigation/MenuRegistry.php
+		- identifier: new.static
+		  path: src/Mail/Mailable.php

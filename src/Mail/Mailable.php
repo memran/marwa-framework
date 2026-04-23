@@ -27,9 +27,10 @@ abstract class Mailable
      */
     public function with(array $data): static
     {
-        $this->data = array_replace($this->data, $data);
+        /** @var array<string, mixed> $newData */
+        $newData = array_replace($this->data, $data);
 
-        return $this;
+        return new static($newData);
     }
 
     /**

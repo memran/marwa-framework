@@ -34,13 +34,27 @@ final class MailJob
     }
 
     /**
-     * @param array{class?: class-string, data?: array<string, mixed>} $payload
+     * @param mixed $payload
      */
-    public static function fromArray(array $payload): self
+    public static function fromArray(mixed $payload): self
     {
+        if (!is_array($payload)) {
+            $payload = [];
+        }
+
+        $className = $payload['class'] ?? null;
+        if (!is_string($className) || $className === '') {
+            throw new \InvalidArgumentException('Mail job payload class must be a non-empty string.');
+        }
+
+        $data = $payload['data'] ?? [];
+        if (!is_array($data)) {
+            $data = [];
+        }
+
         return new self([
-            'class' => (string) ($payload['class'] ?? Mailable::class),
-            'data' => is_array($payload['data'] ?? null) ? $payload['data'] : [],
+            'class' => $className,
+            'data' => $data,
         ]);
     }
 

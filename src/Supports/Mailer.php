@@ -178,7 +178,12 @@ final class Mailer implements MailerInterface
      */
     public function htmlTemplate(string $template, array $data = []): self
     {
-        $html = view($template, $data)->getBody()->__toString();
+        $viewResponse = view($template, $data);
+        if ($viewResponse === null) {
+            throw new \RuntimeException(sprintf('Template [%s] could not be rendered.', $template));
+        }
+
+        $html = $viewResponse->getBody()->__toString();
 
         return $this->html($html);
     }
@@ -217,9 +222,17 @@ final class Mailer implements MailerInterface
 
     public function attachFromStorage(string $path, ?string $name = null, ?string $disk = null): self
     {
+        if (trim($path) === '') {
+            throw new \InvalidArgumentException('Storage path cannot be empty.');
+        }
+
         $storage = $this->app->make(\Marwa\Framework\Supports\Storage::class);
         if ($disk !== null) {
             $storage = $storage->disk($disk);
+        }
+
+        if (!$storage->exists($path)) {
+            throw new \InvalidArgumentException(sprintf('Storage file [%s] does not exist.', $path));
         }
 
         $content = $storage->get($path);
@@ -421,7 +434,7 @@ final class Mailer implements MailerInterface
 
         if ($name !== null && count($recipients) === 1) {
             $email = array_key_first($recipients);
-            $recipients[(string) $email] = $name;
+            $recipients[$email] = $name;
         }
 
         return $recipients;
