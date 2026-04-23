@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Exceptions;
 
-final class MailSendException extends \RuntimeException
-{
-}
+final class MailSendException extends \RuntimeException {}
