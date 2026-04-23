@@ -120,14 +120,45 @@ final class QueuedJob
      */
     public static function fromArray(array $data): self
     {
+        $id = $data['id'] ?? null;
+        if (!is_string($id) || $id === '') {
+            $id = bin2hex(random_bytes(16));
+        }
+
+        $name = $data['name'] ?? null;
+        if (!is_string($name) || $name === '') {
+            $name = 'job';
+        }
+
+        $queue = $data['queue'] ?? null;
+        if (!is_string($queue) || $queue === '') {
+            $queue = 'default';
+        }
+
+        $payload = $data['payload'] ?? null;
+        if (!is_array($payload)) {
+            $payload = [];
+        }
+
+        $attempts = ($data['attempts'] ?? 0);
+        $availableAt = $data['availableAt'] ?? null;
+        if (!is_int($availableAt)) {
+            $availableAt = time();
+        }
+
+        $createdAt = $data['createdAt'] ?? null;
+        if (!is_int($createdAt)) {
+            $createdAt = time();
+        }
+
         return new self(
-            (string) ($data['id'] ?? ''),
-            (string) ($data['name'] ?? 'job'),
-            (string) ($data['queue'] ?? 'default'),
-            is_array($data['payload'] ?? null) ? $data['payload'] : [],
-            (int) ($data['attempts'] ?? 0),
-            (int) ($data['availableAt'] ?? time()),
-            (int) ($data['createdAt'] ?? time())
+            $id,
+            $name,
+            $queue,
+            $payload,
+            $attempts,
+            $availableAt,
+            $createdAt
         );
     }
 }

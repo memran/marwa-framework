@@ -21,6 +21,8 @@ final class Task
     private int $intervalSeconds = 60;
     private bool $withoutOverlapping = false;
     private ?string $description = null;
+    private ?\DateTimeImmutable $firstScheduledAt = null;
+    private \DateTimeImmutable $createdAt;
 
     /**
      * @param callable(Application, \DateTimeImmutable): mixed $callback
@@ -31,6 +33,7 @@ final class Task
     ) {
         $this->callback = $callback;
         $this->filter = static fn (): bool => true;
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function name(): string
@@ -45,6 +48,13 @@ final class Task
         }
 
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function scheduleAt(\DateTimeImmutable $time): self
+    {
+        $this->firstScheduledAt = $time;
 
         return $this;
     }
@@ -102,7 +112,15 @@ final class Task
             return true;
         }
 
-        return $time->getTimestamp() % $this->intervalSeconds === 0;
+        if ($this->firstScheduledAt !== null) {
+            $elapsed = $time->getTimestamp() - $this->firstScheduledAt->getTimestamp();
+
+            return $elapsed >= 0 && ($elapsed % $this->intervalSeconds === 0);
+        }
+
+        $elapsed = $time->getTimestamp() - $this->createdAt->getTimestamp();
+
+        return $elapsed >= 0 && ($elapsed % $this->intervalSeconds === 0);
     }
 
     public function run(Application $app, \DateTimeImmutable $time): mixed

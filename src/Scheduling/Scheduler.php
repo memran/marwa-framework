@@ -55,7 +55,8 @@ final class Scheduler
      */
     public function call(callable $callback, ?string $name = null): Task
     {
-        $task = new Task($name ?? 'callback-' . (count($this->tasks) + 1), $callback);
+        $taskName = $name ?? 'callback-' . bin2hex(random_bytes(8));
+        $task = new Task($taskName, $callback);
 
         return $this->register($task);
     }
@@ -97,10 +98,26 @@ final class Scheduler
      */
     public function due(\DateTimeImmutable $time): array
     {
-        return array_values(array_filter(
-            $this->tasks,
-            fn (Task $task): bool => $task->isDue($this->app, $time)
-        ));
+        $dueTasks = [];
+        $errors = [];
+
+        foreach ($this->tasks as $task) {
+            try {
+                if ($task->isDue($this->app, $time)) {
+                    $dueTasks[] = $task;
+                }
+            } catch (\Throwable $e) {
+                $errors[$task->name()] = $e->getMessage();
+            }
+        }
+
+        if ($errors !== []) {
+            $this->logger->warning('Some tasks threw exceptions during due check.', [
+                'errors' => $errors,
+            ]);
+        }
+
+        return $dueTasks;
     }
 
     /**
@@ -119,9 +136,27 @@ final class Scheduler
             return $summary;
         }
 
+        try {
+            return $this->runTasks($currentTime, $summary);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to run scheduled tasks.', [
+                'exception' => $e->getMessage(),
+            ]);
+
+            return $summary;
+        }
+    }
+
+    /**
+     * @param array{ran:list<string>,skipped:list<string>,failed:list<string>} $summary
+     * @return array{ran:list<string>,skipped:list<string>,failed:list<string>}
+     */
+    private function runTasks(\DateTimeImmutable $currentTime, array $summary): array
+    {
+        $store = $this->store();
+
         foreach ($this->due($currentTime) as $task) {
             $lock = null;
-            $store = $this->store();
 
             if ($task->shouldPreventOverlaps()) {
                 $lock = $store->acquireLock($task, $currentTime, max(60, $task->intervalSeconds() * 2));

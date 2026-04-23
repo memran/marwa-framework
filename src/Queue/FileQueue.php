@@ -123,12 +123,20 @@ final class FileQueue implements QueueInterface
     {
         $released = $job->withAvailableAt(time() + max(0, $delaySeconds));
         $processingPath = $this->processingPath($job);
+        $newPendingPath = $this->pendingPath($released);
 
         if (is_file($processingPath)) {
+            $pendingDir = dirname($newPendingPath);
+            if (!is_dir($pendingDir)) {
+                @mkdir($pendingDir, 0777, true);
+            }
+            $tmpPath = $newPendingPath . '.' . bin2hex(random_bytes(8)) . '.tmp';
+            $this->writeJob($tmpPath, $released);
+            if (!@rename($tmpPath, $newPendingPath)) {
+                @unlink($tmpPath);
+            }
             @unlink($processingPath);
         }
-
-        $this->writeJob($this->pendingPath($released), $released);
 
         return $released;
     }
