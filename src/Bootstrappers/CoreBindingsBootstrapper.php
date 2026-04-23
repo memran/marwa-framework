@@ -35,6 +35,7 @@ use Marwa\Framework\Contracts\ShellFactoryInterface;
 use Marwa\Framework\Navigation\MenuRegistry;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\NotificationManager;
+use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Queue\DatabaseQueue;
 use Marwa\Framework\Queue\FileQueue;
 use Marwa\Framework\Scheduling\Scheduler;
@@ -210,7 +211,8 @@ final class CoreBindingsBootstrapper
         $container->addShared(DatabaseQueue::class, fn () => new DatabaseQueue(
             $app,
             $container->get(Config::class),
-            $container->get(LoggerInterface::class)
+            $container->get(LoggerInterface::class),
+            $container->get(ConnectionManager::class)
         ));
 
         $container->addShared(QueueInterface::class, function () use ($container, $app) {

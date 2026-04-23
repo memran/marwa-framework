@@ -8,7 +8,7 @@ return new class extends AbstractMigration {
     {
         Schema::create('{{ table }}', function ($table): void {
             $table->string('id', 32)->primary();
-            $table->string('name', 191);
+            $table->string('name', 255);
             $table->string('queue', 64)->default('default');
             $table->text('payload');
             $table->integer('attempts')->default(0);

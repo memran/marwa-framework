@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Marwa\Framework\Queue;
 
 use DateTimeImmutable;
+use Marwa\DB\Connection\ConnectionManager;
+use Marwa\DB\Facades\DB;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Supports\Config;
-use Memran\MarwaDb\Database;
-use Memran\MarwaDb\Schema\Blueprint;
 use Psr\Log\LoggerInterface;
 
 final class DatabaseQueue implements QueueInterface
@@ -30,12 +30,10 @@ final class DatabaseQueue implements QueueInterface
     public function __construct(
         private Application $app,
         private Config $config,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private ConnectionManager $manager
     ) {}
 
-    /**
-     * @param array<string, mixed> $payload
-     */
     public function push(string $name, array $payload = [], ?string $queue = null, int $delaySeconds = 0): QueuedJob
     {
         $config = $this->configuration();
@@ -55,8 +53,10 @@ final class DatabaseQueue implements QueueInterface
             createdAt: time()
         );
 
-        $db = $this->database();
-        $db->table($config['database']['table'])->insert([
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
+
+        DB::table($table, $connection)->insert([
             'id' => $job->id(),
             'name' => $job->name(),
             'queue' => $job->queue(),
@@ -81,18 +81,11 @@ final class DatabaseQueue implements QueueInterface
         return $job;
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
     public function pushAt(string $name, int $timestamp, array $payload = [], ?string $queue = null): QueuedJob
     {
         return $this->push($name, $payload, $queue, $timestamp - time());
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     * @param array{expression: string, timezone?: string} $schedule
-     */
     public function pushRecurring(string $name, array $schedule, array $payload = [], ?string $queue = null): QueuedJob
     {
         $payload['_recurring'] = true;
@@ -112,62 +105,66 @@ final class DatabaseQueue implements QueueInterface
         $queueName = $queue !== null && $queue !== '' ? $queue : $config['default'];
         $timestamp = ($now ?? new DateTimeImmutable())->getTimestamp();
         $workerId = uniqid('worker:', true);
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $db = $this->database();
+        return $this->manager->transaction(function () use ($connection, $table, $queueName, $timestamp, $workerId): ?QueuedJob {
+            $row = DB::table($table, $connection)
+                ->where('queue', '=', $queueName)
+                ->where('available_at', '<=', $timestamp)
+                ->whereNull('reserved_at')
+                ->whereNull('completed_at')
+                ->whereNull('failed_at')
+                ->orderBy('created_at', 'asc')
+                ->first();
 
-        $row = $db->table($config['database']['table'])
-            ->where('queue', '=', $queueName)
-            ->where('available_at', '<=', $timestamp)
-            ->whereNull('reserved_at')
-            ->whereNull('completed_at')
-            ->whereNull('failed_at')
-            ->orderBy('created_at', 'asc')
-            ->first();
+            if ($row === null) {
+                return null;
+            }
 
-        if ($row === null) {
-            return null;
-        }
+            $updated = DB::table($table, $connection)
+                ->where('id', '=', $row['id'])
+                ->update([
+                    'reserved_at' => $timestamp,
+                    'reserved_by' => $workerId,
+                    'updated_at' => $timestamp,
+                ]);
 
-        $updated = $db->table($config['database']['table'])
-            ->where('id', '=', $row['id'])
-            ->update([
+            if ($updated !== 1) {
+                return null;
+            }
+
+            $job = QueuedJob::fromArray([
+                'id' => $row['id'],
+                'name' => $row['name'],
+                'queue' => $row['queue'],
+                'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
+                'attempts' => $row['attempts'],
+                'available_at' => $row['available_at'],
                 'reserved_at' => $timestamp,
                 'reserved_by' => $workerId,
-                'updated_at' => $timestamp,
+                'completed_at' => null,
+                'failed_at' => null,
+                'created_at' => $row['created_at'],
             ]);
 
-        if ($updated !== 1) {
-            return null;
-        }
+            $this->logger->debug('Job popped', [
+                'id' => $job->id(),
+                'name' => $job->name(),
+            ]);
 
-        $job = QueuedJob::fromArray([
-            'id' => $row['id'],
-            'name' => $row['name'],
-            'queue' => $row['queue'],
-            'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
-            'attempts' => $row['attempts'],
-            'available_at' => $row['available_at'],
-            'reserved_at' => $timestamp,
-            'reserved_by' => $workerId,
-            'completed_at' => null,
-            'failed_at' => null,
-            'created_at' => $row['created_at'],
-        ]);
-
-        $this->logger->debug('Job popped', [
-            'id' => $job->id(),
-            'name' => $job->name(),
-        ]);
-
-        return $job;
+            return $job;
+        }, $connection);
     }
 
     public function release(QueuedJob $job, int $delaySeconds = 0): QueuedJob
     {
         $config = $this->configuration();
         $timestamp = time();
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $this->database()->table($config['database']['table'])
+        DB::table($table, $connection)
             ->where('id', '=', $job->id())
             ->update([
                 'attempts' => $job->attempts() + 1,
@@ -189,8 +186,10 @@ final class DatabaseQueue implements QueueInterface
     {
         $config = $this->configuration();
         $timestamp = time();
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $this->database()->table($config['database']['table'])
+        DB::table($table, $connection)
             ->where('id', '=', $job->id())
             ->update([
                 'completed_at' => $timestamp,
@@ -204,8 +203,10 @@ final class DatabaseQueue implements QueueInterface
     {
         $config = $this->configuration();
         $timestamp = time();
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $this->database()->table($config['database']['table'])
+        DB::table($table, $connection)
             ->where('id', '=', $job->id())
             ->update([
                 'failed_at' => $timestamp,
@@ -219,15 +220,17 @@ final class DatabaseQueue implements QueueInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<QueuedJob>
      */
     public function pending(?string $queue = null): array
     {
         $config = $this->configuration();
         $queueName = $queue ?? $config['default'];
         $timestamp = time();
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $rows = $this->database()->table($config['database']['table'])
+        $rows = DB::table($table, $connection)
             ->where('queue', '=', $queueName)
             ->where('available_at', '<=', $timestamp)
             ->whereNull('reserved_at')
@@ -253,14 +256,16 @@ final class DatabaseQueue implements QueueInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return list<QueuedJob>
      */
     public function failed(?string $queue = null): array
     {
         $config = $this->configuration();
         $queueName = $queue ?? $config['default'];
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        $rows = $this->database()->table($config['database']['table'])
+        $rows = DB::table($table, $connection)
             ->where('queue', '=', $queueName)
             ->whereNotNull('failed_at')
             ->orderBy('updated_at', 'desc')
@@ -287,8 +292,10 @@ final class DatabaseQueue implements QueueInterface
     {
         $config = $this->configuration();
         $queueName = $queue ?? $config['default'];
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        return $this->database()->table($config['database']['table'])
+        return DB::table($table, $connection)
             ->where('queue', '=', $queueName)
             ->whereNotNull('completed_at')
             ->delete();
@@ -298,44 +305,13 @@ final class DatabaseQueue implements QueueInterface
     {
         $config = $this->configuration();
         $queueName = $queue ?? $config['default'];
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
 
-        return $this->database()->table($config['database']['table'])
+        return DB::table($table, $connection)
             ->where('queue', '=', $queueName)
             ->whereNotNull('failed_at')
             ->delete();
-    }
-
-    public static function migrate(Database $db, string $table): void
-    {
-        $schema = $db->schema();
-
-        if (!$schema->hasTable($table)) {
-            $schema->create($table, function (Blueprint $table) {
-                $table->id('id', 32);
-                $table->string('name', 255);
-                $table->string('queue', 64);
-                $table->text('payload');
-                $table->integer('attempts')->default(0);
-                $table->integer('available_at');
-                $table->integer('reserved_at')->nullable();
-                $table->string('reserved_by', 64)->nullable();
-                $table->integer('completed_at')->nullable();
-                $table->integer('failed_at')->nullable();
-                $table->integer('created_at');
-                $table->integer('updated_at');
-
-                $table->index(['queue', 'available_at', 'reserved_at', 'completed_at', 'failed_at'], 'queue_status');
-                $table->index(['reserved_at', 'reserved_by'], 'reserved');
-            });
-        }
-    }
-
-    private function database(): Database
-    {
-        $config = $this->configuration();
-        $connection = $config['database']['connection'];
-
-        return Database::connection($connection);
     }
 
     /**
