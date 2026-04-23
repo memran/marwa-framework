@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Bootstrappers;
 
 use League\Container\Container;
-use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Adapters\Event\EventDispatcherAdapter;
