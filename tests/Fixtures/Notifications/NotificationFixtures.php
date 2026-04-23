@@ -19,8 +19,8 @@ use Marwa\Framework\Notifications\Notification;
 use Marwa\Framework\Queue\QueuedJob;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Email;
 
 final class RecordingMailer implements MailerInterface
 {
