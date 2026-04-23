@@ -118,6 +118,13 @@ final class RecordingMailer implements MailerInterface
         return $this;
     }
 
+    public function clearTextBody(): self
+    {
+        $this->state['text'] = null;
+
+        return $this;
+    }
+
     public function attach(string $path, ?string $name = null, string $mime = 'application/octet-stream'): self
     {
         $this->state['attachments'][] = compact('path', 'name', 'mime');

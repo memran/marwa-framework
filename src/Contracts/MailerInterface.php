@@ -61,6 +61,8 @@ interface MailerInterface
 
     public function html(string $html, ?string $text = null): self;
 
+    public function clearTextBody(): self;
+
     public function attach(string $path, ?string $name = null, string $mime = 'application/octet-stream'): self;
 
     public function attachData(string $data, string $name, string $mime = 'application/octet-stream'): self;

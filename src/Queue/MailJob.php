@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Queue;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\LoggerInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Mail\Mailable;
 
@@ -71,6 +72,32 @@ final class MailJob
         /** @var MailerInterface $mailer */
         $mailer = $app->mailer();
 
-        return $mailable->build($mailer)->send();
+        $logger = null;
+        if ($app->has(LoggerInterface::class)) {
+            /** @var LoggerInterface $logger */
+            $logger = $app->make(LoggerInterface::class);
+        }
+
+        try {
+            if ($logger !== null) {
+                $logger->info('Processing mail job', ['class' => $class]);
+            }
+
+            $result = $mailable->build($mailer)->send();
+
+            if ($logger !== null) {
+                $logger->info('Mail job processed successfully', ['class' => $class]);
+            }
+
+            return $result;
+        } catch (\Throwable $e) {
+            if ($logger !== null) {
+                $logger->error('Mail job failed', [
+                    'class' => $class,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            throw $e;
+        }
     }
 }

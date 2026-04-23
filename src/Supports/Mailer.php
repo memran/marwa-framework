@@ -101,6 +101,8 @@ final class Mailer implements MailerInterface
         $this->htmlBody = null;
         $this->textBody = null;
         $this->attachments = [];
+        $this->transport = null;
+        $this->symfonyMailer = null;
 
         return $this;
     }
@@ -172,7 +174,16 @@ final class Mailer implements MailerInterface
     public function html(string $html, ?string $text = null): self
     {
         $this->htmlBody = $html;
-        $this->textBody = $text ?? $this->textBody;
+        if ($text !== null) {
+            $this->textBody = $text;
+        }
+
+        return $this;
+    }
+
+    public function clearTextBody(): self
+    {
+        $this->textBody = null;
 
         return $this;
     }
@@ -250,7 +261,7 @@ final class Mailer implements MailerInterface
     {
         $fromAddress = $this->from !== [] ? $this->from : $this->settings['from'];
         $email = (new Email())
-            ->from($fromAddress['address'], $fromAddress['name'] ?? '')
+            ->from(new \Symfony\Component\Mime\Address($fromAddress['address'], $fromAddress['name'] ?? ''))
             ->subject($this->subject ?? '');
 
         foreach ($this->recipients as $method => $addresses) {
@@ -357,12 +368,16 @@ final class Mailer implements MailerInterface
         $recipientCount = count($email->getTo()) + count($email->getCc()) + count($email->getBcc());
         $subject = $email->getSubject() ?? '';
 
-        /** @var LoggerInterface $logger */
-        $logger = $this->app->make(LoggerInterface::class);
-        $logger->info('Attempting to send email', [
-            'subject' => $subject,
-            'recipients' => $recipientCount,
-        ]);
+        $logger = $this->app->has(LoggerInterface::class)
+            ? $this->app->make(LoggerInterface::class)
+            : null;
+
+        if ($logger !== null) {
+            $logger->info('Attempting to send email', [
+                'subject' => $subject,
+                'recipients' => $recipientCount,
+            ]);
+        }
 
         if ($callback !== null) {
             $callback($email, $this);
@@ -372,25 +387,31 @@ final class Mailer implements MailerInterface
             $symfonyMailer = $this->getSymfonyMailer();
             $symfonyMailer->send($email);
 
-            $logger->info('Email sent successfully', [
-                'subject' => $subject,
-                'sent' => $recipientCount,
-                'recipients' => $recipientCount,
-            ]);
+            if ($logger !== null) {
+                $logger->info('Email sent successfully', [
+                    'subject' => $subject,
+                    'sent' => $recipientCount,
+                    'recipients' => $recipientCount,
+                ]);
+            }
 
             $this->reset();
             return $recipientCount;
         } catch (\Symfony\Component\Mailer\Exception\ExceptionInterface $e) {
-            $logger->error('Email send failed: transport error', [
-                'subject' => $subject,
-                'error' => $e->getMessage(),
-            ]);
+            if ($logger !== null) {
+                $logger->error('Email send failed: transport error', [
+                    'subject' => $subject,
+                    'error' => $e->getMessage(),
+                ]);
+            }
             throw new MailSendException('Failed to send email: ' . $e->getMessage(), 0, $e);
         } catch (\Exception $e) {
-            $logger->error('Email send failed: transport error', [
-                'subject' => $subject,
-                'error' => $e->getMessage(),
-            ]);
+            if ($logger !== null) {
+                $logger->error('Email send failed: transport error', [
+                    'subject' => $subject,
+                    'error' => $e->getMessage(),
+                ]);
+            }
             throw new MailSendException('Failed to send email due to transport error: ' . $e->getMessage(), 0, $e);
         }
     }
@@ -501,8 +522,16 @@ final class Mailer implements MailerInterface
     {
         $smtp = $this->settings['smtp'];
 
+        $protocol = 'smtp://';
+        if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
+            if (in_array(strtolower($smtp['encryption']), ['ssl', 'tls'])) {
+                $protocol = 'smtps://';
+            }
+        }
+
         $dsn = sprintf(
-            'smtp://%s:%s@%s:%d',
+            '%s%s:%s@%s:%d',
+            $protocol,
             urlencode($smtp['username'] ?? ''),
             urlencode($smtp['password'] ?? ''),
             $smtp['host'],
@@ -510,12 +539,11 @@ final class Mailer implements MailerInterface
         );
 
         if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
-            $dsn = str_replace('smtp://', 'smtp://', $dsn);
             $dsn .= '?encryption=' . $smtp['encryption'];
         }
 
         if ($smtp['authMode'] !== null && $smtp['authMode'] !== '') {
-            $dsn .= '&auth_mode=' . $smtp['authMode'];
+            $dsn .= ($smtp['encryption'] !== null && $smtp['encryption'] !== '' ? '&' : '?') . 'auth_mode=' . $smtp['authMode'];
         }
 
         return \Symfony\Component\Mailer\Transport::fromDsn($dsn);
@@ -524,13 +552,13 @@ final class Mailer implements MailerInterface
     private function sendmailTransport(): TransportInterface
     {
         return \Symfony\Component\Mailer\Transport::fromDsn(
-            sprintf('sendmail://%s', escapeshellarg($this->settings['sendmail']['path']))
+            sprintf('sendmail://%s', $this->settings['sendmail']['path'])
         );
     }
 
     private function mailTransport(): TransportInterface
     {
-        return \Symfony\Component\Mailer\Transport::fromDsn('null://null');
+        return \Symfony\Component\Mailer\Transport::fromDsn('native://default');
     }
 
     private function validateEmail(string $email): void
