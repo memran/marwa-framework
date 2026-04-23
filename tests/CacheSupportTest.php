@@ -61,7 +61,7 @@ PHP
             self::assertTrue($cache->put('disk-key', 'disk-value', 60));
             self::assertSame('disk-value', $cache->get('disk-key'));
 
-            $cacheFiles = $this->collectFiles($basePath . '/storage/framework/cache');
+            $cacheFiles = $this->collectFiles($basePath . '/storage/cache/framework');
 
             self::assertNotEmpty($cacheFiles);
 

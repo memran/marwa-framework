@@ -30,7 +30,7 @@ final class LoggerConfig
             'level' => 'debug',
             'storage' => [
                 'driver' => (string) env('LOG_CHANNEL', 'file'),
-                'path' => $app->basePath('storage/framework/logs'),
+                'path' => $app->basePath('storage/logs'),
                 'prefix' => 'marwa',
             ],
         ];

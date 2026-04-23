@@ -83,11 +83,11 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('default', ViewConfig::defaults($app)['fallbackTheme']);
         self::assertSame('file', CacheConfig::defaults($app)['driver']);
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/cache'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework'),
             str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['file']['path'])
         );
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/cache.sqlite'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework.sqlite'),
             str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['sqlite']['path'])
         );
         self::assertSame(
@@ -99,7 +99,7 @@ final class ConfigContractsTest extends TestCase
             str_replace('/', DIRECTORY_SEPARATOR, StorageConfig::defaults($app)['disks']['public']['root'])
         );
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/logs'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/logs'),
             str_replace('/', DIRECTORY_SEPARATOR, LoggerConfig::defaults($app)['storage']['path'])
         );
     }
@@ -211,7 +211,7 @@ final class ConfigContractsTest extends TestCase
         self::assertTrue(QueueConfig::defaults($app)['enabled']);
         self::assertSame('default', QueueConfig::defaults($app)['default']);
         self::assertSame(
-            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/framework/queue'),
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/queue'),
             str_replace('/', DIRECTORY_SEPARATOR, QueueConfig::defaults($app)['path'])
         );
         self::assertSame(90, QueueConfig::defaults($app)['retryAfter']);
