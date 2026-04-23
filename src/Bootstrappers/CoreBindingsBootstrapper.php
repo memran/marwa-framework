@@ -201,28 +201,15 @@ final class CoreBindingsBootstrapper
             $container->get(LoggerInterface::class)
         ));
 
-        $queueConfig = QueueConfig::defaults($app);
-        $container->addShared(FileQueue::class, fn () => new FileQueue(
-            $app,
-            $container->get(Config::class),
-            $container->get(LoggerInterface::class)
-        ));
-
-        $container->addShared(DatabaseQueue::class, fn () => new DatabaseQueue(
-            $app,
-            $container->get(Config::class),
-            $container->get(LoggerInterface::class),
-            $container->get(ConnectionManager::class)
-        ));
-
         $container->addShared(QueueInterface::class, function () use ($container, $app) {
             $config = $container->get(Config::class);
             $config->loadIfExists(QueueConfig::KEY . '.php');
             $settings = QueueConfig::merge($app, $config->getArray(QueueConfig::KEY, []));
 
             return match ($settings['driver']) {
-                'database' => $container->get(DatabaseQueue::class),
-                default => $container->get(FileQueue::class),
+                'database' => $container->make(DatabaseQueue::class),
+                'file' => $container->make(FileQueue::class),
+                default => $container->make(FileQueue::class),
             };
         });
 

@@ -56,10 +56,10 @@ final class AppBootstrapper
         /** @var array{providers:list<class-string>,middlewares:list<class-string>,debugbar:bool,collectors:list<string>} $appConfig */
         $appConfig = array_replace_recursive(AppConfig::defaults(), $this->config->getArray(AppConfig::KEY, []));
 
+        $this->databaseBootstrapper->bootstrap();
         $this->providerBootstrapper->bootstrap($appConfig['providers']);
         $this->app->dispatch(new ProvidersBootstrapped(providers: $appConfig['providers']));
         $this->errorHandlerBootstrapper->bootstrap();
-        $this->databaseBootstrapper->bootstrap();
         $this->moduleBootstrapper->bootstrap();
         $this->app->boot();
         $this->appConfig = $appConfig;
