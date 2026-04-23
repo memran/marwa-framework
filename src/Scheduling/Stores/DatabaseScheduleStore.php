@@ -126,7 +126,10 @@ final class DatabaseScheduleStore implements ScheduleStoreInterface
      */
     private function find(\PDO $pdo, string $name): ?array
     {
-        $statement = $pdo->prepare(sprintf('SELECT * FROM %s WHERE name = :name LIMIT 1', $this->table));
+        $statement = $pdo->prepare(sprintf(
+            'SELECT name, description, status, last_message, lock_expires_at, last_ran_at, last_finished_at, last_failed_at, last_skipped_at, created_at, updated_at FROM %s WHERE name = :name LIMIT 1',
+            $this->table
+        ));
         $statement->execute(['name' => $name]);
         $row = $statement->fetch(\PDO::FETCH_ASSOC);
 

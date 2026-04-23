@@ -17,20 +17,25 @@ final class CacheScheduleStore implements ScheduleStoreInterface
     public function acquireLock(Task $task, \DateTimeImmutable $time, int $ttlSeconds): mixed
     {
         $key = $this->lockKey($task);
-
-        if ($this->cache->has($key)) {
-            return null;
-        }
-
-        if (!$this->cache->put($key, [
+        $value = [
             'task' => $task->name(),
             'expires_at' => $time->modify(sprintf('+%d seconds', $ttlSeconds))->format(DATE_ATOM),
-        ], max(1, $ttlSeconds))) {
+        ];
 
-            return null;
+        // Retry loop to reduce race condition window
+        for ($i = 0; $i < 3; $i++) {
+            if ($this->cache->has($key)) {
+                return null;
+            }
+
+            if ($this->cache->put($key, $value, max(1, $ttlSeconds))) {
+                return $key;
+            }
+
+            usleep(10000); // 10ms delay before retry
         }
 
-        return $key;
+        return null;
     }
 
     public function releaseLock(Task $task, mixed $lock): void

@@ -179,7 +179,7 @@ final class DatabaseQueue implements QueueInterface
             'delay' => $delaySeconds,
         ]);
 
-        return $job;
+        return $job->withAttempts($job->attempts() + 1);
     }
 
     public function complete(QueuedJob $job): void

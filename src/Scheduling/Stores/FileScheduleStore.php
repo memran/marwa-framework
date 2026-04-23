@@ -59,35 +59,52 @@ final class FileScheduleStore implements ScheduleStoreInterface
         }
 
         $path = $directory . DIRECTORY_SEPARATOR . $this->normalizeName($task->name()) . '.json';
-        $state = is_file($path) ? json_decode((string) file_get_contents($path), true) : [];
+        $lockPath = $path . '.lock';
 
-        if (!is_array($state)) {
-            $state = [];
+        $lockHandle = fopen($lockPath, 'c+');
+        if ($lockHandle === false) {
+            throw new \RuntimeException(sprintf('Unable to create lock file [%s].', $lockPath));
         }
 
-        $state['name'] = $task->name();
-        $state['description'] = $task->description();
-        $state['status'] = $status;
-        $state['last_message'] = $message;
-        $state['updated_at'] = $time->format(DATE_ATOM);
-
-        if ($status === 'success') {
-            $state['last_ran_at'] = $time->format(DATE_ATOM);
-            $state['last_finished_at'] = $time->format(DATE_ATOM);
+        if (!flock($lockHandle, LOCK_EX)) {
+            fclose($lockHandle);
+            throw new \RuntimeException(sprintf('Unable to acquire lock [%s].', $lockPath));
         }
 
-        if ($status === 'failed') {
-            $state['last_failed_at'] = $time->format(DATE_ATOM);
-        }
+        try {
+            $state = is_file($path) ? json_decode((string) file_get_contents($path), true) : [];
 
-        if ($status === 'skipped') {
-            $state['last_skipped_at'] = $time->format(DATE_ATOM);
-        }
+            if (!is_array($state)) {
+                $state = [];
+            }
 
-        file_put_contents(
-            $path,
-            json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)
-        );
+            $state['name'] = $task->name();
+            $state['description'] = $task->description();
+            $state['status'] = $status;
+            $state['last_message'] = $message;
+            $state['updated_at'] = $time->format(DATE_ATOM);
+
+            if ($status === 'success') {
+                $state['last_ran_at'] = $time->format(DATE_ATOM);
+                $state['last_finished_at'] = $time->format(DATE_ATOM);
+            }
+
+            if ($status === 'failed') {
+                $state['last_failed_at'] = $time->format(DATE_ATOM);
+            }
+
+            if ($status === 'skipped') {
+                $state['last_skipped_at'] = $time->format(DATE_ATOM);
+            }
+
+            file_put_contents(
+                $path,
+                json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)
+            );
+        } finally {
+            flock($lockHandle, LOCK_UN);
+            fclose($lockHandle);
+        }
     }
 
     private function lockDirectory(): string

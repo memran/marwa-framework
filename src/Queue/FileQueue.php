@@ -79,6 +79,7 @@ final class FileQueue implements QueueInterface
             }
 
             try {
+                // Re-read job after acquiring lock to prevent race condition
                 $job = $this->readJob($file);
 
                 if ($job === null || $job->availableAt() > $timestamp) {
@@ -125,16 +126,19 @@ final class FileQueue implements QueueInterface
         $processingPath = $this->processingPath($job);
         $newPendingPath = $this->pendingPath($released);
 
+        // Always write the released job to pending queue
+        $pendingDir = dirname($newPendingPath);
+        if (!is_dir($pendingDir)) {
+            @mkdir($pendingDir, 0777, true);
+        }
+        $tmpPath = $newPendingPath . '.' . bin2hex(random_bytes(8)) . '.tmp';
+        $this->writeJob($tmpPath, $released);
+        if (!@rename($tmpPath, $newPendingPath)) {
+            @unlink($tmpPath);
+        }
+
+        // Clean up processing file if it exists
         if (is_file($processingPath)) {
-            $pendingDir = dirname($newPendingPath);
-            if (!is_dir($pendingDir)) {
-                @mkdir($pendingDir, 0777, true);
-            }
-            $tmpPath = $newPendingPath . '.' . bin2hex(random_bytes(8)) . '.tmp';
-            $this->writeJob($tmpPath, $released);
-            if (!@rename($tmpPath, $newPendingPath)) {
-                @unlink($tmpPath);
-            }
             @unlink($processingPath);
         }
 
