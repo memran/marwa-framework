@@ -12,6 +12,9 @@ use Marwa\Framework\Exceptions\MailSendException;
 use Marwa\Framework\Mail\Mailable;
 use Marwa\Framework\Queue\MailJob;
 use Marwa\Framework\Queue\QueuedJob;
+use Symfony\Component\Mailer\Mailer as SymfonyMailer;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Email;
 
 final class Mailer implements MailerInterface
 {
@@ -59,7 +62,8 @@ final class Mailer implements MailerInterface
      */
     private array $attachments = [];
 
-    private ?object $transport = null;
+    private ?TransportInterface $transport = null;
+    private ?SymfonyMailer $symfonyMailer = null;
 
     public function __construct(
         private Application $app,
@@ -242,48 +246,87 @@ final class Mailer implements MailerInterface
         return $this->attachData($content, $filename, $mime);
     }
 
-    public function message(): object
+    public function message(): Email
     {
-        $this->assertSwiftMailerAvailable();
-
-        $message = new \Swift_Message($this->subject ?? '');
-        $message = $message->setCharset($this->settings['charset']);
-        $message->setFrom($this->from !== [] ? $this->from : $this->settings['from']);
+        $fromAddress = $this->from !== [] ? $this->from : $this->settings['from'];
+        $email = (new Email())
+            ->from($fromAddress['address'], $fromAddress['name'] ?? '')
+            ->subject($this->subject ?? '');
 
         foreach ($this->recipients as $method => $addresses) {
             if ($addresses === []) {
                 continue;
             }
 
-            $message->{$this->recipientMethod($method)}($addresses);
+            $email = $this->applyRecipients($email, $method, $addresses);
         }
 
         if ($this->htmlBody !== null) {
-            $message->setBody($this->htmlBody, 'text/html', $this->settings['charset']);
+            $email->html($this->htmlBody);
 
             if ($this->textBody !== null) {
-                $message->addPart($this->textBody, 'text/plain', $this->settings['charset']);
+                $email->text($this->textBody);
             }
         } elseif ($this->textBody !== null) {
-            $message->setBody($this->textBody, 'text/plain', $this->settings['charset']);
-        } else {
-            $message->setBody('', 'text/plain', $this->settings['charset']);
+            $email->text($this->textBody);
         }
 
         foreach ($this->attachments as $attachment) {
-            $message->attach($this->buildAttachment($attachment));
+            $email = $this->applyAttachment($email, $attachment);
         }
 
-        return $message;
+        return $email;
     }
 
-    public function transport(): object
+/**
+     * @param array<string, string|null> $addresses
+     */
+    private function applyRecipients(Email $email, string $method, array $addresses): Email
+    {
+        return match ($method) {
+            'to' => $email->to(...$this->formatAddresses($addresses)),
+            'cc' => $email->cc(...$this->formatAddresses($addresses)),
+            'bcc' => $email->bcc(...$this->formatAddresses($addresses)),
+            'replyTo' => $email->replyTo(...$this->formatAddresses($addresses)),
+            default => $email,
+        };
+    }
+
+    /**
+     * @param array<string, string|null> $addresses
+     * @return list<string|\Symfony\Component\Mime\Address>
+     */
+    private function formatAddresses(array $addresses): array
+    {
+        $result = [];
+        foreach ($addresses as $email => $name) {
+            if ($name !== null && $name !== '') {
+                $result[] = new \Symfony\Component\Mime\Address($email, $name);
+            } else {
+                $result[] = $email;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param array{type: string, value: string, name: string|null, mime: string} $attachment
+     */
+    private function applyAttachment(Email $email, array $attachment): Email
+    {
+        if ($attachment['type'] === 'path') {
+            return $email->attachFromPath($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
+        }
+
+        return $email->attach($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
+    }
+
+    public function transport(): TransportInterface
     {
         if ($this->transport !== null) {
             return $this->transport;
         }
-
-        $this->assertSwiftMailerAvailable();
 
         $this->transport = match ($this->settings['driver']) {
             'smtp' => $this->smtpTransport(),
@@ -295,15 +338,24 @@ final class Mailer implements MailerInterface
         return $this->transport;
     }
 
+    private function getSymfonyMailer(): SymfonyMailer
+    {
+        if ($this->symfonyMailer === null) {
+            $this->symfonyMailer = new SymfonyMailer($this->transport());
+        }
+
+        return $this->symfonyMailer;
+    }
+
     public function send(?callable $callback = null): int
     {
         if (!$this->settings['enabled']) {
             throw new \RuntimeException('Mailer service is disabled.');
         }
 
-        $message = $this->message();
-        $recipientCount = count($message->getTo() ?? []) + count($message->getCc() ?? []) + count($message->getBcc() ?? []);
-        $subject = $message->getSubject() ?? '';
+        $email = $this->message();
+        $recipientCount = count($email->getTo()) + count($email->getCc()) + count($email->getBcc());
+        $subject = $email->getSubject() ?? '';
 
         /** @var LoggerInterface $logger */
         $logger = $this->app->make(LoggerInterface::class);
@@ -313,36 +365,27 @@ final class Mailer implements MailerInterface
         ]);
 
         if ($callback !== null) {
-            $callback($message, $this);
+            $callback($email, $this);
         }
 
         try {
-            $transport = $this->transport();
-            $mailer = new \Swift_Mailer($transport);
-            $sent = $mailer->send($message);
-
-            if ($sent === 0) {
-                $logger->error('Email send failed: no recipients accepted', [
-                    'subject' => $subject,
-                    'recipients' => $recipientCount,
-                ]);
-                throw new MailSendException('Email could not be sent to any recipients.');
-            }
+            $symfonyMailer = $this->getSymfonyMailer();
+            $symfonyMailer->send($email);
 
             $logger->info('Email sent successfully', [
                 'subject' => $subject,
-                'sent' => $sent,
+                'sent' => $recipientCount,
                 'recipients' => $recipientCount,
             ]);
 
             $this->reset();
-            return $sent;
-        } catch (\Swift_RfcComplianceException $e) {
-            $logger->error('Email send failed: RFC compliance error', [
+            return $recipientCount;
+        } catch (\Symfony\Component\Mailer\Exception\ExceptionInterface $e) {
+            $logger->error('Email send failed: transport error', [
                 'subject' => $subject,
                 'error' => $e->getMessage(),
             ]);
-            throw new MailSendException('Email address does not comply with RFC standards: ' . $e->getMessage(), 0, $e);
+            throw new MailSendException('Failed to send email: ' . $e->getMessage(), 0, $e);
         } catch (\Exception $e) {
             $logger->error('Email send failed: transport error', [
                 'subject' => $subject,
@@ -454,62 +497,40 @@ final class Mailer implements MailerInterface
         return $existing;
     }
 
-    private function recipientMethod(string $method): string
-    {
-        return match ($method) {
-            'replyTo' => 'setReplyTo',
-            default => 'set' . ucfirst($method),
-        };
-    }
-
-    /**
-     * @param array{type: string, value: string, name?: string|null, mime: string} $attachment
-     */
-    private function buildAttachment(array $attachment): object
-    {
-        $this->assertSwiftMailerAvailable();
-
-        if ($attachment['type'] === 'path') {
-            $swiftAttachment = new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
-
-            return $swiftAttachment;
-        }
-
-        return new \Swift_Attachment($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
-    }
-
-    private function smtpTransport(): object
+    private function smtpTransport(): TransportInterface
     {
         $smtp = $this->settings['smtp'];
-        $transport = new \Swift_SmtpTransport($smtp['host'], $smtp['port'], $smtp['encryption']);
 
-        if ($smtp['username'] !== null) {
-            $transport->setUsername($smtp['username']);
+        $dsn = sprintf(
+            'smtp://%s:%s@%s:%d',
+            urlencode($smtp['username'] ?? ''),
+            urlencode($smtp['password'] ?? ''),
+            $smtp['host'],
+            $smtp['port']
+        );
+
+        if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
+            $dsn = str_replace('smtp://', 'smtp://', $dsn);
+            $dsn .= '?encryption=' . $smtp['encryption'];
         }
 
-        if ($smtp['password'] !== null) {
-            $transport->setPassword($smtp['password']);
+        if ($smtp['authMode'] !== null && $smtp['authMode'] !== '') {
+            $dsn .= '&auth_mode=' . $smtp['authMode'];
         }
 
-        if ($smtp['authMode'] !== null) {
-            $transport->setAuthMode($smtp['authMode']);
-        }
-
-        if ($smtp['timeout'] > 0) {
-            $transport->setTimeout($smtp['timeout']);
-        }
-
-        return $transport;
+        return \Symfony\Component\Mailer\Transport::fromDsn($dsn);
     }
 
-    private function sendmailTransport(): object
+    private function sendmailTransport(): TransportInterface
     {
-        return new \Swift_SendmailTransport($this->settings['sendmail']['path']);
+        return \Symfony\Component\Mailer\Transport::fromDsn(
+            sprintf('sendmail://%s', escapeshellarg($this->settings['sendmail']['path']))
+        );
     }
 
-    private function mailTransport(): object
+    private function mailTransport(): TransportInterface
     {
-        return new \Swift_MailTransport();
+        return \Symfony\Component\Mailer\Transport::fromDsn('null://null');
     }
 
     private function validateEmail(string $email): void
@@ -518,12 +539,4 @@ final class Mailer implements MailerInterface
             throw new \InvalidArgumentException("Invalid email address: {$email}");
         }
     }
-
-    private function assertSwiftMailerAvailable(): void
-    {
-        if (!class_exists(\Swift_Mailer::class) || !class_exists(\Swift_Message::class) || !class_exists(\Swift_Attachment::class)) {
-            throw new \RuntimeException('SwiftMailer is required to use the Mailer service.');
-        }
-    }
-
 }

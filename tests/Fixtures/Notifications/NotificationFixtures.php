@@ -19,6 +19,8 @@ use Marwa\Framework\Notifications\Notification;
 use Marwa\Framework\Queue\QueuedJob;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 
 final class RecordingMailer implements MailerInterface
 {
@@ -130,14 +132,14 @@ final class RecordingMailer implements MailerInterface
         return $this;
     }
 
-    public function message(): object
+    public function message(): Email
     {
-        return (object) $this->state;
+        return (new Email())->html('< html>< /html>');
     }
 
-    public function transport(): object
+    public function transport(): TransportInterface
     {
-        return (object) [];
+        return \Symfony\Component\Mailer\Transport::fromDsn('null://null');
     }
 
     public function send(?callable $callback = null): int

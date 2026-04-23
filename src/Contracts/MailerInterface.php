@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Contracts;
 
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+
 interface MailerInterface
 {
     /**
@@ -63,9 +66,9 @@ interface MailerInterface
 
     public function attachData(string $data, string $name, string $mime = 'application/octet-stream'): self;
 
-    public function message(): object;
+    public function message(): \Symfony\Component\Mime\Email;
 
-    public function transport(): object;
+    public function transport(): \Symfony\Component\Mailer\Transport\TransportInterface;
 
     public function send(?callable $callback = null): int;
 
