@@ -7,7 +7,6 @@ parameters:
 		- tests
 	bootstrapFiles:
 		- src/Authorization/Authenticatable.php
-		- build-stubs/memran-marwa-db.php
 	ignoreErrors:
 		- identifier: trait.unused
 		  path: src/Authorization/Authenticatable.php
