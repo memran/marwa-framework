@@ -207,9 +207,9 @@ final class CoreBindingsBootstrapper
             $settings = QueueConfig::merge($app, $config->getArray(QueueConfig::KEY, []));
 
             return match ($settings['driver']) {
-                'database' => $container->make(DatabaseQueue::class),
-                'file' => $container->make(FileQueue::class),
-                default => $container->make(FileQueue::class),
+                'database' => $container->get(DatabaseQueue::class),
+                'file' => $container->get(FileQueue::class),
+                default => $container->get(FileQueue::class),
             };
         });
 
