@@ -39,7 +39,19 @@ mailer()
     ->send();
 ```
 
+## Send HTML from Twig template
+
+```php
+mailer()
+    ->to('user@example.com')
+    ->subject('Welcome')
+    ->htmlTemplate('emails.welcome', ['name' => 'John'])
+    ->send();
+```
+
 ## Queue a message
+
+### Basic Queueing with Delay
 
 ```php
 use App\Mail\WelcomeMail;
@@ -48,18 +60,57 @@ use App\Mail\WelcomeMail;
     'subject' => 'Welcome',
     'to' => ['user@example.com' => 'User'],
     'html' => '<p>Welcome to MarwaPHP.</p>',
-]))->queue('mail');
+]))->queue('mail', 3600); // Delay 1 hour
+```
+
+### Queue at Specific Time
+
+```php
+$tomorrow = strtotime('tomorrow 3pm');
+(new WelcomeMail($data))->queueAt('high-priority', $tomorrow);
+```
+
+### Recurring Emails
+
+```php
+(new DailyReport($data))->queueRecurring('reports', [
+    'expression' => '0 9 * * *', // Daily at 9 AM
+    'timezone' => 'America/New_York'
+]);
+```
+
+### Priority Queues
+
+```php
+// High priority
+(new UrgentNotification($data))->queue('urgent');
+
+// Bulk emails
+(new Newsletter($data))->queue('bulk');
 ```
 
 Queued mail jobs are stored as `mail:send` entries in the shared file queue. A worker can later hydrate the payload and call `Marwa\Framework\Queue\MailJob::handle()`.
 
 ## Attach files
 
+### Attach from filesystem
+
 ```php
 mailer()
     ->to('user@example.com')
     ->subject('Report')
     ->text('See the attached file.')
-    ->attach(storage_path('reports/daily.csv'), 'daily.csv', 'text/csv')
+    ->attach('/path/to/file.pdf', 'report.pdf', 'application/pdf')
+    ->send();
+```
+
+### Attach from storage
+
+```php
+mailer()
+    ->to('user@example.com')
+    ->subject('Report')
+    ->text('See the attached file.')
+    ->attachFromStorage('reports/daily.pdf', 'daily-report.pdf', 's3')
     ->send();
 ```
