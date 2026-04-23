@@ -275,7 +275,7 @@ final class Mailer implements MailerInterface
             $email = $this->applyAttachment($email, $attachment);
         }
 
-return $email;
+        return $email;
     }
 
     /**
