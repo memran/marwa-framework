@@ -20,6 +20,10 @@ final class FileStore implements KeyValueStore
 
     public function get(string $key, mixed &$token = null): mixed
     {
+        if (!$this->validateKeyOrFail($key)) {
+            return false;
+        }
+
         $payload = $this->readPayload($key);
 
         if ($payload === null) {
@@ -93,17 +97,29 @@ final class FileStore implements KeyValueStore
         return $results;
     }
 
+    private function validateKey(string $key): void
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cache key cannot be empty.');
+        }
+    }
+
+    public function validateKeyOrFail(string $key): bool
+    {
+        return $key !== '';
+    }
+
     public function add(string $key, mixed $value, int $expire = 0): bool
     {
-        if ($this->readPayload($key) !== null) {
-            return false;
-        }
+        $this->validateKey($key);
 
         return $this->writePayload($key, $value, $expire, 1);
     }
 
     public function replace(string $key, mixed $value, int $expire = 0): bool
     {
+        $this->validateKey($key);
+
         $payload = $this->readPayload($key);
 
         if ($payload === null) {
@@ -115,6 +131,8 @@ final class FileStore implements KeyValueStore
 
     public function cas(mixed $token, string $key, mixed $value, int $expire = 0): bool
     {
+        $this->validateKey($key);
+
         $payload = $this->readPayload($key);
 
         if ($payload === null || $payload['version'] !== $token) {
@@ -126,16 +144,22 @@ final class FileStore implements KeyValueStore
 
     public function increment(string $key, int $offset = 1, int $initial = 0, int $expire = 0): int|false
     {
+        $this->validateKey($key);
+
         return $this->changeNumericValue($key, $offset, $initial, $expire, true);
     }
 
     public function decrement(string $key, int $offset = 1, int $initial = 0, int $expire = 0): int|false
     {
+        $this->validateKey($key);
+
         return $this->changeNumericValue($key, $offset, $initial, $expire, false);
     }
 
     public function touch(string $key, int $expire): bool
     {
+        $this->validateKey($key);
+
         $payload = $this->readPayload($key);
 
         if ($payload === null) {
@@ -153,7 +177,11 @@ final class FileStore implements KeyValueStore
             return true;
         }
 
-        $this->deleteDirectoryContents($directory);
+        try {
+            $this->deleteDirectoryContents($directory);
+        } catch (\Throwable) {
+            return false;
+        }
 
         return true;
     }
