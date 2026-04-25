@@ -55,7 +55,6 @@
     "matthiasmullie/scrapbook": "^1.5",
     "league/flysystem": "^3.29",
     "league/flysystem-local": "^3.29",
-    "swiftmailer/swiftmailer": "^6.0",
     "symfony/mailer": "^7.0"
   },
   "autoload": {
