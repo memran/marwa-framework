@@ -90,6 +90,11 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(HttpClientInterface::class, fn() => $container->get(Http::class));
 
+        $container->addShared(\Marwa\Framework\Contracts\AIManagerInterface::class, fn() => new \Marwa\Framework\Adapters\AI\AIManagerAdapter(
+            $app,
+            $container->get(Config::class)
+        ));
+
         $container->addShared(Mailer::class, fn() => new Mailer(
             $app,
             $container->get(\Marwa\Framework\Contracts\MailerAdapterInterface::class)

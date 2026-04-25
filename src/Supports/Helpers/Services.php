@@ -98,3 +98,31 @@ if (!function_exists('http')) {
         return $http;
     }
 }
+
+if (!function_exists('ai')) {
+    function ai(): \Marwa\Framework\Contracts\AIManagerInterface
+    {
+        return app(\Marwa\Framework\Contracts\AIManagerInterface::class);
+    }
+}
+
+if (!function_exists('ai_complete')) {
+    function ai_complete(string $prompt, array $options = []): mixed
+    {
+        return ai()->complete($prompt, $options);
+    }
+}
+
+if (!function_exists('ai_conversation')) {
+    function ai_conversation(array $messages = []): mixed
+    {
+        return ai()->conversation($messages);
+    }
+}
+
+if (!function_exists('ai_embed')) {
+    function ai_embed(array $texts, array $options = []): mixed
+    {
+        return ai()->embed($texts, $options);
+    }
+}
