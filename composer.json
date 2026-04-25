@@ -54,7 +54,7 @@
     "league/flysystem": "^3.29",
     "league/flysystem-local": "^3.29",
     "symfony/mailer": "^7.0",
-    "symfony/process": "^5.4|^6.0|^7.0",
+    "symfony/process": "^5.4|^6.4|^7.0",
     "memran/marwa-ai": "^1.0",
     "memran/marwa-mcp": "^0.1"
   },
