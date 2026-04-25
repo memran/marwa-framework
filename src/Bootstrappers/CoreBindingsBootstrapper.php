@@ -100,6 +100,11 @@ final class CoreBindingsBootstrapper
             $container->get(Config::class)
         ));
 
+        $container->addShared(\Marwa\Framework\Adapters\Process\ProcessAdapter::class, fn() => new \Marwa\Framework\Adapters\Process\ProcessAdapter(
+            $app,
+            $container->get(Config::class)
+        ));
+
         $container->addShared(Mailer::class, fn() => new Mailer(
             $app,
             $container->get(\Marwa\Framework\Contracts\MailerAdapterInterface::class)

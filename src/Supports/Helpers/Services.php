@@ -133,3 +133,24 @@ if (!function_exists('mcp')) {
         return app(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class);
     }
 }
+
+if (!function_exists('process')) {
+    function process(?string $command = null, array|callable $options = []): mixed
+    {
+        $adapter = app(\Marwa\Framework\Adapters\Process\ProcessAdapter::class);
+        
+        if ($command === null) {
+            return $adapter;
+        }
+        
+        if (is_callable($options)) {
+            $callback = $options;
+            $adapter->onComplete(function($result) use ($callback) {
+                $callback($result->getOutput());
+            });
+            return $adapter->execute($command);
+        }
+        
+        return $adapter->execute($command, $options);
+    }
+}
