@@ -33,6 +33,20 @@ if (!function_exists('mailer')) {
     }
 }
 
+if (!function_exists('mail')) {
+    function mail(): \Marwa\Framework\Contracts\MailerInterface
+    {
+        return app(\Marwa\Framework\Supports\Mailer::class);
+    }
+}
+
+if (!function_exists('mail_fake')) {
+    function mail_fake(): \Marwa\Framework\Mail\MailFake
+    {
+        return app(\Marwa\Framework\Mail\MailFake::class);
+    }
+}
+
 if (!function_exists('notification')) {
     function notification(): \Marwa\Framework\Notifications\NotificationManager
     {

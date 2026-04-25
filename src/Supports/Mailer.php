@@ -341,4 +341,21 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
             throw new \InvalidArgumentException("Invalid email address: {$email}");
         }
     }
+
+    private static ?MailerAdapterInterface $swappedAdapter = null;
+
+    public static function swap(MailerAdapterInterface $adapter): void
+    {
+        self::$swappedAdapter = $adapter;
+    }
+
+    public static function getSwappedAdapter(): ?MailerAdapterInterface
+    {
+        return self::$swappedAdapter;
+    }
+
+    public static function restore(): void
+    {
+        self::$swappedAdapter = null;
+    }
 }
