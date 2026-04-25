@@ -139,12 +139,11 @@ final class Application
      */
     public function make(string $abstract): mixed
     {
-        if ($this->has($abstract)) {
-            return $this->container->get($abstract);
-        } else {
-            $this->container->add($abstract);
-            return $this->container->get($abstract);
+        if (!$this->has($abstract)) {
+            $this->container->addShared($abstract);
         }
+
+        return $this->container->get($abstract);
     }
     /**
      * Resolve a class or interface from the container.
