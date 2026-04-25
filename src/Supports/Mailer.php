@@ -7,96 +7,44 @@ namespace Marwa\Framework\Supports;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\MailConfig;
 use Marwa\Framework\Contracts\LoggerInterface;
-use Marwa\Framework\Contracts\MailerInterface;
-use Marwa\Framework\Exceptions\MailSendException;
+use Marwa\Framework\Contracts\MailerAdapterInterface;
 use Marwa\Framework\Mail\Mailable;
-use Marwa\Framework\Queue\MailJob;
+use Marwa\Framework\Mail\MailJob;
 use Marwa\Framework\Queue\QueuedJob;
-use Symfony\Component\Mailer\Mailer as SymfonyMailer;
-use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
-final class Mailer implements MailerInterface
+final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
 {
-    /**
-     * @var array{
-     *     enabled: bool,
-     *     driver: string,
-     *     charset: string,
-     *     from: array{address: string, name: string},
-     *     smtp: array{
-     *         host: string,
-     *         port: int,
-     *         encryption: string|null,
-     *         username: string|null,
-     *         password: string|null,
-     *         authMode: string|null,
-     *         timeout: int
-     *     },
-     *     sendmail: array{path: string}
-     * }
-     */
-    /**
-     * @var array<string, string|null>
-     */
     private array $from = [];
-
-    /**
-     * @var array<string, array<string, string|null>>
-     */
-    private array $recipients = [
-        'to' => [],
-        'cc' => [],
-        'bcc' => [],
-        'replyTo' => [],
-    ];
-
+    private array $recipients = ['to' => [], 'cc' => [], 'bcc' => [], 'replyTo' => []];
     private ?string $subject = null;
     private ?string $htmlBody = null;
     private ?string $textBody = null;
-
-    /**
-     * @var list<array{type: string, value: string, name?: string|null, mime: string}>
-     */
     private array $attachments = [];
-
-    private ?TransportInterface $transport = null;
-    private ?SymfonyMailer $symfonyMailer = null;
-    private ?string $transportConfigHash = null;
 
     public function __construct(
         private Application $app,
-        private Config $config
+        private MailerAdapterInterface $adapter
     ) {}
 
     public function configuration(): array
     {
-        return $this->settings();
+        return $this->adapter->configuration();
     }
 
     public function reset(): self
     {
         $this->from = [];
-        $this->recipients = [
-            'to' => [],
-            'cc' => [],
-            'bcc' => [],
-            'replyTo' => [],
-        ];
+        $this->recipients = ['to' => [], 'cc' => [], 'bcc' => [], 'replyTo' => []];
         $this->subject = null;
         $this->htmlBody = null;
         $this->textBody = null;
         $this->attachments = [];
-        $this->transport = null;
-        $this->symfonyMailer = null;
-        $this->transportConfigHash = null;
 
         return $this;
     }
 
-    /**
-     * @param string|array<string, string>|array<int, string> $address
-     */
     public function from(string|array $address, ?string $name = null): self
     {
         $this->from = $this->normalizeRecipients($address, $name);
@@ -104,9 +52,6 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
-    /**
-     * @param string|array<string, string>|array<int, string> $address
-     */
     public function to(string|array $address, ?string $name = null): self
     {
         $this->recipients['to'] = $this->mergeRecipients($this->recipients['to'], $this->normalizeRecipients($address, $name));
@@ -114,9 +59,6 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
-    /**
-     * @param string|array<string, string>|array<int, string> $address
-     */
     public function cc(string|array $address, ?string $name = null): self
     {
         $this->recipients['cc'] = $this->mergeRecipients($this->recipients['cc'], $this->normalizeRecipients($address, $name));
@@ -124,9 +66,6 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
-    /**
-     * @param string|array<string, string>|array<int, string> $address
-     */
     public function bcc(string|array $address, ?string $name = null): self
     {
         $this->recipients['bcc'] = $this->mergeRecipients($this->recipients['bcc'], $this->normalizeRecipients($address, $name));
@@ -134,9 +73,6 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
-    /**
-     * @param string|array<string, string>|array<int, string> $address
-     */
     public function replyTo(string|array $address, ?string $name = null): self
     {
         $this->recipients['replyTo'] = $this->mergeRecipients($this->recipients['replyTo'], $this->normalizeRecipients($address, $name));
@@ -175,9 +111,6 @@ final class Mailer implements MailerInterface
         return $this;
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
     public function htmlTemplate(string $template, array $data = []): self
     {
         $viewResponse = view($template, $data);
@@ -185,9 +118,7 @@ final class Mailer implements MailerInterface
             throw new \RuntimeException(sprintf('Template [%s] could not be rendered.', $template));
         }
 
-        $html = $viewResponse->getBody()->__toString();
-
-        return $this->html($html);
+        return $this->html($viewResponse->getBody()->__toString());
     }
 
     public function attach(string $path, ?string $name = null, string $mime = 'application/octet-stream'): self
@@ -196,12 +127,7 @@ final class Mailer implements MailerInterface
             throw new \InvalidArgumentException(sprintf('Attachment [%s] does not exist or is not readable.', $path));
         }
 
-        $this->attachments[] = [
-            'type' => 'path',
-            'value' => $path,
-            'name' => $name,
-            'mime' => $mime,
-        ];
+        $this->attachments[] = ['type' => 'path', 'value' => $path, 'name' => $name, 'mime' => $mime];
 
         return $this;
     }
@@ -212,12 +138,7 @@ final class Mailer implements MailerInterface
             throw new \InvalidArgumentException('Attachment name cannot be empty.');
         }
 
-        $this->attachments[] = [
-            'type' => 'data',
-            'value' => $data,
-            'name' => $name,
-            'mime' => $mime,
-        ];
+        $this->attachments[] = ['type' => 'data', 'value' => $data, 'name' => $name, 'mime' => $mime];
 
         return $this;
     }
@@ -246,23 +167,21 @@ final class Mailer implements MailerInterface
 
     public function message(): Email
     {
-        $settings = $this->settings();
+        $settings = $this->configuration();
         $fromAddress = $this->from !== [] ? $this->from : $settings['from'];
         $email = (new Email())
-            ->from(new \Symfony\Component\Mime\Address($fromAddress['address'], $fromAddress['name'] ?? ''))
+            ->from(new Address($fromAddress['address'], $fromAddress['name'] ?? ''))
             ->subject($this->subject ?? '');
 
         foreach ($this->recipients as $method => $addresses) {
             if ($addresses === []) {
                 continue;
             }
-
             $email = $this->applyRecipients($email, $method, $addresses);
         }
 
         if ($this->htmlBody !== null) {
             $email->html($this->htmlBody);
-
             if ($this->textBody !== null) {
                 $email->text($this->textBody);
             }
@@ -277,9 +196,6 @@ final class Mailer implements MailerInterface
         return $email;
     }
 
-    /**
-     * @param array<string, string|null> $addresses
-     */
     private function applyRecipients(Email $email, string $method, array $addresses): Email
     {
         return match ($method) {
@@ -292,122 +208,42 @@ final class Mailer implements MailerInterface
     }
 
     /**
-     * @param array<string, string|null> $addresses
-     * @return list<string|\Symfony\Component\Mime\Address>
+     * @return list<string|Address>
      */
     private function formatAddresses(array $addresses): array
     {
         $result = [];
         foreach ($addresses as $email => $name) {
-            if ($name !== null && $name !== '') {
-                $result[] = new \Symfony\Component\Mime\Address($email, $name);
-            } else {
-                $result[] = $email;
-            }
+            $result[] = $name !== null && $name !== '' ? new Address($email, $name) : $email;
         }
 
         return $result;
     }
 
-    /**
-     * @param array{type: string, value: string, name: string|null, mime: string} $attachment
-     */
     private function applyAttachment(Email $email, array $attachment): Email
     {
-        if ($attachment['type'] === 'path') {
-            return $email->attachFromPath($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
-        }
-
-        return $email->attach($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
-    }
-
-    public function transport(): TransportInterface
-    {
-        $settings = $this->settings();
-        $configHash = $this->transportConfigHash($settings);
-
-        if ($this->transport !== null && $this->transportConfigHash === $configHash) {
-            return $this->transport;
-        }
-
-        $this->transport = match ($settings['driver']) {
-            'smtp' => $this->smtpTransport($settings),
-            'sendmail' => $this->sendmailTransport($settings),
-            'mail' => $this->mailTransport(),
-            default => throw new \InvalidArgumentException(sprintf('Mail driver [%s] is not supported.', $settings['driver'])),
-        };
-        $this->transportConfigHash = $configHash;
-        $this->symfonyMailer = null;
-
-        return $this->transport;
-    }
-
-    private function getSymfonyMailer(): SymfonyMailer
-    {
-        if ($this->symfonyMailer === null) {
-            $this->symfonyMailer = new SymfonyMailer($this->transport());
-        }
-
-        return $this->symfonyMailer;
+        return $attachment['type'] === 'path'
+            ? $email->attachFromPath($attachment['value'], $attachment['name'] ?? null, $attachment['mime'])
+            : $email->attach($attachment['value'], $attachment['name'] ?? null, $attachment['mime']);
     }
 
     public function send(?callable $callback = null): int
     {
-        $settings = $this->settings();
+        $settings = $this->configuration();
         if (!$settings['enabled']) {
             throw new \RuntimeException('Mailer service is disabled.');
         }
 
         $email = $this->message();
-        $recipientCount = count($email->getTo()) + count($email->getCc()) + count($email->getBcc());
-        $subject = $email->getSubject() ?? '';
-
-        $logger = $this->app->has(LoggerInterface::class)
-            ? $this->app->make(LoggerInterface::class)
-            : null;
-
-        if ($logger !== null) {
-            $logger->info('Attempting to send email', [
-                'subject' => $subject,
-                'recipients' => $recipientCount,
-            ]);
-        }
 
         if ($callback !== null) {
             $callback($email, $this);
         }
 
-        try {
-            $symfonyMailer = $this->getSymfonyMailer();
-            $symfonyMailer->send($email);
+        $recipientCount = $this->adapter->send($email);
+        $this->reset();
 
-            if ($logger !== null) {
-                $logger->info('Email sent successfully', [
-                    'subject' => $subject,
-                    'sent' => $recipientCount,
-                    'recipients' => $recipientCount,
-                ]);
-            }
-
-            $this->reset();
-            return $recipientCount;
-        } catch (\Symfony\Component\Mailer\Exception\ExceptionInterface $e) {
-            if ($logger !== null) {
-                $logger->error('Email send failed: transport error', [
-                    'subject' => $subject,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-            throw new MailSendException('Failed to send email: ' . $e->getMessage(), 0, $e);
-        } catch (\Exception $e) {
-            if ($logger !== null) {
-                $logger->error('Email send failed: transport error', [
-                    'subject' => $subject,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-            throw new MailSendException('Failed to send email due to transport error: ' . $e->getMessage(), 0, $e);
-        }
+        return $recipientCount;
     }
 
     public function queue(Mailable $mailable, ?string $queue = null, int $delaySeconds = 0): QueuedJob
@@ -420,9 +256,6 @@ final class Mailer implements MailerInterface
         );
     }
 
-    /**
-     * Queue email to be sent at a specific timestamp
-     */
     public function queueAt(Mailable $mailable, int $timestamp, ?string $queue = null): QueuedJob
     {
         return $this->app->queue()->pushAt(
@@ -433,10 +266,6 @@ final class Mailer implements MailerInterface
         );
     }
 
-    /**
-     * Queue recurring email
-     * @param array{expression: string, timezone?: string} $schedule
-     */
     public function queueRecurring(Mailable $mailable, array $schedule, ?string $queue = null): QueuedJob
     {
         return $this->app->queue()->pushRecurring(
@@ -447,15 +276,18 @@ final class Mailer implements MailerInterface
         );
     }
 
+    public function transport(): \Symfony\Component\Mailer\Transport\TransportInterface
+    {
+        return $this->adapter->transport();
+    }
+
     /**
-     * @param string|array<string, string>|array<int, string> $address
      * @return array<string, string|null>
      */
     private function normalizeRecipients(string|array $address, ?string $name = null): array
     {
         if (is_string($address)) {
             $email = trim($address);
-
             if ($email !== '') {
                 $this->validateEmail($email);
                 return [$email => $name];
@@ -465,29 +297,22 @@ final class Mailer implements MailerInterface
         }
 
         $recipients = [];
-
         foreach ($address as $key => $value) {
             if (is_int($key)) {
                 $email = trim((string) $value);
-
                 if ($email === '') {
                     continue;
                 }
-
                 $this->validateEmail($email);
                 $recipients[$email] = null;
-
-                continue;
+            } else {
+                $email = trim($key);
+                if ($email === '') {
+                    continue;
+                }
+                $this->validateEmail($email);
+                $recipients[$email] = $value !== '' ? $value : null;
             }
-
-            $email = trim($key);
-
-            if ($email === '') {
-                continue;
-            }
-
-            $this->validateEmail($email);
-            $recipients[$email] = $value !== '' ? $value : null;
         }
 
         if ($name !== null && count($recipients) === 1) {
@@ -499,8 +324,6 @@ final class Mailer implements MailerInterface
     }
 
     /**
-     * @param array<string, string|null> $existing
-     * @param array<string, string|null> $incoming
      * @return array<string, string|null>
      */
     private function mergeRecipients(array $existing, array $incoming): array
@@ -512,143 +335,10 @@ final class Mailer implements MailerInterface
         return $existing;
     }
 
-    /**
-     * @param array{
-     *     enabled: bool,
-     *     driver: string,
-     *     charset: string,
-     *     from: array{address: string, name: string},
-     *     smtp: array{
-     *         host: string,
-     *         port: int,
-     *         encryption: string|null,
-     *         username: string|null,
-     *         password: string|null,
-     *         authMode: string|null,
-     *         timeout: int
-     *     },
-     *     sendmail: array{path: string}
-     * } $settings
-     */
-    private function smtpTransport(array $settings): TransportInterface
-    {
-        $smtp = $settings['smtp'];
-
-        $protocol = 'smtp://';
-        if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
-            if (in_array(strtolower($smtp['encryption']), ['ssl', 'tls'])) {
-                $protocol = 'smtps://';
-            }
-        }
-
-        $dsn = sprintf(
-            '%s%s:%s@%s:%d',
-            $protocol,
-            urlencode($smtp['username'] ?? ''),
-            urlencode($smtp['password'] ?? ''),
-            $smtp['host'],
-            $smtp['port']
-        );
-
-        if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
-            $dsn .= '?encryption=' . $smtp['encryption'];
-        }
-
-        if ($smtp['authMode'] !== null && $smtp['authMode'] !== '') {
-            $dsn .= ($smtp['encryption'] !== null && $smtp['encryption'] !== '' ? '&' : '?') . 'auth_mode=' . $smtp['authMode'];
-        }
-
-        return \Symfony\Component\Mailer\Transport::fromDsn($dsn);
-    }
-
-    /**
-     * @param array{
-     *     enabled: bool,
-     *     driver: string,
-     *     charset: string,
-     *     from: array{address: string, name: string},
-     *     smtp: array{
-     *         host: string,
-     *         port: int,
-     *         encryption: string|null,
-     *         username: string|null,
-     *         password: string|null,
-     *         authMode: string|null,
-     *         timeout: int
-     *     },
-     *     sendmail: array{path: string}
-     * } $settings
-     */
-    private function sendmailTransport(array $settings): TransportInterface
-    {
-        return \Symfony\Component\Mailer\Transport::fromDsn(
-            sprintf('sendmail://%s', $settings['sendmail']['path'])
-        );
-    }
-
-    private function mailTransport(): TransportInterface
-    {
-        return \Symfony\Component\Mailer\Transport::fromDsn('native://default');
-    }
-
     private function validateEmail(string $email): void
     {
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             throw new \InvalidArgumentException("Invalid email address: {$email}");
         }
-    }
-
-    /**
-     * @return array{
-     *     enabled: bool,
-     *     driver: string,
-     *     charset: string,
-     *     from: array{address: string, name: string},
-     *     smtp: array{
-     *         host: string,
-     *         port: int,
-     *         encryption: string|null,
-     *         username: string|null,
-     *         password: string|null,
-     *         authMode: string|null,
-     *         timeout: int
-     *     },
-     *     sendmail: array{path: string}
-     * }
-     */
-    private function settings(): array
-    {
-        $this->config->loadIfExists(MailConfig::KEY . '.php');
-        $settings = MailConfig::merge($this->app, $this->config->getArray(MailConfig::KEY, []));
-        $this->validateEmail($settings['from']['address']);
-
-        return $settings;
-    }
-
-    /**
-     * @param array{
-     *     enabled: bool,
-     *     driver: string,
-     *     charset: string,
-     *     from: array{address: string, name: string},
-     *     smtp: array{
-     *         host: string,
-     *         port: int,
-     *         encryption: string|null,
-     *         username: string|null,
-     *         password: string|null,
-     *         authMode: string|null,
-     *         timeout: int
-     *     },
-     *     sendmail: array{path: string}
-     * } $settings
-     */
-    private function transportConfigHash(array $settings): string
-    {
-        return hash('sha256', json_encode([
-            'driver' => $settings['driver'],
-            'smtp' => $settings['smtp'],
-            'sendmail' => $settings['sendmail'],
-        ], JSON_THROW_ON_ERROR));
     }
 }

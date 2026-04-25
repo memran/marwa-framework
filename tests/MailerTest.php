@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Tests;
 
+use Marwa\Framework\Adapters\Mail\SymfonyMailerAdapter;
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\MailerAdapterInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Mailer;
@@ -65,7 +67,8 @@ PHP
     public function testValidEmailPassesValidation(): void
     {
         $config = $this->app->make(Config::class);
-        $mailer = new Mailer($this->app, $config);
+        $adapter = new SymfonyMailerAdapter($this->app, $config);
+        $mailer = new Mailer($this->app, $adapter);
 
         $this->expectNotToPerformAssertions();
         $mailer->to('valid@example.com');
@@ -74,7 +77,8 @@ PHP
     public function testInvalidEmailThrowsException(): void
     {
         $config = $this->app->make(Config::class);
-        $mailer = new Mailer($this->app, $config);
+        $adapter = new SymfonyMailerAdapter($this->app, $config);
+        $mailer = new Mailer($this->app, $adapter);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid email address: invalid-email');
@@ -84,7 +88,8 @@ PHP
     public function testInvalidEmailInArrayThrowsException(): void
     {
         $config = $this->app->make(Config::class);
-        $mailer = new Mailer($this->app, $config);
+        $adapter = new SymfonyMailerAdapter($this->app, $config);
+        $mailer = new Mailer($this->app, $adapter);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid email address: bad@');
@@ -94,7 +99,8 @@ PHP
     public function testInvalidEmailInAssociativeArrayThrowsException(): void
     {
         $config = $this->app->make(Config::class);
-        $mailer = new Mailer($this->app, $config);
+        $adapter = new SymfonyMailerAdapter($this->app, $config);
+        $mailer = new Mailer($this->app, $adapter);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid email address: invalid@domain');

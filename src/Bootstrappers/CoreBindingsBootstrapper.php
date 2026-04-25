@@ -92,10 +92,15 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(Mailer::class, fn() => new Mailer(
             $app,
-            $container->get(Config::class)
+            $container->get(\Marwa\Framework\Contracts\MailerAdapterInterface::class)
         ));
 
         $container->addShared(MailerInterface::class, fn() => $container->get(Mailer::class));
+
+        $container->addShared(\Marwa\Framework\Contracts\MailerAdapterInterface::class, fn() => new \Marwa\Framework\Adapters\Mail\SymfonyMailerAdapter(
+            $app,
+            $container->get(Config::class)
+        ));
 
         if (!Runtime::isConsole()) {
             $container->addShared(FrameworkView::class, fn() => new FrameworkView(
