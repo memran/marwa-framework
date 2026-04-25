@@ -115,32 +115,11 @@ final class ModuleBootstrapper
      */
     public function consoleDiscoverySources(): array
     {
-        if ($this->consoleDiscoverySources !== null) {
-            return $this->consoleDiscoverySources;
-        }
-
-        $registry = $this->registry();
-
-        if ($registry === null) {
-            $this->consoleDiscoverySources = [];
-
-            return [];
-        }
-
-        $sources = [];
-        $moduleConfig = $this->moduleConfig();
-
-        foreach ($registry->all() as $module) {
-            foreach ($this->pathResolver->resolveCommandPaths($module, $moduleConfig) as $path) {
-                $sources[] = [
-                    'path' => $path,
-                ];
-            }
-        }
-
-        $this->consoleDiscoverySources = $sources;
-
-        return $this->consoleDiscoverySources;
+        return $this->resolvePaths(
+            'consoleDiscoverySources',
+            fn($module, $config) => $this->pathResolver->resolveCommandPaths($module, $config),
+            true
+        );
     }
 
     /**
@@ -148,30 +127,10 @@ final class ModuleBootstrapper
      */
     public function migrationPaths(): array
     {
-        if ($this->migrationPaths !== null) {
-            return $this->migrationPaths;
-        }
-
-        $registry = $this->registry();
-
-        if ($registry === null) {
-            $this->migrationPaths = [];
-
-            return [];
-        }
-
-        $paths = [];
-        $moduleConfig = $this->moduleConfig();
-
-        foreach ($registry->all() as $module) {
-            foreach ($this->pathResolver->resolveMigrationPaths($module, $moduleConfig) as $path) {
-                $paths[] = $path;
-            }
-        }
-
-        $this->migrationPaths = array_values(array_unique($paths));
-
-        return $this->migrationPaths;
+        return $this->resolvePaths(
+            'migrationPaths',
+            fn($module, $config) => $this->pathResolver->resolveMigrationPaths($module, $config)
+        );
     }
 
     /**
@@ -179,15 +138,27 @@ final class ModuleBootstrapper
      */
     public function seederPaths(): array
     {
-        if ($this->seederPaths !== null) {
-            return $this->seederPaths;
+        return $this->resolvePaths(
+            'seederPaths',
+            fn($module, $config) => $this->pathResolver->resolveSeederPaths($module, $config)
+        );
+    }
+
+    /**
+     * @param string $cacheKey
+     * @param callable $resolver
+     * @param bool $wrapAsArray
+     * @return array
+     */
+    private function resolvePaths(string $cacheKey, callable $resolver, bool $wrapAsArray = false): array
+    {
+        if ($this->{$cacheKey} !== null) {
+            return $this->{$cacheKey};
         }
 
         $registry = $this->registry();
-
         if ($registry === null) {
-            $this->seederPaths = [];
-
+            $this->{$cacheKey} = [];
             return [];
         }
 
@@ -195,14 +166,18 @@ final class ModuleBootstrapper
         $moduleConfig = $this->moduleConfig();
 
         foreach ($registry->all() as $module) {
-            foreach ($this->pathResolver->resolveSeederPaths($module, $moduleConfig) as $path) {
-                $paths[] = $path;
+            foreach ($resolver($module, $moduleConfig) as $path) {
+                if ($wrapAsArray && is_string($path)) {
+                    $paths[] = ['path' => $path];
+                } else {
+                    $paths[] = $path;
+                }
             }
         }
 
-        $this->seederPaths = array_values(array_unique($paths));
+        $this->{$cacheKey} = array_values(array_unique($paths, SORT_REGULAR));
 
-        return $this->seederPaths;
+        return $this->{$cacheKey};
     }
 
     private function loadModuleConfigs(ModuleRegistryInterface $registry): void
