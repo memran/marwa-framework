@@ -8,6 +8,7 @@ use FilesystemIterator;
 use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
+use Marwa\Framework\Supports\Config;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -132,6 +133,49 @@ PHP
         $cache->put('draft', 'committed', 60);
         self::assertTrue($cache->commit());
         self::assertSame('committed', $cache->get('draft'));
+    }
+
+    public function testSharedCacheReadsUpdatedGlobalConfig(): void
+    {
+        $app = new Application($this->basePath);
+        /** @var ScrapbookCacheAdapter $cache */
+        $cache = $app->cache();
+        $cache->put('runtime-only', 'memory-value', 60);
+
+        /** @var Config $config */
+        $config = $app->make(Config::class);
+        $config->set('cache.driver', 'file');
+        $config->set('cache.file.path', $this->basePath . '/storage/cache/framework');
+        $config->set('cache.namespace', 'framework-tests');
+
+        self::assertTrue($cache->put('disk-key', 'disk-value', 60));
+        self::assertSame('disk-value', $cache->get('disk-key'));
+
+        $updatedConfig = sprintf(
+            <<<'PHP'
+<?php
+
+return [
+    'driver' => 'file',
+    'namespace' => 'framework-tests',
+    'buffered' => true,
+    'transactional' => false,
+    'stampede' => [
+        'enabled' => false,
+        'sla' => 250,
+    ],
+    'file' => [
+        'path' => '%s',
+    ],
+];
+PHP,
+            $this->basePath . '/storage/cache/framework'
+        );
+        file_put_contents($this->basePath . '/config/cache.php', $updatedConfig);
+
+        $app = new Application($this->basePath);
+        self::assertSame('disk-value', $app->cache()->get('disk-key'));
+        self::assertNull($app->cache()->get('runtime-only'));
     }
 
     private function createBasePathWithoutCacheConfig(): string

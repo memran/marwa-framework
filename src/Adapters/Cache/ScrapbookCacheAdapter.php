@@ -33,6 +33,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
      * }|null
      */
     private ?array $cacheConfig = null;
+    private ?string $configurationHash = null;
 
     private ?KeyValueStore $store = null;
     private ?SimpleCache $cache = null;
@@ -138,6 +139,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
     {
         $clone = new self($this->app, $this->config);
         $clone->cacheConfig = $this->configuration();
+        $clone->configurationHash = md5(serialize($clone->cacheConfig));
         $clone->cacheConfig['namespace'] = $this->collectionNamespace($name);
 
         return $clone;
@@ -163,18 +165,34 @@ final class ScrapbookCacheAdapter implements CacheInterface
      */
     public function configuration(): array
     {
+        $this->config->loadIfExists(CacheConfig::KEY . '.php');
+
+        $configuration = CacheConfig::merge($this->app, $this->config->getArray(CacheConfig::KEY, []));
+        $configurationHash = md5(serialize($configuration));
+
+        if ($this->configurationHash !== $configurationHash) {
+            $this->cacheConfig = $configuration;
+            $this->configurationHash = $configurationHash;
+            $this->store = null;
+            $this->cache = null;
+            $this->transactions = null;
+
+            return $this->cacheConfig;
+        }
+
         if ($this->cacheConfig !== null) {
             return $this->cacheConfig;
         }
 
-        $this->config->loadIfExists(CacheConfig::KEY . '.php');
-        $this->cacheConfig = CacheConfig::merge($this->app, $this->config->getArray(CacheConfig::KEY, []));
+        $this->cacheConfig = $configuration;
 
         return $this->cacheConfig;
     }
 
     private function simpleCache(): SimpleCache
     {
+        $this->store();
+
         if ($this->cache instanceof SimpleCache) {
             return $this->cache;
         }
@@ -186,6 +204,8 @@ final class ScrapbookCacheAdapter implements CacheInterface
 
     private function store(): KeyValueStore
     {
+        $this->configuration();
+
         if ($this->store instanceof KeyValueStore) {
             return $this->store;
         }
@@ -230,6 +250,8 @@ final class ScrapbookCacheAdapter implements CacheInterface
 
     private function transactionalStore(): TransactionalStore
     {
+        $this->configuration();
+
         if ($this->transactions instanceof TransactionalStore) {
             return $this->transactions;
         }
