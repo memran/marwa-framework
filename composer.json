@@ -50,6 +50,8 @@
     "memran/marwa-module": "^1.0.1",
     "memran/marwa-entity": "^1.1.0",
     "memran/marwa-db": "^1.2",
+    "memran/marwa-ai": "^1.0",
+    "memran/marwa-mcp": "^0.1",
     "matthiasmullie/scrapbook": "^1.5",
     "league/flysystem": "^3.29",
     "league/flysystem-local": "^3.29",
