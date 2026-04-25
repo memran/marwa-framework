@@ -50,12 +50,12 @@
     "memran/marwa-module": "^1.0.1",
     "memran/marwa-entity": "^1.1.0",
     "memran/marwa-db": "^1.2",
-    "memran/marwa-ai": "^1.0",
-    "memran/marwa-mcp": "^0.1",
     "matthiasmullie/scrapbook": "^1.5",
     "league/flysystem": "^3.29",
     "league/flysystem-local": "^3.29",
-    "symfony/mailer": "^7.0"
+    "symfony/mailer": "^7.0",
+    "memran/marwa-ai": "^1.0",
+    "memran/marwa-mcp": "^0.1"
   },
   "autoload": {
     "psr-4": {
@@ -77,7 +77,7 @@
   },
   "config": {
     "platform": {
-      "php": "8.2.0"
+      "php": "8.3.0"
     }
   },
   "suggest": {
