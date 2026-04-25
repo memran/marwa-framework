@@ -69,8 +69,6 @@ final class CoreBindingsBootstrapper
 
         $container->addShared(MenuRegistry::class);
 
-        $this->registerLogger($container, $app);
-
         $container->addShared(EventDispatcherAdapter::class, fn() => new EventDispatcherAdapter(
             $container,
             $container->get(Config::class)
@@ -226,23 +224,18 @@ final class CoreBindingsBootstrapper
             $container->get(ConsoleApplication::class)
         ));
 
+        $this->registerLogger($container, $app);
         $this->registerAuthorization($container);
     }
 
     private function registerLogger(Container $container, Application $app): void
     {
-        $isEnabled = $app->make(Config::class)->getBool(LoggerConfig::KEY . '.enable', LoggerConfig::defaults($app)['enable']);
+        $container->addShared(LoggerAdapter::class, fn() => (new LoggerAdapter(
+            $app,
+            $container->get(Config::class)
+        ))->getLogger());
 
-        if ($isEnabled) {
-            $container->addShared(LoggerAdapter::class, fn() => (new LoggerAdapter(
-                $app,
-                $container->get(Config::class)
-            ))->getLogger());
-
-            $container->addShared(LoggerInterface::class, fn() => $container->get(LoggerAdapter::class));
-        } else {
-            $container->addShared(LoggerInterface::class, new NullLogger());
-        }
+        $container->addShared(LoggerInterface::class, fn() => $container->get(LoggerAdapter::class));
     }
 
     private function registerAuthorization(Container $container): void
