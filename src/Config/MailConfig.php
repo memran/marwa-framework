@@ -25,7 +25,8 @@ final class MailConfig
      *         authMode: string|null,
      *         timeout: int
      *     },
-     *     sendmail: array{path: string}
+     *     sendmail: array{path: string},
+     *     template: array{path: string, autoPlainText: bool, inlineCss: bool}
      * }
      */
     public static function defaults(Application $app): array
@@ -53,6 +54,11 @@ final class MailConfig
             'sendmail' => [
                 'path' => (string) env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs'),
             ],
+            'template' => [
+                'path' => (string) env('MAIL_TEMPLATE_PATH', 'resources/views/emails'),
+                'autoPlainText' => (bool) env('MAIL_AUTO_PLAIN_TEXT', true),
+                'inlineCss' => (bool) env('MAIL_INLINE_CSS', true),
+            ],
         ];
     }
 
@@ -72,7 +78,8 @@ final class MailConfig
      *         authMode: string|null,
      *         timeout: int
      *     },
-     *     sendmail: array{path: string}
+     *     sendmail: array{path: string},
+     *     template: array{path: string, autoPlainText: bool, inlineCss: bool}
      * }
      */
     public static function merge(Application $app, array $overrides): array
@@ -81,6 +88,7 @@ final class MailConfig
         $from = is_array($overrides['from'] ?? null) ? $overrides['from'] : [];
         $smtp = is_array($overrides['smtp'] ?? null) ? $overrides['smtp'] : [];
         $sendmail = is_array($overrides['sendmail'] ?? null) ? $overrides['sendmail'] : [];
+        $template = is_array($overrides['template'] ?? null) ? $overrides['template'] : [];
 
         return [
             'enabled' => (bool) ($overrides['enabled'] ?? $defaults['enabled']),
@@ -111,6 +119,13 @@ final class MailConfig
                 'path' => is_string($sendmail['path'] ?? null) && $sendmail['path'] !== ''
                     ? $sendmail['path']
                     : $defaults['sendmail']['path'],
+            ],
+            'template' => [
+                'path' => is_string($template['path'] ?? null) && $template['path'] !== ''
+                    ? $template['path']
+                    : $defaults['template']['path'],
+                'autoPlainText' => (bool) ($template['autoPlainText'] ?? $defaults['template']['autoPlainText']),
+                'inlineCss' => (bool) ($template['inlineCss'] ?? $defaults['template']['inlineCss']),
             ],
         ];
     }

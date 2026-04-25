@@ -17,9 +17,11 @@ final class {{ class }} extends Mailable
     public function build(MailerInterface $mailer): MailerInterface
     {
         return $mailer
-            ->subject((string) $this->value('subject', '{{ class }}'))
+            ->subject((string) $this->value('subject', 'Welcome'))
             ->to($this->value('to', []))
-            ->html((string) $this->value('html', '<p>Update the mail template.</p>'), $this->value('text'))
+            ->htmlTemplate('emails/{{ slug }}/welcome', [
+                'name' => $this->value('name', 'User'),
+            ])
             ->from($this->value('from', ['no-reply@example.com' => 'MarwaPHP']));
     }
 }
