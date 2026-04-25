@@ -24,10 +24,12 @@ final class ScheduleConfig
      */
     public static function defaults(Application $app): array
     {
+        $driver = env('SCHEDULE_DRIVER', 'file');
+
         return [
             'enabled' => true,
             'lockPath' => $app->basePath('storage/framework/schedule'),
-            'driver' => 'file',
+            'driver' => self::resolveDriver(is_string($driver) ? $driver : null, 'file'),
             'file' => [
                 'path' => $app->basePath('storage/framework/schedule'),
             ],
@@ -38,7 +40,7 @@ final class ScheduleConfig
                 'connection' => 'sqlite',
                 'table' => 'schedule_jobs',
             ],
-            'defaultLoopSeconds' => 1,
+            'defaultLoopSeconds' => 0,
             'defaultSleepSeconds' => 1,
         ];
     }
@@ -68,9 +70,14 @@ final class ScheduleConfig
                     : $defaults['file']['path']
             );
 
-        $driver = is_string($overrides['driver'] ?? null) && in_array($overrides['driver'], ['file', 'database', 'cache'], true)
-            ? $overrides['driver']
-            : $defaults['driver'];
+        $driver = self::resolveDriver($overrides['driver'] ?? null, $defaults['driver']);
+        $databaseTable = is_string($overrides['database']['table'] ?? null) && $overrides['database']['table'] !== ''
+            ? $overrides['database']['table']
+            : $defaults['database']['table'];
+
+        if (!self::isIdentifier($databaseTable)) {
+            $databaseTable = $defaults['database']['table'];
+        }
 
         return [
             'enabled' => (bool) ($overrides['enabled'] ?? $defaults['enabled']),
@@ -88,12 +95,30 @@ final class ScheduleConfig
                 'connection' => is_string($overrides['database']['connection'] ?? null) && $overrides['database']['connection'] !== ''
                     ? $overrides['database']['connection']
                     : $defaults['database']['connection'],
-                'table' => is_string($overrides['database']['table'] ?? null) && $overrides['database']['table'] !== ''
-                    ? $overrides['database']['table']
-                    : $defaults['database']['table'],
+                'table' => $databaseTable,
             ],
-            'defaultLoopSeconds' => max(1, (int) ($overrides['defaultLoopSeconds'] ?? $defaults['defaultLoopSeconds'])),
+            'defaultLoopSeconds' => max(0, (int) ($overrides['defaultLoopSeconds'] ?? $defaults['defaultLoopSeconds'])),
             'defaultSleepSeconds' => max(1, (int) ($overrides['defaultSleepSeconds'] ?? $defaults['defaultSleepSeconds'])),
         ];
+    }
+
+    private static function resolveDriver(mixed $driver, string $default): string
+    {
+        if (!is_string($driver) || $driver === '') {
+            return $default;
+        }
+
+        $driver = strtolower(trim($driver));
+
+        if (!in_array($driver, ['file', 'database', 'cache', 'redis'], true)) {
+            return $default;
+        }
+
+        return $driver;
+    }
+
+    private static function isIdentifier(string $value): bool
+    {
+        return preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
     }
 }

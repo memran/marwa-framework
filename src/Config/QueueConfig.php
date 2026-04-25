@@ -23,9 +23,11 @@ final class QueueConfig
      */
     public static function defaults(Application $app): array
     {
+        $driver = env('QUEUE_DRIVER', 'file');
+
         return [
             'enabled' => true,
-            'driver' => 'file',
+            'driver' => self::resolveDriver(is_string($driver) ? $driver : null, 'file'),
             'default' => 'default',
             'path' => $app->basePath('storage/queue'),
             'database' => [

@@ -204,7 +204,7 @@ Add cron job:
 
 ```bash
 # crontab -e
-* * * * * /usr/bin/php /var/www/yourapp marwa schedule:run >> /dev/null 2>&1
+* * * * * /usr/bin/php /var/www/yourapp marwa schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
 ```
 
 ## Step 7: SSL/HTTPS

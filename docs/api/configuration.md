@@ -460,13 +460,13 @@ Defined by `Marwa\Framework\Config\ScheduleConfig`.
 Supported keys:
 
 - `enabled`: enable the scheduler runtime
-- `driver`: `file`, `cache`, or `database`
+- `driver`: `file`, `cache`, `redis`, or `database`
 - `lockPath`: legacy alias for `file.path`
 - `file.path`: directory used for file-based lock and state records
 - `cache.namespace`: cache key prefix used for scheduler state and locks
 - `database.connection`: `marwa-db` connection name used by the scheduler store
 - `database.table`: table used for scheduler state and overlap locks
-- `defaultLoopSeconds`: default `schedule:run --for` duration
+- `defaultLoopSeconds`: default `schedule:run --for` duration; `0` keeps the scheduler persistent
 - `defaultSleepSeconds`: default `schedule:run --sleep` duration
 
 Example:
@@ -474,7 +474,7 @@ Example:
 ```php
 return [
     'enabled' => true,
-    'driver' => 'cache',
+    'driver' => env('SCHEDULE_DRIVER', 'file'),
     'file' => [
         'path' => storage_path('framework/schedule'),
     ],
@@ -485,7 +485,7 @@ return [
         'connection' => 'sqlite',
         'table' => 'schedule_jobs',
     ],
-    'defaultLoopSeconds' => 60,
+    'defaultLoopSeconds' => 0,
     'defaultSleepSeconds' => 1,
 ];
 ```
@@ -544,18 +544,22 @@ Defined by `Marwa\Framework\Config\QueueConfig`.
 Supported keys:
 
 - `enabled`: enable the shared file-backed queue
+- `driver`: queue backend (`file` or `database`)
 - `default`: default queue name
 - `path`: queue storage root
 - `retryAfter`: retry visibility timeout in seconds for user-defined workers
+- `tries`: maximum worker attempts before a job is failed
 
 Example:
 
 ```php
 return [
     'enabled' => true,
+    'driver' => env('QUEUE_DRIVER', 'file'),
     'default' => 'default',
     'path' => storage_path('queue'),
     'retryAfter' => 90,
+    'tries' => null,
 ];
 ```
 
@@ -567,7 +571,7 @@ Supported keys:
 
 - `enabled`: enable the scheduler runtime
 - `lockPath`: directory for overlap-prevention lock files
-- `defaultLoopSeconds`: default `schedule:run --for` value
+- `defaultLoopSeconds`: default `schedule:run --for` value; `0` keeps the scheduler persistent
 - `defaultSleepSeconds`: default `schedule:run --sleep` value
 
 Example:
@@ -576,7 +580,7 @@ Example:
 return [
     'enabled' => true,
     'lockPath' => storage_path('framework/schedule'),
-    'defaultLoopSeconds' => 60,
+    'defaultLoopSeconds' => 0,
     'defaultSleepSeconds' => 1,
 ];
 ```

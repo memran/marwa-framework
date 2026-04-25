@@ -23,6 +23,7 @@ final class SmsChannel implements NotificationChannelInterface
         if ($uri === '') {
             throw new \InvalidArgumentException('SMS notifications require a url.');
         }
+        $this->assertHttpUrl($uri);
 
         $method = strtoupper((string) ($payload['method'] ?? $config['method'] ?? 'POST'));
         $options = [
@@ -59,5 +60,15 @@ final class SmsChannel implements NotificationChannelInterface
         }
 
         return property_exists($notifiable, 'phone') ? $notifiable->phone : (property_exists($notifiable, 'phone_number') ? $notifiable->phone_number : null);
+    }
+
+    private function assertHttpUrl(string $uri): void
+    {
+        $scheme = parse_url($uri, PHP_URL_SCHEME);
+        if ($scheme === 'http' || $scheme === 'https') {
+            return;
+        }
+
+        throw new \InvalidArgumentException('SMS notifications require an http or https url.');
     }
 }

@@ -12,13 +12,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'schedule:run', description: 'Run due scheduled tasks. Use --for=60 to let cron drive per-second execution.')]
+#[AsCommand(name: 'schedule:run', description: 'Run due scheduled tasks. Persistent by default; use --once or --for to bound execution.')]
 final class ScheduleRunCommand extends AbstractCommand
 {
     protected function configure(): void
     {
         $this
-            ->addOption('for', null, InputOption::VALUE_REQUIRED, 'Number of seconds to keep the scheduler loop alive.', null)
+            ->addOption('once', null, InputOption::VALUE_NONE, 'Run one scheduler tick and exit.')
+            ->addOption('for', null, InputOption::VALUE_REQUIRED, 'Number of seconds to keep the scheduler loop alive. Omit for persistent mode.', null)
             ->addOption('sleep', null, InputOption::VALUE_REQUIRED, 'Seconds to sleep between loop iterations.', null);
     }
 
@@ -27,11 +28,12 @@ final class ScheduleRunCommand extends AbstractCommand
         /** @var Scheduler $scheduler */
         $scheduler = $this->app()->make(Scheduler::class);
         $config = $scheduler->configuration();
+        $once = (bool) $input->getOption('once');
         $loopSeconds = $this->resolveIntegerOption($input->getOption('for'), $config['defaultLoopSeconds']);
         $sleepSeconds = $this->resolveIntegerOption($input->getOption('sleep'), $config['defaultSleepSeconds']);
 
-        if ($loopSeconds <= 0 || $sleepSeconds <= 0) {
-            $output->writeln('<error>The --for and --sleep options must be positive integers.</error>');
+        if ($loopSeconds < 0 || $sleepSeconds < 0) {
+            $output->writeln('<error>The --for and --sleep options must be non-negative integers.</error>');
 
             return Command::INVALID;
         }
@@ -57,11 +59,15 @@ final class ScheduleRunCommand extends AbstractCommand
                 $output->writeln(sprintf('<error>Task [%s] failed.</error>', $task));
             }
 
-            if ((time() - $startedAt + 1) >= $loopSeconds) {
+            if ($once) {
                 break;
             }
 
-            sleep($sleepSeconds);
+            if ($loopSeconds > 0 && (time() - $startedAt + 1) >= $loopSeconds) {
+                break;
+            }
+
+            $this->sleepBetweenTicks($sleepSeconds);
         } while (true);
 
         if (!$hadDueTask) {
@@ -79,6 +85,16 @@ final class ScheduleRunCommand extends AbstractCommand
 
         $resolved = filter_var($value, FILTER_VALIDATE_INT);
 
-        return is_int($resolved) ? $resolved : 0;
+        return is_int($resolved) ? $resolved : -1;
+    }
+
+    private function sleepBetweenTicks(int $sleepSeconds): void
+    {
+        if ($sleepSeconds > 0) {
+            sleep($sleepSeconds);
+            return;
+        }
+
+        usleep(100000);
     }
 }

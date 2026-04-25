@@ -31,10 +31,11 @@ final class MailConfig
     public static function defaults(Application $app): array
     {
         $appName = (string) env('APP_NAME', 'MarwaPHP');
+        $driver = env('MAIL_DRIVER', env('MAIL_MAILER', 'smtp'));
 
         return [
             'enabled' => true,
-            'driver' => (string) env('MAIL_DRIVER', 'smtp'),
+            'driver' => self::resolveDriver($driver, 'smtp'),
             'charset' => (string) env('MAIL_CHARSET', 'UTF-8'),
             'from' => [
                 'address' => (string) env('MAIL_FROM_ADDRESS', 'no-reply@example.com'),
@@ -53,6 +54,80 @@ final class MailConfig
                 'path' => (string) env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs'),
             ],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array{
+     *     enabled: bool,
+     *     driver: string,
+     *     charset: string,
+     *     from: array{address: string, name: string},
+     *     smtp: array{
+     *         host: string,
+     *         port: int,
+     *         encryption: string|null,
+     *         username: string|null,
+     *         password: string|null,
+     *         authMode: string|null,
+     *         timeout: int
+     *     },
+     *     sendmail: array{path: string}
+     * }
+     */
+    public static function merge(Application $app, array $overrides): array
+    {
+        $defaults = self::defaults($app);
+        $from = is_array($overrides['from'] ?? null) ? $overrides['from'] : [];
+        $smtp = is_array($overrides['smtp'] ?? null) ? $overrides['smtp'] : [];
+        $sendmail = is_array($overrides['sendmail'] ?? null) ? $overrides['sendmail'] : [];
+
+        return [
+            'enabled' => (bool) ($overrides['enabled'] ?? $defaults['enabled']),
+            'driver' => self::resolveDriver($overrides['driver'] ?? null, $defaults['driver']),
+            'charset' => is_string($overrides['charset'] ?? null) && $overrides['charset'] !== ''
+                ? $overrides['charset']
+                : $defaults['charset'],
+            'from' => [
+                'address' => is_string($from['address'] ?? null) && $from['address'] !== ''
+                    ? $from['address']
+                    : $defaults['from']['address'],
+                'name' => is_string($from['name'] ?? null)
+                    ? $from['name']
+                    : $defaults['from']['name'],
+            ],
+            'smtp' => [
+                'host' => is_string($smtp['host'] ?? null) && $smtp['host'] !== ''
+                    ? $smtp['host']
+                    : $defaults['smtp']['host'],
+                'port' => max(1, (int) ($smtp['port'] ?? $defaults['smtp']['port'])),
+                'encryption' => self::nullableString($smtp['encryption'] ?? $defaults['smtp']['encryption']),
+                'username' => self::nullableString($smtp['username'] ?? $defaults['smtp']['username']),
+                'password' => self::nullableString($smtp['password'] ?? $defaults['smtp']['password']),
+                'authMode' => self::nullableString($smtp['authMode'] ?? $defaults['smtp']['authMode']),
+                'timeout' => max(1, (int) ($smtp['timeout'] ?? $defaults['smtp']['timeout'])),
+            ],
+            'sendmail' => [
+                'path' => is_string($sendmail['path'] ?? null) && $sendmail['path'] !== ''
+                    ? $sendmail['path']
+                    : $defaults['sendmail']['path'],
+            ],
+        ];
+    }
+
+    private static function resolveDriver(mixed $driver, string $default): string
+    {
+        if (!is_string($driver) || $driver === '') {
+            return $default;
+        }
+
+        $driver = strtolower(trim($driver));
+
+        if (!in_array($driver, ['smtp', 'sendmail', 'mail'], true)) {
+            return $default;
+        }
+
+        return $driver;
     }
 
     /**

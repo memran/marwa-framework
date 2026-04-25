@@ -48,11 +48,13 @@ final class Kernel
 php marwa schedule:run
 ```
 
+`schedule:run` is persistent by default. Use `--once` for a single scheduler tick, or `--for=60 --sleep=1` when cron should keep the scheduler alive for one minute.
+
 ### 3. Setup Cron (Production)
 
 ```bash
 # crontab -e
-* * * * * /usr/bin/php /var/www/yourapp marwa schedule:run >> /dev/null 2>&1
+* * * * * /usr/bin/php /var/www/yourapp marwa schedule:run --for=60 --sleep=1 >> /dev/null 2>&1
 ```
 
 ## Scheduling Methods

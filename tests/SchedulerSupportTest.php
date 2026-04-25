@@ -123,6 +123,27 @@ final class SchedulerSupportTest extends TestCase
         self::assertSame([], $summary['failed']);
     }
 
+    public function testSchedulerResolvesStoreFromCurrentConfigurationOnEachRun(): void
+    {
+        $app = new Application($this->basePath);
+        /** @var \Marwa\Framework\Supports\Config $config */
+        $config = $app->make(\Marwa\Framework\Supports\Config::class);
+        $config->set('schedule.driver', 'file');
+
+        $queue = $this->createMock(QueueInterface::class);
+        $queue->expects(self::never())->method('push');
+
+        $resolver = new RecordingScheduleStoreResolver();
+        $scheduler = new Scheduler($app, new NullLogger(), $queue, $resolver);
+        $scheduler->call(static function (): void {}, 'dynamic-driver')->everySecond();
+
+        $scheduler->runDue(new \DateTimeImmutable('@1700000010'));
+        $config->set('schedule.driver', 'cache');
+        $scheduler->runDue(new \DateTimeImmutable('@1700000011'));
+
+        self::assertSame(['file', 'cache'], $resolver->drivers);
+    }
+
     private function removeDirectory(string $path): void
     {
         if (!is_dir($path)) {
@@ -152,4 +173,39 @@ final class SchedulerSupportTest extends TestCase
 
         @rmdir($path);
     }
+}
+
+final class RecordingScheduleStoreResolver implements ScheduleStoreResolverInterface
+{
+    /**
+     * @var list<string>
+     */
+    public array $drivers = [];
+
+    /**
+     * @param array{
+     *     driver:string,
+     *     file:array{path:string},
+     *     cache:array{namespace:string},
+     *     database:array{connection:string,table:string}
+     * } $config
+     */
+    public function resolve(array $config): ScheduleStoreInterface
+    {
+        $this->drivers[] = $config['driver'];
+
+        return new NullScheduleStore();
+    }
+}
+
+final class NullScheduleStore implements ScheduleStoreInterface
+{
+    public function acquireLock(\Marwa\Framework\Scheduling\Task $task, \DateTimeImmutable $time, int $ttlSeconds): mixed
+    {
+        return $task->name();
+    }
+
+    public function releaseLock(\Marwa\Framework\Scheduling\Task $task, mixed $lock): void {}
+
+    public function record(\Marwa\Framework\Scheduling\Task $task, \DateTimeImmutable $time, string $status, ?string $message = null): void {}
 }

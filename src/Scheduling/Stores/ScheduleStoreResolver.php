@@ -10,11 +10,6 @@ use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 
 final class ScheduleStoreResolver implements ScheduleStoreResolverInterface
 {
-    /**
-     * @var array<string, ScheduleStoreInterface>
-     */
-    private array $stores = [];
-
     public function __construct(
         private DatabaseBootstrapper $databaseBootstrapper,
         private CacheInterface $cache
@@ -32,12 +27,12 @@ final class ScheduleStoreResolver implements ScheduleStoreResolverInterface
     {
         $driver = $config['driver'];
 
-        if (isset($this->stores[$driver])) {
-            return $this->stores[$driver];
-        }
-
-        return $this->stores[$driver] = match ($driver) {
+        return match ($driver) {
             'cache' => new CacheScheduleStore(
+                $this->cache,
+                $config['cache']['namespace']
+            ),
+            'redis' => new RedisScheduleStore(
                 $this->cache,
                 $config['cache']['namespace']
             ),

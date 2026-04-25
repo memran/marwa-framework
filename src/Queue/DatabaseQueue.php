@@ -22,7 +22,8 @@ final class DatabaseQueue implements QueueInterface
      *     default: string,
      *     path: string,
      *     database: array{connection: string, table: string},
-     *     retryAfter: int
+     *     retryAfter: int,
+     *     tries: int|null
      * }|null
      */
     private ?array $queueConfig = null;
@@ -122,9 +123,11 @@ final class DatabaseQueue implements QueueInterface
                 return null;
             }
 
+            $attempts = (int) ($row['attempts'] ?? 0) + 1;
             $updated = DB::table($table, $connection)
                 ->where('id', '=', $row['id'])
                 ->update([
+                    'attempts' => $attempts,
                     'reserved_at' => $timestamp,
                     'reserved_by' => $workerId,
                     'updated_at' => $timestamp,
@@ -139,13 +142,9 @@ final class DatabaseQueue implements QueueInterface
                 'name' => $row['name'],
                 'queue' => $row['queue'],
                 'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
-                'attempts' => $row['attempts'],
-                'available_at' => $row['available_at'],
-                'reserved_at' => $timestamp,
-                'reserved_by' => $workerId,
-                'completed_at' => null,
-                'failed_at' => null,
-                'created_at' => $row['created_at'],
+                'attempts' => $attempts,
+                'availableAt' => (int) $row['available_at'],
+                'createdAt' => (int) $row['created_at'],
             ]);
 
             $this->logger->debug('Job popped', [
@@ -167,7 +166,6 @@ final class DatabaseQueue implements QueueInterface
         DB::table($table, $connection)
             ->where('id', '=', $job->id())
             ->update([
-                'attempts' => $job->attempts() + 1,
                 'available_at' => $timestamp + max(0, $delaySeconds),
                 'reserved_at' => null,
                 'reserved_by' => null,
@@ -179,7 +177,7 @@ final class DatabaseQueue implements QueueInterface
             'delay' => $delaySeconds,
         ]);
 
-        return $job->withAttempts($job->attempts() + 1);
+        return $job->withAvailableAt($timestamp + max(0, $delaySeconds));
     }
 
     public function complete(QueuedJob $job): void
@@ -246,9 +244,9 @@ final class DatabaseQueue implements QueueInterface
                 'name' => $row['name'],
                 'queue' => $row['queue'],
                 'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
-                'attempts' => $row['attempts'],
-                'available_at' => $row['available_at'],
-                'created_at' => $row['created_at'],
+                'attempts' => (int) $row['attempts'],
+                'availableAt' => (int) $row['available_at'],
+                'createdAt' => (int) $row['created_at'],
             ]);
         }
 
@@ -278,10 +276,9 @@ final class DatabaseQueue implements QueueInterface
                 'name' => $row['name'],
                 'queue' => $row['queue'],
                 'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
-                'attempts' => $row['attempts'],
-                'available_at' => $row['available_at'],
-                'failed_at' => $row['failed_at'],
-                'created_at' => $row['created_at'],
+                'attempts' => (int) $row['attempts'],
+                'availableAt' => (int) $row['available_at'],
+                'createdAt' => (int) $row['created_at'],
             ]);
         }
 
@@ -299,6 +296,23 @@ final class DatabaseQueue implements QueueInterface
             ->where('queue', '=', $queueName)
             ->whereNotNull('completed_at')
             ->delete();
+    }
+
+    public function size(?string $queue = null): int
+    {
+        $config = $this->configuration();
+        $queueName = $queue ?? $config['default'];
+        $timestamp = time();
+        $connection = $config['database']['connection'];
+        $table = $config['database']['table'];
+
+        return DB::table($table, $connection)
+            ->where('queue', '=', $queueName)
+            ->where('available_at', '<=', $timestamp)
+            ->whereNull('reserved_at')
+            ->whereNull('completed_at')
+            ->whereNull('failed_at')
+            ->count();
     }
 
     public function flushFailed(?string $queue = null): int
@@ -321,7 +335,8 @@ final class DatabaseQueue implements QueueInterface
      *     default: string,
      *     path: string,
      *     database: array{connection: string, table: string},
-     *     retryAfter: int
+     *     retryAfter: int,
+     *     tries: int|null
      * }
      */
     private function configuration(): array

@@ -35,4 +35,19 @@ interface QueueInterface
      * Release a failed job back to the queue with optional delay
      */
     public function release(QueuedJob $job, int $delaySeconds = 0): QueuedJob;
+
+    /**
+     * Mark a reserved job as completed.
+     */
+    public function complete(QueuedJob $job): void;
+
+    /**
+     * Mark a reserved job as permanently failed.
+     */
+    public function fail(QueuedJob $job, ?string $error = null): void;
+
+    /**
+     * Count pending jobs.
+     */
+    public function size(?string $queue = null): int;
 }

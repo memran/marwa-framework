@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 final class FileQueue implements QueueInterface
 {
     /**
-     * @var array{enabled:bool,default:string,path:string,retryAfter:int}|null
+     * @var array{enabled:bool,driver:string,default:string,path:string,database:array{connection:string,table:string},retryAfter:int,tries:int|null}|null
      */
     private ?array $queueConfig = null;
 
@@ -97,10 +97,10 @@ final class FileQueue implements QueueInterface
                     continue;
                 }
 
-                $this->writeJob($processingPath, $reserved);
-
                 flock($handle, LOCK_UN);
                 fclose($handle);
+
+                $this->writeJob($processingPath, $reserved);
 
                 return $reserved;
             } catch (\Throwable $e) {
@@ -118,6 +118,11 @@ final class FileQueue implements QueueInterface
         $path = $this->processingPath($job);
 
         return is_file($path) ? unlink($path) : false;
+    }
+
+    public function complete(QueuedJob $job): void
+    {
+        $this->delete($job);
     }
 
     public function release(QueuedJob $job, int $delaySeconds = 0): QueuedJob
@@ -145,7 +150,7 @@ final class FileQueue implements QueueInterface
         return $released;
     }
 
-    public function fail(QueuedJob $job, ?string $reason = null): bool
+    public function fail(QueuedJob $job, ?string $reason = null): void
     {
         $path = $this->failedPath($job);
         $payload = $job->toArray();
@@ -156,8 +161,6 @@ final class FileQueue implements QueueInterface
 
         $this->writePayload($path, $payload);
         $this->delete($job);
-
-        return true;
     }
 
     public function size(?string $queue = null): int
@@ -168,7 +171,7 @@ final class FileQueue implements QueueInterface
     }
 
     /**
-     * @return array{enabled:bool,default:string,path:string,retryAfter:int}
+     * @return array{enabled:bool,driver:string,default:string,path:string,database:array{connection:string,table:string},retryAfter:int,tries:int|null}
      */
     public function configuration(): array
     {

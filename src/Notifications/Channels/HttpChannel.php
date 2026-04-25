@@ -32,6 +32,7 @@ final class HttpChannel implements NotificationChannelInterface
         if ($uri === '') {
             throw new \InvalidArgumentException('HTTP notifications require a url.');
         }
+        $this->assertHttpUrl($uri);
 
         $options = is_array($payload['options'] ?? null) ? $payload['options'] : [];
         if (isset($config['headers']) && is_array($config['headers'])) {
@@ -50,5 +51,15 @@ final class HttpChannel implements NotificationChannelInterface
         }
 
         return $client->request($method, $uri, $options);
+    }
+
+    private function assertHttpUrl(string $uri): void
+    {
+        $scheme = parse_url($uri, PHP_URL_SCHEME);
+        if ($scheme === 'http' || $scheme === 'https') {
+            return;
+        }
+
+        throw new \InvalidArgumentException('HTTP notifications require an http or https url.');
     }
 }

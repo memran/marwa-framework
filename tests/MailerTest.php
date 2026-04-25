@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Mailer;
 use PHPUnit\Framework\TestCase;
@@ -98,5 +99,26 @@ PHP
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid email address: invalid@domain');
         $mailer->to(['invalid@domain' => 'Name']);
+    }
+
+    public function testSharedMailerReadsUpdatedGlobalConfig(): void
+    {
+        /** @var MailerInterface $mailer */
+        $mailer = $this->app->mailer();
+
+        self::assertSame('mail', $mailer->configuration()['driver']);
+        self::assertSame('test@example.com', $mailer->configuration()['from']['address']);
+
+        /** @var Config $config */
+        $config = $this->app->make(Config::class);
+        $config->set('mail.driver', 'sendmail');
+        $config->set('mail.from.address', 'updated@example.com');
+        $config->set('mail.from.name', 'Updated');
+        $config->set('mail.sendmail.path', '/usr/local/bin/sendmail -bs');
+
+        self::assertSame('sendmail', $mailer->configuration()['driver']);
+        self::assertSame('updated@example.com', $mailer->configuration()['from']['address']);
+        self::assertSame('Updated', $mailer->configuration()['from']['name']);
+        self::assertSame('/usr/local/bin/sendmail -bs', $mailer->configuration()['sendmail']['path']);
     }
 }

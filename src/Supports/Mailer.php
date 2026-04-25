@@ -36,8 +36,6 @@ final class Mailer implements MailerInterface
      *     sendmail: array{path: string}
      * }
      */
-    private array $settings;
-
     /**
      * @var array<string, string|null>
      */
@@ -64,28 +62,16 @@ final class Mailer implements MailerInterface
 
     private ?TransportInterface $transport = null;
     private ?SymfonyMailer $symfonyMailer = null;
+    private ?string $transportConfigHash = null;
 
     public function __construct(
         private Application $app,
         private Config $config
-    ) {
-        $this->config->loadIfExists(MailConfig::KEY . '.php');
-        $this->settings = array_replace_recursive(MailConfig::defaults($this->app), $this->config->getArray(MailConfig::KEY, []));
-        $this->settings['enabled'] = (bool) $this->settings['enabled'];
-        $this->settings['driver'] = strtolower((string) $this->settings['driver']);
-        $this->settings['charset'] = (string) $this->settings['charset'];
-        $this->settings['from']['address'] = (string) $this->settings['from']['address'];
-        $this->validateEmail($this->settings['from']['address']);
-        $this->settings['from']['name'] = (string) $this->settings['from']['name'];
-        $this->settings['smtp']['host'] = (string) $this->settings['smtp']['host'];
-        $this->settings['smtp']['port'] = (int) $this->settings['smtp']['port'];
-        $this->settings['smtp']['timeout'] = (int) $this->settings['smtp']['timeout'];
-        $this->settings['sendmail']['path'] = (string) $this->settings['sendmail']['path'];
-    }
+    ) {}
 
     public function configuration(): array
     {
-        return $this->settings;
+        return $this->settings();
     }
 
     public function reset(): self
@@ -103,6 +89,7 @@ final class Mailer implements MailerInterface
         $this->attachments = [];
         $this->transport = null;
         $this->symfonyMailer = null;
+        $this->transportConfigHash = null;
 
         return $this;
     }
@@ -259,7 +246,8 @@ final class Mailer implements MailerInterface
 
     public function message(): Email
     {
-        $fromAddress = $this->from !== [] ? $this->from : $this->settings['from'];
+        $settings = $this->settings();
+        $fromAddress = $this->from !== [] ? $this->from : $settings['from'];
         $email = (new Email())
             ->from(new \Symfony\Component\Mime\Address($fromAddress['address'], $fromAddress['name'] ?? ''))
             ->subject($this->subject ?? '');
@@ -335,16 +323,21 @@ final class Mailer implements MailerInterface
 
     public function transport(): TransportInterface
     {
-        if ($this->transport !== null) {
+        $settings = $this->settings();
+        $configHash = $this->transportConfigHash($settings);
+
+        if ($this->transport !== null && $this->transportConfigHash === $configHash) {
             return $this->transport;
         }
 
-        $this->transport = match ($this->settings['driver']) {
-            'smtp' => $this->smtpTransport(),
-            'sendmail' => $this->sendmailTransport(),
+        $this->transport = match ($settings['driver']) {
+            'smtp' => $this->smtpTransport($settings),
+            'sendmail' => $this->sendmailTransport($settings),
             'mail' => $this->mailTransport(),
-            default => throw new \InvalidArgumentException(sprintf('Mail driver [%s] is not supported.', $this->settings['driver'])),
+            default => throw new \InvalidArgumentException(sprintf('Mail driver [%s] is not supported.', $settings['driver'])),
         };
+        $this->transportConfigHash = $configHash;
+        $this->symfonyMailer = null;
 
         return $this->transport;
     }
@@ -360,7 +353,8 @@ final class Mailer implements MailerInterface
 
     public function send(?callable $callback = null): int
     {
-        if (!$this->settings['enabled']) {
+        $settings = $this->settings();
+        if (!$settings['enabled']) {
             throw new \RuntimeException('Mailer service is disabled.');
         }
 
@@ -518,9 +512,27 @@ final class Mailer implements MailerInterface
         return $existing;
     }
 
-    private function smtpTransport(): TransportInterface
+    /**
+     * @param array{
+     *     enabled: bool,
+     *     driver: string,
+     *     charset: string,
+     *     from: array{address: string, name: string},
+     *     smtp: array{
+     *         host: string,
+     *         port: int,
+     *         encryption: string|null,
+     *         username: string|null,
+     *         password: string|null,
+     *         authMode: string|null,
+     *         timeout: int
+     *     },
+     *     sendmail: array{path: string}
+     * } $settings
+     */
+    private function smtpTransport(array $settings): TransportInterface
     {
-        $smtp = $this->settings['smtp'];
+        $smtp = $settings['smtp'];
 
         $protocol = 'smtp://';
         if ($smtp['encryption'] !== null && $smtp['encryption'] !== '') {
@@ -549,10 +561,28 @@ final class Mailer implements MailerInterface
         return \Symfony\Component\Mailer\Transport::fromDsn($dsn);
     }
 
-    private function sendmailTransport(): TransportInterface
+    /**
+     * @param array{
+     *     enabled: bool,
+     *     driver: string,
+     *     charset: string,
+     *     from: array{address: string, name: string},
+     *     smtp: array{
+     *         host: string,
+     *         port: int,
+     *         encryption: string|null,
+     *         username: string|null,
+     *         password: string|null,
+     *         authMode: string|null,
+     *         timeout: int
+     *     },
+     *     sendmail: array{path: string}
+     * } $settings
+     */
+    private function sendmailTransport(array $settings): TransportInterface
     {
         return \Symfony\Component\Mailer\Transport::fromDsn(
-            sprintf('sendmail://%s', $this->settings['sendmail']['path'])
+            sprintf('sendmail://%s', $settings['sendmail']['path'])
         );
     }
 
@@ -566,5 +596,59 @@ final class Mailer implements MailerInterface
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             throw new \InvalidArgumentException("Invalid email address: {$email}");
         }
+    }
+
+    /**
+     * @return array{
+     *     enabled: bool,
+     *     driver: string,
+     *     charset: string,
+     *     from: array{address: string, name: string},
+     *     smtp: array{
+     *         host: string,
+     *         port: int,
+     *         encryption: string|null,
+     *         username: string|null,
+     *         password: string|null,
+     *         authMode: string|null,
+     *         timeout: int
+     *     },
+     *     sendmail: array{path: string}
+     * }
+     */
+    private function settings(): array
+    {
+        $this->config->loadIfExists(MailConfig::KEY . '.php');
+        $settings = MailConfig::merge($this->app, $this->config->getArray(MailConfig::KEY, []));
+        $this->validateEmail($settings['from']['address']);
+
+        return $settings;
+    }
+
+    /**
+     * @param array{
+     *     enabled: bool,
+     *     driver: string,
+     *     charset: string,
+     *     from: array{address: string, name: string},
+     *     smtp: array{
+     *         host: string,
+     *         port: int,
+     *         encryption: string|null,
+     *         username: string|null,
+     *         password: string|null,
+     *         authMode: string|null,
+     *         timeout: int
+     *     },
+     *     sendmail: array{path: string}
+     * } $settings
+     */
+    private function transportConfigHash(array $settings): string
+    {
+        return hash('sha256', json_encode([
+            'driver' => $settings['driver'],
+            'smtp' => $settings['smtp'],
+            'sendmail' => $settings['sendmail'],
+        ], JSON_THROW_ON_ERROR));
     }
 }

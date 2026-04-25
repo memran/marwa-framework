@@ -21,7 +21,7 @@ final class BroadcastChannel implements NotificationChannelInterface
 
         $payload = $notification->toBroadcast($notifiable);
         $eventName = (string) ($payload['event'] ?? 'notification.broadcasted');
-        $eventClass = is_string($config['event'] ?? null) && class_exists($config['event'])
+        $eventClass = is_string($config['event'] ?? null) && is_a($config['event'], NamedEvent::class, true)
             ? $config['event']
             : NamedEvent::class;
 

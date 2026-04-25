@@ -17,22 +17,10 @@ use Marwa\Framework\Supports\Config;
 
 final class NotificationManager
 {
-    /**
-     * @var array{
-     *     enabled: bool,
-     *     default: list<string>,
-     *     channels: array<string, array<string, mixed>>
-     * }
-     */
-    private array $settings;
-
     public function __construct(
         private Application $app,
         private Config $config
-    ) {
-        $this->config->loadIfExists(NotificationConfig::KEY . '.php');
-        $this->settings = NotificationConfig::merge($this->app, $this->config->getArray(NotificationConfig::KEY, []));
-    }
+    ) {}
 
     /**
      * @return array{
@@ -43,7 +31,7 @@ final class NotificationManager
      */
     public function configuration(): array
     {
-        return $this->settings;
+        return $this->settings();
     }
 
     /**
@@ -51,19 +39,21 @@ final class NotificationManager
      */
     public function send(NotificationInterface $notification, ?object $notifiable = null): array
     {
-        if (!$this->settings['enabled']) {
+        $settings = $this->settings();
+
+        if (!$settings['enabled']) {
             return [];
         }
 
         $channels = $notification->via($notifiable);
         if ($channels === []) {
-            $channels = $this->settings['default'];
+            $channels = $settings['default'];
         }
 
         $results = [];
 
         foreach ($channels as $channel) {
-            $config = $this->settings['channels'][$channel] ?? ['enabled' => false];
+            $config = $settings['channels'][$channel] ?? ['enabled' => false];
 
             if (!(bool) ($config['enabled'] ?? false)) {
                 continue;
@@ -89,5 +79,19 @@ final class NotificationManager
             'broadcast' => $this->app->make(BroadcastChannel::class)->send($notification, $notifiable, $config),
             default => throw new \InvalidArgumentException(sprintf('Notification channel [%s] is not supported.', $channel)),
         };
+    }
+
+    /**
+     * @return array{
+     *     enabled: bool,
+     *     default: list<string>,
+     *     channels: array<string, array<string, mixed>>
+     * }
+     */
+    private function settings(): array
+    {
+        $this->config->loadIfExists(NotificationConfig::KEY . '.php');
+
+        return NotificationConfig::merge($this->app, $this->config->getArray(NotificationConfig::KEY, []));
     }
 }

@@ -229,7 +229,7 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('schedule', ScheduleConfig::defaults($app)['cache']['namespace']);
         self::assertSame('sqlite', ScheduleConfig::defaults($app)['database']['connection']);
         self::assertSame('schedule_jobs', ScheduleConfig::defaults($app)['database']['table']);
-        self::assertSame(1, ScheduleConfig::defaults($app)['defaultLoopSeconds']);
+        self::assertSame(0, ScheduleConfig::defaults($app)['defaultLoopSeconds']);
         self::assertSame(1, ScheduleConfig::defaults($app)['defaultSleepSeconds']);
     }
 

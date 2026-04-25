@@ -22,6 +22,7 @@ final class DatabaseChannel implements NotificationChannelInterface
         $connectionName = (string) ($payload['connection'] ?? $config['connection'] ?? 'default');
         $connection = $this->manager->getPdo($connectionName);
         $table = (string) ($payload['table'] ?? $config['table'] ?? 'notifications');
+        $this->assertValidTable($table);
 
         $data = [
             'notifiable_type' => $payload['notifiable_type'] ?? ($notifiable ? $notifiable::class : null),
@@ -66,5 +67,14 @@ final class DatabaseChannel implements NotificationChannelInterface
         }
 
         return property_exists($notifiable, 'id') ? $notifiable->id : null;
+    }
+
+    private function assertValidTable(string $table): void
+    {
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $table) === 1) {
+            return;
+        }
+
+        throw new \InvalidArgumentException(sprintf('Invalid notifications table name [%s].', $table));
     }
 }

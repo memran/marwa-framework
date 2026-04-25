@@ -48,6 +48,8 @@ final class ConsoleKernelTest extends TestCase
             $this->basePath . '/config/console.php',
             $this->basePath . '/config/module.php',
             $this->basePath . '/config/database.php',
+            $this->basePath . '/config/queue.php',
+            $this->basePath . '/config/schedule.php',
             $this->basePath . '/.env',
             $this->databaseFile,
         ] as $file) {
@@ -556,8 +558,132 @@ PHP
         self::assertCount(1, $files);
 
         $contents = (string) file_get_contents($files[0]);
+        self::assertStringContainsString('declare(strict_types=1);', $contents);
         self::assertStringContainsString("Schema::create('scheduler_entries'", $contents);
         self::assertStringContainsString('$table->string(\'status\', 50)->default(\'idle\');', $contents);
+    }
+
+    public function testScheduleTableCommandRejectsInvalidTableName(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('schedule:table');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--table' => 'bad-table',
+        ]);
+
+        self::assertSame(Command::INVALID, $status);
+        self::assertStringContainsString('Invalid scheduler table name', $tester->getDisplay());
+        self::assertSame([], glob($this->basePath . '/database/migrations/*_create_bad_table.php') ?: []);
+    }
+
+    public function testScheduleTableCommandRejectsInvalidConfiguredTableName(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/schedule.php',
+            <<<'PHP'
+<?php
+
+return [
+    'database' => [
+        'table' => 'bad-table',
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('schedule:table');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([]);
+
+        self::assertSame(Command::INVALID, $status);
+        self::assertStringContainsString('Invalid scheduler table name', $tester->getDisplay());
+        self::assertSame([], glob($this->basePath . '/database/migrations/*_create_schedule_jobs_table.php') ?: []);
+    }
+
+    public function testScheduleRunCommandSupportsSingleTickMode(): void
+    {
+        $app = new Application($this->basePath);
+        $ran = 0;
+        $app->schedule()->call(static function () use (&$ran): void {
+            $ran++;
+        }, 'single-tick')->everySecond();
+
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('schedule:run');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--once' => true,
+            '--sleep' => 0,
+        ]);
+
+        self::assertSame(Command::SUCCESS, $status);
+        self::assertSame(1, $ran);
+        self::assertStringContainsString('Ran [single-tick]', $tester->getDisplay());
+    }
+
+    public function testQueueTableCommandCreatesMigrationUsingConfiguredTable(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/queue.php',
+            <<<'PHP'
+<?php
+
+return [
+    'driver' => 'database',
+    'database' => [
+        'table' => 'queue_entries',
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('queue:table');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([]);
+
+        self::assertSame(0, $status);
+
+        $files = glob($this->basePath . '/database/migrations/*_create_queue_entries_table.php');
+
+        self::assertIsArray($files);
+        self::assertCount(1, $files);
+
+        $contents = (string) file_get_contents($files[0]);
+        self::assertStringContainsString('declare(strict_types=1);', $contents);
+        self::assertStringContainsString("Schema::create('queue_entries'", $contents);
+        self::assertStringContainsString('$table->string(\'id\', 32)->primary();', $contents);
+        self::assertStringContainsString('$table->integer(\'failed_at\')->nullable();', $contents);
+    }
+
+    public function testQueueTableCommandRejectsInvalidTableName(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('queue:table');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            '--table' => 'bad-table',
+        ]);
+
+        self::assertSame(Command::INVALID, $status);
+        self::assertStringContainsString('Invalid queue table name', $tester->getDisplay());
+        self::assertSame([], glob($this->basePath . '/database/migrations/*_create_bad_table.php') ?: []);
     }
 
     public function testMakeModelCommandCreatesModelAndMatchingMigration(): void

@@ -19,7 +19,7 @@ final class RedisQueue implements QueueInterface
     private const ID_KEY = 'queue:%s:next_id';
 
     /**
-     * @var array{enabled:bool,default:string,path:string,retryAfter:int}|null
+     * @var array{enabled:bool,driver:string,default:string,path:string,database:array{connection:string,table:string},retryAfter:int,tries:int|null}|null
      */
     private ?array $queueConfig = null;
 
@@ -57,7 +57,11 @@ final class RedisQueue implements QueueInterface
         );
 
         $this->cache->put(sprintf(self::JOB_KEY, $job->id()), $job->toArray(), null);
-        $this->cache->put(sprintf(self::PENDING_LIST, $queueName), $this->addToList($queueName, $job->id(), $job->availableAt()), null);
+        $this->cache->put(
+            sprintf(self::PENDING_LIST, $queueName),
+            $this->addToList($queueName, $job->id(), $job->availableAt()),
+            null
+        );
 
         $this->logger->info('Job queued', [
             'id' => $job->id(),
@@ -117,7 +121,11 @@ final class RedisQueue implements QueueInterface
 
             // Move to processing
             $this->cache->put($jobKey, $reserved->toArray(), null);
-            $this->cache->put(sprintf(self::PROCESSING_SET, $queueName), $this->addToSet($queueName, $reserved->id()), null);
+            $this->cache->put(
+                sprintf(self::PROCESSING_SET, $queueName),
+                $this->addToSet($queueName, $reserved->id()),
+                null
+            );
             $this->removeFromList($queueName, $id);
 
             $this->logger->debug('Job popped', [
@@ -140,7 +148,11 @@ final class RedisQueue implements QueueInterface
         $this->cache->put($jobKey, $released->toArray(), null);
 
         $this->removeFromSet($job->queue(), $job->id());
-        $this->cache->put(sprintf(self::PENDING_LIST, $job->queue()), $this->addToList($job->queue(), $released->id(), $released->availableAt()), null);
+        $this->cache->put(
+            sprintf(self::PENDING_LIST, $job->queue()),
+            $this->addToList($job->queue(), $released->id(), $released->availableAt()),
+            null
+        );
 
         $this->logger->info('Job released', [
             'id' => $job->id(),
@@ -161,7 +173,6 @@ final class RedisQueue implements QueueInterface
     public function complete(QueuedJob $job): void
     {
         $jobKey = sprintf(self::JOB_KEY, $job->id());
-        $processingKey = sprintf(self::PROCESSING_SET, $job->queue());
 
         $this->cache->forget($jobKey);
         $this->removeFromSet($job->queue(), $job->id());
@@ -172,7 +183,6 @@ final class RedisQueue implements QueueInterface
     public function fail(QueuedJob $job, ?string $error = null): void
     {
         $jobKey = sprintf(self::JOB_KEY, $job->id());
-        $processingKey = sprintf(self::PROCESSING_SET, $job->queue());
 
         $this->removeFromSet($job->queue(), $job->id());
 
@@ -197,7 +207,7 @@ final class RedisQueue implements QueueInterface
     }
 
     /**
-     * @return array{enabled:bool,default:string,path:string,retryAfter:int}
+     * @return array{enabled:bool,driver:string,default:string,path:string,database:array{connection:string,table:string},retryAfter:int,tries:int|null}
      */
     private function configuration(): array
     {
@@ -217,6 +227,12 @@ final class RedisQueue implements QueueInterface
      */
     private function addToList(string $queue, string $id, int $availableAt, array $list = []): array
     {
+        $pendingKey = sprintf(self::PENDING_LIST, $queue);
+        $stored = $this->cache->get($pendingKey, []);
+        if (is_array($stored)) {
+            $list = $stored;
+        }
+
         $list[$id] = $availableAt;
         asort($list, SORT_NUMERIC);
 
@@ -240,6 +256,12 @@ final class RedisQueue implements QueueInterface
      */
     private function addToSet(string $queue, string $id, array $set = []): array
     {
+        $processingKey = sprintf(self::PROCESSING_SET, $queue);
+        $stored = $this->cache->get($processingKey, []);
+        if (is_array($stored)) {
+            $set = $stored;
+        }
+
         $set[$id] = true;
 
         return $set;

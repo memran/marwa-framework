@@ -6,6 +6,7 @@ namespace Marwa\Framework\Tests;
 
 use Marwa\DB\Connection\ConnectionManager;
 use Marwa\Framework\Application;
+use Marwa\Framework\Adapters\Event\NamedEvent;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;
@@ -13,12 +14,15 @@ use Marwa\Framework\Contracts\KafkaConsumerInterface;
 use Marwa\Framework\Contracts\KafkaPublisherInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Notifications\Channels\BroadcastChannel;
+use Marwa\Framework\Notifications\Channels\DatabaseChannel;
 use Marwa\Framework\Notifications\Channels\HttpChannel;
 use Marwa\Framework\Notifications\Channels\KafkaChannel;
 use Marwa\Framework\Notifications\Channels\MailChannel;
 use Marwa\Framework\Notifications\Channels\SmsChannel;
 use Marwa\Framework\Notifications\Events\KafkaMessageReceived;
+use Marwa\Framework\Notifications\Notification;
 use Marwa\Framework\Notifications\NotificationManager;
+use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Http as HttpSupport;
 use Marwa\Framework\Tests\Fixtures\Notifications\DemoNotifiable;
 use Marwa\Framework\Tests\Fixtures\Notifications\DemoNotification;
@@ -198,6 +202,113 @@ SQL;
 
         self::assertInstanceOf(NotificationManager::class, notification());
         self::assertSame($app->notifications(), notification());
+    }
+
+    public function testSharedNotificationManagerReadsUpdatedGlobalConfig(): void
+    {
+        $app = new \Marwa\Framework\Application($this->basePath);
+        $http = new RecordingHttpClient();
+
+        $app->set(HttpSupport::class, $http);
+        $app->set(HttpClientInterface::class, $http);
+        $app->set(MailerInterface::class, new RecordingMailer());
+        $app->set(KafkaPublisherInterface::class, new RecordingKafkaPublisher());
+        $app->set(EventDispatcherInterface::class, new RecordingEventDispatcher());
+        $app->set(MailChannel::class, new RecordingMailNotificationChannel(new RecordingMailer()));
+        $app->set(SmsChannel::class, new RecordingSmsNotificationChannel($http));
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        $manager = $app->notifications();
+        $manager->configuration();
+
+        /** @var Config $config */
+        $config = $app->make(Config::class);
+        $config->set('notification.default', ['sms']);
+        $config->set('notification.channels.sms.enabled', true);
+
+        $results = $manager->send(new DemoNotification([]), new DemoNotifiable(7, 'user@example.com', '+15551234567'));
+
+        self::assertSame(['sms'], array_keys($results));
+        self::assertSame('https://example.test/sms', $http->requests[0]['uri'] ?? null);
+    }
+
+    public function testDatabaseChannelRejectsUnsafeTableNames(): void
+    {
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        /** @var ConnectionManager $manager */
+        $manager = $app->make(ConnectionManager::class);
+        $channel = new DatabaseChannel($manager);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid notifications table name');
+
+        $channel->send(new class () extends Notification {
+            public function toDatabase(?object $notifiable = null): array
+            {
+                return [
+                    'table' => 'notifications; DROP TABLE users',
+                    'payload' => [
+                        'message' => 'unsafe',
+                    ],
+                ];
+            }
+        });
+    }
+
+    public function testHttpChannelRejectsNonHttpUrls(): void
+    {
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $http = new RecordingHttpClient();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('HTTP notifications require an http or https url.');
+
+        (new HttpChannel($http))->send(new class () extends Notification {
+            public function toHttp(?object $notifiable = null): array
+            {
+                return [
+                    'url' => 'file:///etc/passwd',
+                ];
+            }
+        });
+    }
+
+    public function testSmsChannelRejectsNonHttpUrls(): void
+    {
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $http = new RecordingHttpClient();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('SMS notifications require an http or https url.');
+
+        (new SmsChannel($http))->send(new class () extends Notification {
+            public function toSms(?object $notifiable = null): array
+            {
+                return [
+                    'url' => 'file:///etc/passwd',
+                ];
+            }
+        });
+    }
+
+    public function testBroadcastChannelFallsBackWhenConfiguredEventIsNotNamedEvent(): void
+    {
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $events = new RecordingEventDispatcher();
+        $channel = new BroadcastChannel($events);
+
+        $result = $channel->send(new DemoNotification(['broadcast']), null, [
+            'event' => \DateTimeImmutable::class,
+        ]);
+
+        self::assertInstanceOf(NamedEvent::class, $result);
+        self::assertSame('notification.broadcasted', $result->getName());
+        self::assertSame($result, $events->events[0] ?? null);
     }
 
     public function testKafkaChannelPublishesMessagesThroughConfiguredPublisher(): void

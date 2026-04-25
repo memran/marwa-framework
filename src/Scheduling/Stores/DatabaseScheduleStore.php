@@ -10,11 +10,19 @@ use Marwa\Framework\Scheduling\Task;
 
 final class DatabaseScheduleStore implements ScheduleStoreInterface
 {
+    private string $table;
+
     public function __construct(
         private DatabaseBootstrapper $databaseBootstrapper,
         private string $connection,
-        private string $table
-    ) {}
+        string $table
+    ) {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $table)) {
+            throw new \InvalidArgumentException(sprintf('Invalid scheduler table name [%s].', $table));
+        }
+
+        $this->table = $table;
+    }
 
     public function acquireLock(Task $task, \DateTimeImmutable $time, int $ttlSeconds): mixed
     {

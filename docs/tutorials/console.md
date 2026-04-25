@@ -135,6 +135,12 @@ $app->schedule()
 Run the scheduler once:
 
 ```bash
+php marwa schedule:run --once
+```
+
+Run it persistently under a process supervisor:
+
+```bash
 php marwa schedule:run
 ```
 

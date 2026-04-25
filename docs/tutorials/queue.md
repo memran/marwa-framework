@@ -18,9 +18,11 @@ The queue system allows you to defer expensive tasks to be processed later:
 ```php
 return [
     'enabled' => true,
+    'driver' => env('QUEUE_DRIVER', 'file'),
     'default' => 'default',
     'path' => storage_path('queue'),
     'retryAfter' => 60,
+    'tries' => null,
 ];
 ```
 
@@ -114,6 +116,8 @@ Queue::push(new SendWelcomeEmail(...), queue: 'emails');
 php marwa queue:work
 ```
 
+`queue:work` is persistent by default. Run it under a process supervisor for production, or stop it manually with your terminal/process manager.
+
 ### Process Specific Queue
 
 ```bash
@@ -126,26 +130,25 @@ php marwa queue:work --queue=emails
 php marwa queue:work --queue=default,emails
 ```
 
+### Bounded Runs
+
+```bash
+# Process one job and exit, or exit immediately if no job is available
+php marwa queue:work --once
+
+# Drain currently available jobs and exit when the queue is empty
+php marwa queue:work --stop-when-empty
+
+# Exit after a fixed number of jobs or seconds
+php marwa queue:work --max-jobs=100
+php marwa queue:work --max-time=3600
+```
+
 ## Queue Commands
 
 | Command | Description |
 |---------|-------------|
-| `queue:work` | Process queued jobs |
-| `queue:listen` | Listen for new jobs |
-| `queue:retry` | Retry failed jobs |
-
-### Listen Mode
-
-```bash
-# Keep running and process new jobs
-php marwa queue:listen
-```
-
-### Retry Failed Jobs
-
-```bash
-php marwa queue:retry
-```
+| `queue:work` | Process queued jobs persistently by default |
 
 ## Monitoring
 

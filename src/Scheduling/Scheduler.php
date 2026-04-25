@@ -20,22 +20,6 @@ final class Scheduler
      */
     private array $tasks = [];
 
-    /**
-     * @var array{
-     *     enabled:bool,
-     *     driver:string,
-     *     lockPath:string,
-     *     file:array{path:string},
-     *     cache:array{namespace:string},
-     *     database:array{connection:string,table:string},
-     *     defaultLoopSeconds:int,
-     *     defaultSleepSeconds:int
-     * }|null
-     */
-    private ?array $config = null;
-
-    private ?ScheduleStoreInterface $store = null;
-
     public function __construct(
         private Application $app,
         private LoggerInterface $logger,
@@ -202,26 +186,15 @@ final class Scheduler
      */
     public function configuration(): array
     {
-        if ($this->config !== null) {
-            return $this->config;
-        }
-
         /** @var \Marwa\Framework\Supports\Config $config */
         $config = $this->app->make(\Marwa\Framework\Supports\Config::class);
         $config->loadIfExists(ScheduleConfig::KEY . '.php');
-        $this->config = ScheduleConfig::merge($this->app, $config->getArray(ScheduleConfig::KEY, []));
 
-        return $this->config;
+        return ScheduleConfig::merge($this->app, $config->getArray(ScheduleConfig::KEY, []));
     }
 
     private function store(): ScheduleStoreInterface
     {
-        if ($this->store !== null) {
-            return $this->store;
-        }
-
-        $this->store = $this->storeResolver->resolve($this->configuration());
-
-        return $this->store;
+        return $this->storeResolver->resolve($this->configuration());
     }
 }
