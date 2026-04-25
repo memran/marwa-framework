@@ -126,3 +126,10 @@ if (!function_exists('ai_embed')) {
         return ai()->embed($texts, $options);
     }
 }
+
+if (!function_exists('mcp')) {
+    function mcp(): \Marwa\Framework\Contracts\MCP\MCPServerInterface
+    {
+        return app(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class);
+    }
+}

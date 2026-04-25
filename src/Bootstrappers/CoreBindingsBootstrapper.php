@@ -95,6 +95,11 @@ final class CoreBindingsBootstrapper
             $container->get(Config::class)
         ));
 
+        $container->addShared(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class, fn() => new \Marwa\Framework\Adapters\MCP\MCPAdapter(
+            $app,
+            $container->get(Config::class)
+        ));
+
         $container->addShared(Mailer::class, fn() => new Mailer(
             $app,
             $container->get(\Marwa\Framework\Contracts\MailerAdapterInterface::class)
