@@ -10,3 +10,4 @@ app/
 public/
 database/
 vendor/
+.kilo/
