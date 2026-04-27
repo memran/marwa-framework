@@ -9,18 +9,32 @@ use Marwa\Framework\Config\MailConfig;
 use Marwa\Framework\Contracts\LoggerInterface;
 use Marwa\Framework\Contracts\MailerAdapterInterface;
 use Marwa\Framework\Mail\Mailable;
-use Marwa\Framework\Mail\MailJob;
+use Marwa\Framework\Queue\MailJob;
 use Marwa\Framework\Queue\QueuedJob;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
 {
+    /**
+     * @var array<string, string|null>
+     */
     private array $from = [];
+    /**
+     * @var array{
+     *     to: array<string, string|null>,
+     *     cc: array<string, string|null>,
+     *     bcc: array<string, string|null>,
+     *     replyTo: array<string, string|null>
+     * }
+     */
     private array $recipients = ['to' => [], 'cc' => [], 'bcc' => [], 'replyTo' => []];
     private ?string $subject = null;
     private ?string $htmlBody = null;
     private ?string $textBody = null;
+    /**
+     * @var list<array{type: 'path'|'data', value: string, name: string|null, mime: string}>
+     */
     private array $attachments = [];
 
     public function __construct(
@@ -111,6 +125,9 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function htmlTemplate(string $template, array $data = []): self
     {
         $viewResponse = view($template, $data);
@@ -196,6 +213,9 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
         return $email;
     }
 
+    /**
+     * @param array<string, string|null> $addresses
+     */
     private function applyRecipients(Email $email, string $method, array $addresses): Email
     {
         return match ($method) {
@@ -208,6 +228,7 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
     }
 
     /**
+     * @param array<string, string|null> $addresses
      * @return list<string|Address>
      */
     private function formatAddresses(array $addresses): array
@@ -220,6 +241,9 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
         return $result;
     }
 
+    /**
+     * @param array{type: 'path'|'data', value: string, name: string|null, mime: string} $attachment
+     */
     private function applyAttachment(Email $email, array $attachment): Email
     {
         return $attachment['type'] === 'path'
@@ -282,6 +306,7 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
     }
 
     /**
+     * @param string|array<string, string>|array<int, string> $address
      * @return array<string, string|null>
      */
     private function normalizeRecipients(string|array $address, ?string $name = null): array
@@ -324,6 +349,8 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
     }
 
     /**
+     * @param array<string, string|null> $existing
+     * @param array<string, string|null> $incoming
      * @return array<string, string|null>
      */
     private function mergeRecipients(array $existing, array $incoming): array

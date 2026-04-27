@@ -93,6 +93,9 @@ final class SymfonyMailerAdapter implements MailerAdapterInterface
         return $this->transport;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array
     {
         $this->config->loadIfExists(MailConfig::KEY . '.php');
@@ -110,6 +113,9 @@ final class SymfonyMailerAdapter implements MailerAdapterInterface
         return $this->symfonyMailer;
     }
 
+    /**
+     * @param array<string, mixed> $settings
+     */
     private function smtpTransport(array $settings): TransportInterface
     {
         $smtp = $settings['smtp'];
@@ -141,6 +147,9 @@ final class SymfonyMailerAdapter implements MailerAdapterInterface
         return \Symfony\Component\Mailer\Transport::fromDsn($dsn);
     }
 
+    /**
+     * @param array<string, mixed> $settings
+     */
     private function sendmailTransport(array $settings): TransportInterface
     {
         return \Symfony\Component\Mailer\Transport::fromDsn(
@@ -153,6 +162,9 @@ final class SymfonyMailerAdapter implements MailerAdapterInterface
         return \Symfony\Component\Mailer\Transport::fromDsn('native://default');
     }
 
+    /**
+     * @param array<string, mixed> $settings
+     */
     private function transportConfigHash(array $settings): string
     {
         return hash('sha256', json_encode([

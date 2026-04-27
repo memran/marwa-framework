@@ -32,6 +32,9 @@ final class ResourceResult
         return $this->mimeType;
     }
 
+    /**
+     * @return array{uri: string, mimeType: string, content: string}
+     */
     public function toArray(): array
     {
         return [

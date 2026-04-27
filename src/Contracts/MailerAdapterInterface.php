@@ -10,6 +10,9 @@ interface MailerAdapterInterface
 
     public function transport(): \Symfony\Component\Mailer\Transport\TransportInterface;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array;
 
     public function getSymfonyMailer(): \Symfony\Component\Mailer\Mailer;

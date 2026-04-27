@@ -31,6 +31,9 @@ final class ToolResult
         return $this->isError;
     }
 
+    /**
+     * @return array{content: string, isError: bool}
+     */
     public function toArray(): array
     {
         return [

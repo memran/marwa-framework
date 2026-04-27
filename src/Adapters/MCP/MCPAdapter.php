@@ -13,44 +13,57 @@ use Marwa\Framework\Contracts\MCP\ResourceResult;
 use Marwa\Framework\Contracts\MCP\ToolInterface;
 use Marwa\Framework\Contracts\MCP\ToolResult;
 use Marwa\Framework\Supports\Config;
-use Memran\MarwaMcp\McpServer;
-use Memran\MarwaMcp\Tool\ToolRegistry;
-use Memran\MarwaMcp\Resource\ResourceRegistry;
-use Memran\MarwaMcp\Prompt\PromptRegistry;
-use Memran\MarwaMcp\ServerFactory;
+use Memran\MarwaMcp\Prompt\PromptResult as VendorPromptResult;
+use Memran\MarwaMcp\Resource\ResourceResult as VendorResourceResult;
 use Memran\MarwaMcp\Security\AllowAllPermissionPolicy;
-use Memran\MarwaMcp\Transport\StdioTransport;
+use Memran\MarwaMcp\Server\JsonRpcHandler;
+use Memran\MarwaMcp\Server\McpServer;
+use Memran\MarwaMcp\Server\ServerFactory;
 use Memran\MarwaMcp\Transport\HttpTransport;
+use Memran\MarwaMcp\Transport\StdioTransport;
 
 final class MCPAdapter implements MCPServerInterface
 {
     private ?McpServer $server = null;
+
+    /**
+     * @var array<string, ToolInterface>
+     */
     private array $tools = [];
+
+    /**
+     * @var array<string, ResourceInterface>
+     */
     private array $resources = [];
+
+    /**
+     * @var array<string, PromptInterface>
+     */
     private array $prompts = [];
 
     public function __construct(
-        private Application $app,
         private Config $config
     ) {}
 
     private function getServer(): McpServer
     {
-        if ($this->server === null) {
-            $config = $this->configuration();
-            
-            $this->server = ServerFactory::createDefault(
-                name: $config['name'] ?? 'marwa-mcp',
-                version: $config['version'] ?? '1.0.0'
-            );
+        if ($this->server instanceof McpServer) {
+            return $this->server;
         }
+
+        $config = $this->configuration();
+        $this->server = ServerFactory::createDefault(
+            permissionPolicy: new AllowAllPermissionPolicy(),
+            name: (string) ($config['name'] ?? 'marwa-mcp'),
+            version: (string) ($config['version'] ?? '1.0.0')
+        );
 
         return $this->server;
     }
 
     public function registerTool(ToolInterface $tool): self
     {
-        $wrapper = new class($tool) implements \Memran\MarwaMcp\Tool\ToolInterface {
+        $wrapper = new class ($tool) implements \Memran\MarwaMcp\Tool\ToolInterface {
             public function __construct(private ToolInterface $tool) {}
 
             public function name(): string
@@ -63,27 +76,37 @@ final class MCPAdapter implements MCPServerInterface
                 return $this->tool->description();
             }
 
+            /**
+             * @return array<string, mixed>
+             */
             public function schema(): array
             {
                 return $this->tool->schema();
             }
 
-            public function call(array $arguments): mixed
+            /**
+             * @param array<string, mixed> $arguments
+             */
+            public function call(array $arguments): \Memran\MarwaMcp\Tool\ToolResult
             {
                 $result = $this->tool->execute($arguments);
-                return $result->getContent();
+
+                return \Memran\MarwaMcp\Tool\ToolResult::text(
+                    $result->getContent(),
+                    $result->isError()
+                );
             }
         };
 
         $this->tools[$tool->name()] = $tool;
-        $this->getServer()->getTools()->register($wrapper);
+        $this->getServer()->tools()->register($wrapper);
 
         return $this;
     }
 
     public function registerResource(ResourceInterface $resource): self
     {
-        $wrapper = new class($resource) implements \Memran\MarwaMcp\Resource\ResourceInterface {
+        $wrapper = new class ($resource) implements \Memran\MarwaMcp\Resource\ResourceInterface {
             public function __construct(private ResourceInterface $resource) {}
 
             public function uri(): string
@@ -101,15 +124,11 @@ final class MCPAdapter implements MCPServerInterface
                 return $this->resource->description();
             }
 
-            public function mimeType(): string
-            {
-                return $this->resource->mimeType();
-            }
-
-            public function read(): mixed
+            public function read(): \Memran\MarwaMcp\Resource\ResourceResult
             {
                 $result = $this->resource->read();
-                return new \Memran\MarwaMcp\Resource\ResourceResult(
+
+                return new VendorResourceResult(
                     $result->getUri(),
                     $result->getContent(),
                     $result->getMimeType()
@@ -118,14 +137,14 @@ final class MCPAdapter implements MCPServerInterface
         };
 
         $this->resources[$resource->uri()] = $resource;
-        $this->getServer()->getResources()->register($wrapper);
+        $this->getServer()->resources()->register($wrapper);
 
         return $this;
     }
 
     public function registerPrompt(PromptInterface $prompt): self
     {
-        $wrapper = new class($prompt) implements \Memran\MarwaMcp\Prompt\PromptInterface {
+        $wrapper = new class ($prompt) implements \Memran\MarwaMcp\Prompt\PromptInterface {
             public function __construct(private PromptInterface $prompt) {}
 
             public function name(): string
@@ -138,50 +157,68 @@ final class MCPAdapter implements MCPServerInterface
                 return $this->prompt->description();
             }
 
+            /**
+             * @return list<array<string, mixed>>
+             */
             public function arguments(): array
             {
                 return $this->prompt->arguments();
             }
 
-            public function get(array $arguments = []): mixed
+            /**
+             * @param array<string, mixed> $arguments
+             */
+            public function get(array $arguments = []): \Memran\MarwaMcp\Prompt\PromptResult
             {
                 $result = $this->prompt->get($arguments);
-                $messages = $result->getMessages();
-                return \Memran\MarwaMcp\Prompt\PromptResult::create($messages);
+
+                return new VendorPromptResult(
+                    $this->prompt->description(),
+                    $result->getMessages()
+                );
             }
         };
 
         $this->prompts[$prompt->name()] = $prompt;
-        $this->getServer()->getPrompts()->register($wrapper);
+        $this->getServer()->prompts()->register($wrapper);
 
         return $this;
     }
 
+    /**
+     * @return array<string, ToolInterface>
+     */
     public function tools(): array
     {
         return $this->tools;
     }
 
+    /**
+     * @return array<string, ResourceInterface>
+     */
     public function resources(): array
     {
         return $this->resources;
     }
 
+    /**
+     * @return array<string, PromptInterface>
+     */
     public function prompts(): array
     {
         return $this->prompts;
     }
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function callTool(string $name, array $arguments = []): ToolResult
     {
         if (!isset($this->tools[$name])) {
             return ToolResult::error("Tool [{$name}] not found");
         }
 
-        $tool = $this->tools[$name];
-        $result = $tool->execute($arguments);
-
-        return $result;
+        return $this->tools[$name]->execute($arguments);
     }
 
     public function readResource(string $uri): ResourceResult
@@ -190,26 +227,24 @@ final class MCPAdapter implements MCPServerInterface
             return ResourceResult::create($uri, '', 'text/plain');
         }
 
-        $resource = $this->resources[$uri];
-
-        return $resource->read();
+        return $this->resources[$uri]->read();
     }
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function getPrompt(string $name, array $arguments = []): PromptResult
     {
         if (!isset($this->prompts[$name])) {
             return PromptResult::userText("Prompt [{$name}] not found");
         }
 
-        $prompt = $this->prompts[$name];
-
-        return $prompt->get($arguments);
+        return $this->prompts[$name]->get($arguments);
     }
 
     public function serve(string $transport = 'stdio'): void
     {
-        $server = $this->getServer();
-        $handler = new \Memran\MarwaMcp\JsonRpcHandler($server);
+        $handler = new JsonRpcHandler($this->getServer());
 
         match ($transport) {
             'stdio' => (new StdioTransport($handler))->listen(),
@@ -218,15 +253,18 @@ final class MCPAdapter implements MCPServerInterface
         };
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array
     {
-        $configData = $this->config->getArray('mcp', []);
+        $this->config->loadIfExists('mcp.php');
 
         return array_merge([
             'name' => 'marwa-mcp',
             'version' => '1.0.0',
             'transport' => 'stdio',
             'port' => 8080,
-        ], $configData);
+        ], $this->config->getArray('mcp', []));
     }
 }

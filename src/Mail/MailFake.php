@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Marwa\Framework\Mail;
 
 use Marwa\Framework\Contracts\MailerAdapterInterface;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\AbstractTransport;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Email;
 
 final class MailFake implements MailerAdapterInterface
@@ -15,9 +18,11 @@ final class MailFake implements MailerAdapterInterface
     private array $sentEmails = [];
 
     /**
-     * @var array<string, Email>
+     * @var list<Email>
      */
     private array $queuedEmails = [];
+
+    private ?TransportInterface $transport = null;
 
     public function __construct(
         private ?MailerAdapterInterface $realAdapter = null
@@ -36,15 +41,33 @@ final class MailFake implements MailerAdapterInterface
         return $recipients;
     }
 
-    public function transport(): \Symfony\Component\Mailer\Transport\TransportInterface
+    public function transport(): TransportInterface
     {
         if ($this->realAdapter !== null) {
             return $this->realAdapter->transport();
         }
 
-        return new \Symfony\Component\Mailer\Transport\InMemoryTransport();
+        if ($this->transport instanceof TransportInterface) {
+            return $this->transport;
+        }
+
+        $this->transport = new class () extends AbstractTransport {
+            public function __toString(): string
+            {
+                return 'fake://';
+            }
+
+            protected function doSend(SentMessage $message): void
+            {
+            }
+        };
+
+        return $this->transport;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array
     {
         if ($this->realAdapter !== null) {

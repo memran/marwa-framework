@@ -6,6 +6,9 @@ namespace Marwa\Framework\Contracts\MCP;
 
 final class PromptResult
 {
+    /**
+     * @var list<array<string, mixed>>
+     */
     private array $messages = [];
 
     public static function userText(string $content): self
@@ -39,11 +42,17 @@ final class PromptResult
         return $this;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function getMessages(): array
     {
         return $this->messages;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function toArray(): array
     {
         return $this->messages;

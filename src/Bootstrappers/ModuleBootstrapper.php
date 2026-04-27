@@ -148,7 +148,7 @@ final class ModuleBootstrapper
      * @param string $cacheKey
      * @param callable $resolver
      * @param bool $wrapAsArray
-     * @return array
+     * @return list<string|array{path: string}>
      */
     private function resolvePaths(string $cacheKey, callable $resolver, bool $wrapAsArray = false): array
     {

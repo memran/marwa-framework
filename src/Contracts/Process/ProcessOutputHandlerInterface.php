@@ -8,5 +8,8 @@ interface ProcessOutputHandlerInterface
 {
     public function write(ProcessResult $result): void;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array;
 }

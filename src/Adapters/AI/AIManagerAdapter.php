@@ -4,66 +4,83 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters\AI;
 
-use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\AIManagerInterface;
 use Marwa\Framework\Supports\Config;
-use Marwa\AI\AIManager;
+use Marwa\AI\Contracts\AIManagerInterface as VendorAIManagerInterface;
 use function Marwa\AI\ai;
+use function Marwa\AI\chat;
+use function Marwa\AI\complete;
+use function Marwa\AI\conversation;
+use function Marwa\AI\embed;
+use function Marwa\AI\image;
+use function Marwa\AI\stream;
 
 final class AIManagerAdapter implements AIManagerInterface
 {
-    private ?AIManager $aiManager = null;
-
     public function __construct(
-        private Application $app,
         private Config $config
     ) {}
 
-    private function getAiManager(): AIManager
+    /**
+     * @return VendorAIManagerInterface
+     */
+    private function getAiManager(): VendorAIManagerInterface
     {
-        if ($this->aiManager === null) {
-            $this->aiManager = ai();
-        }
+        /** @var VendorAIManagerInterface $manager */
+        $manager = ai();
 
-        return $this->aiManager;
+        return $manager;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function complete(string $prompt, array $options = []): mixed
     {
-        $response = $this->getAiManager()->complete($prompt, $options);
-
-        if ($response instanceof \Marwa\AI\Response\CompletionResponse) {
-            return $response->getContent();
-        }
-
-        return $response;
+        return complete($prompt, $options)->getContent();
     }
 
+    /**
+     * @param list<array<string, mixed>>|array<string, mixed> $messages
+     */
     public function conversation(array $messages = []): mixed
     {
-        return $this->getAiManager()->conversation($messages);
+        return conversation($messages);
     }
 
+    /**
+     * @param list<string> $texts
+     * @param array<string, mixed> $options
+     */
     public function embed(array $texts, array $options = []): mixed
     {
-        return $this->getAiManager()->embed($texts, $options);
+        return embed($texts, $options);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function image(string $prompt, array $options = []): mixed
     {
-        return $this->getAiManager()->image($prompt, $options);
+        return image($prompt, $options);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function stream(string $prompt, callable $onChunk, array $options = []): void
     {
-        $this->getAiManager()->stream($prompt, $onChunk, $options);
+        stream($prompt, $onChunk, $options);
     }
 
     public function chat(): mixed
     {
-        return $this->getAiManager()->chat();
+        return chat();
     }
 
+    /**
+     * @param mixed $tool
+     */
     public function tool($tool): self
     {
         $this->getAiManager()->tool($tool);
@@ -71,14 +88,20 @@ final class AIManagerAdapter implements AIManagerInterface
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getTools(): array
     {
         return $this->getAiManager()->getTools();
     }
 
+    /**
+     * @return list<string>
+     */
     public function providers(): array
     {
-        return $this->getAiManager()->providers();
+        return $this->getAiManager()->getAvailableProviders();
     }
 
     public function driver(?string $name = null): self
@@ -88,8 +111,13 @@ final class AIManagerAdapter implements AIManagerInterface
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array
     {
-        return [];
+        $this->config->loadIfExists('ai.php');
+
+        return $this->config->getArray('ai', []);
     }
 }

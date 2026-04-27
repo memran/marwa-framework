@@ -8,12 +8,25 @@ use Symfony\Component\Process\Process;
 
 interface ProcessInterface
 {
+    /**
+     * @param array<string, mixed> $options
+     */
     public function run(array $options = []): ProcessResult;
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function execute(string $command, array $options = []): ProcessResult;
 
+    /**
+     * @param list<string> $commands
+     * @param array<string, mixed> $options
+     */
     public function parallel(array $commands, array $options = []): ProcessResult;
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function runInBackground(string $command, array $options = []): int|null;
 
     public function input(string $input): self;
@@ -24,6 +37,9 @@ interface ProcessInterface
 
     public function cwd(string $cwd): self;
 
+    /**
+     * @param array<string, string> $env
+     */
     public function env(array $env): self;
 
     public function onStart(callable $callback): self;
@@ -34,6 +50,9 @@ interface ProcessInterface
 
     public function toFile(string $path): self;
 
+    /**
+     * @param array<string, mixed> $metadata
+     */
     public function toDb(string $table, array $metadata = []): self;
 
     public function toRedis(string $key, int $ttl = 86400): self;
@@ -44,5 +63,8 @@ interface ProcessInterface
 
     public function schedule(string $expression, ?string $queue = null): \Marwa\Framework\Queue\QueuedJob;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function configuration(): array;
 }

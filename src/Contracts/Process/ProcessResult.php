@@ -95,11 +95,17 @@ final class ProcessResult
         return $this->exitCode === 0;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getLines(): array
     {
         return array_filter(explode("\n", $this->output));
     }
 
+    /**
+     * @return list<string>
+     */
     public function getLastLines(int $count = 10): array
     {
         $lines = $this->getLines();
@@ -121,6 +127,19 @@ final class ProcessResult
         return $this->endTime;
     }
 
+    /**
+     * @return array{
+     *     command: string,
+     *     exit_code: int,
+     *     output: string,
+     *     error: string,
+     *     duration: float,
+     *     memory: int,
+     *     start_time: string,
+     *     end_time: string,
+     *     successful: bool
+     * }
+     */
     public function toArray(): array
     {
         return [

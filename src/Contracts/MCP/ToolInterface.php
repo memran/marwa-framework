@@ -10,7 +10,13 @@ interface ToolInterface
 
     public function description(): string;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(): array;
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function execute(array $arguments): ToolResult;
 }

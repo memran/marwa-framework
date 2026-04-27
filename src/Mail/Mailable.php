@@ -59,6 +59,9 @@ abstract class Mailable
         return $this->data[$key] ?? $default;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function htmlTemplate(string $template, array $data = []): static
     {
         $this->data['__htmlTemplate'] = $template;
@@ -66,6 +69,9 @@ abstract class Mailable
         return $this->with(array_merge($this->data, $data));
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function setTemplateConfig(array $config): self
     {
         $this->templateConfig = array_merge($this->templateConfig, $config);
@@ -73,11 +79,17 @@ abstract class Mailable
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getTemplateConfig(): array
     {
         return $this->templateConfig;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function renderHtmlTemplate(string $template, array $data): string
     {
         $fullTemplate = $this->templateConfig['path'] . '/' . ltrim($template, '/');
