@@ -56,7 +56,7 @@
     "symfony/mailer": "^6.0",
     "symfony/process": "^5.4|^6.4",
     "memran/marwa-ai": "^1.0",
-    "memran/marwa-mcp": "^0.1"
+    "memran/marwa-mcp": "^0.2.0"
   },
   "autoload": {
     "psr-4": {
@@ -77,6 +77,9 @@
     ]
   },
   "config": {
+    "platform": {
+      "php": "8.2.30"
+    },
     "allow-plugins": {
       "php-http/discovery": true
     }
@@ -85,8 +88,8 @@
     "psy/psysh": "Optional interactive console shell for tinker-style debugging.",
     "memran/marwa-kafka": "Optional Kafka publisher/consumer for notification fan-out and async message processing.",
     "memran/marwa-db": "Optional database toolkit integration; console commands auto-register when available.",
-    "memran/marwa-entity": "Optional entity builder and validation layer for domain models.",
-    "memran/marwa-module": "Optional module management for modular application structure.",
+        "memran/marwa-entity": "Optional entity builder and validation layer for domain models.",
+        "memran/marwa-module": "Optional module management for modular application structure.",
     "memran/marwa-support": "Optional support helpers and utility primitives for consuming apps."
   },
   "minimum-stability": "dev",

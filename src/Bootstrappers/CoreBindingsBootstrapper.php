@@ -95,10 +95,12 @@ final class CoreBindingsBootstrapper
             $container->get(Config::class)
         ));
 
-        $container->addShared(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class, fn() => new \Marwa\Framework\Adapters\MCP\MCPAdapter(
-            $app,
-            $container->get(Config::class)
-        ));
+        if (class_exists(\Memran\MarwaMcp\ServerFactory::class)) {
+            $container->addShared(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class, fn() => new \Marwa\Framework\Adapters\MCP\MCPAdapter(
+                $app,
+                $container->get(Config::class)
+            ));
+        }
 
         $container->addShared(\Marwa\Framework\Adapters\Process\ProcessAdapter::class, fn() => new \Marwa\Framework\Adapters\Process\ProcessAdapter(
             $app,

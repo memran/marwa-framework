@@ -25,21 +25,27 @@ final class MCPServeCommand extends AbstractCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $transport = $input->getArgument('transport');
-        
+
         if (!in_array($transport, ['stdio', 'http'], true)) {
             $output->writeln('<error>Invalid transport. Use: stdio or http</error>');
             return Command::INVALID;
         }
 
         $output->writeln(sprintf('<info>Starting MCP server on %s transport...</info>', $transport));
-        
+
         if ($transport === 'http') {
             $port = (int) $input->getOption('port');
             $output->writeln(sprintf('<info>Listening on port: %d</info>', $port));
         }
 
+        if (!$this->app()->has(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class)) {
+            $output->writeln('<error>MCP support is not installed. Require memran/marwa-mcp to use this command.</error>');
+
+            return Command::FAILURE;
+        }
+
         $mcp = $this->app()->make(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class);
-        
+
         try {
             $mcp->serve($transport);
         } catch (\Throwable $e) {

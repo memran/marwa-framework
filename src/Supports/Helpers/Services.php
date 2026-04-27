@@ -107,6 +107,9 @@ if (!function_exists('ai')) {
 }
 
 if (!function_exists('ai_complete')) {
+    /**
+     * @param array<string, mixed> $options
+     */
     function ai_complete(string $prompt, array $options = []): mixed
     {
         return ai()->complete($prompt, $options);
@@ -114,6 +117,9 @@ if (!function_exists('ai_complete')) {
 }
 
 if (!function_exists('ai_conversation')) {
+    /**
+     * @param list<array<string, mixed>> $messages
+     */
     function ai_conversation(array $messages = []): mixed
     {
         return ai()->conversation($messages);
@@ -121,6 +127,10 @@ if (!function_exists('ai_conversation')) {
 }
 
 if (!function_exists('ai_embed')) {
+    /**
+     * @param list<string> $texts
+     * @param array<string, mixed> $options
+     */
     function ai_embed(array $texts, array $options = []): mixed
     {
         return ai()->embed($texts, $options);
@@ -130,19 +140,26 @@ if (!function_exists('ai_embed')) {
 if (!function_exists('mcp')) {
     function mcp(): \Marwa\Framework\Contracts\MCP\MCPServerInterface
     {
+        if (!app()->has(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class)) {
+            throw new \RuntimeException('MCP support is not installed. Require memran/marwa-mcp to use mcp().');
+        }
+
         return app(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class);
     }
 }
 
 if (!function_exists('process')) {
+    /**
+     * @param array<string, mixed>|callable $options
+     */
     function process(?string $command = null, array|callable $options = []): mixed
     {
         $adapter = app(\Marwa\Framework\Adapters\Process\ProcessAdapter::class);
-        
+
         if ($command === null) {
             return $adapter;
         }
-        
+
         if (is_callable($options)) {
             $callback = $options;
             $adapter->onComplete(function($result) use ($callback) {
@@ -150,7 +167,7 @@ if (!function_exists('process')) {
             });
             return $adapter->execute($command);
         }
-        
+
         return $adapter->execute($command, $options);
     }
 }
