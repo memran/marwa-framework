@@ -162,7 +162,7 @@ if (!function_exists('process')) {
 
         if (is_callable($options)) {
             $callback = $options;
-            $adapter->onComplete(function($result) use ($callback) {
+            $adapter->onComplete(function ($result) use ($callback) {
                 $callback($result->getOutput());
             });
             return $adapter->execute($command);

@@ -29,9 +29,9 @@ final class AiCompleteCommand extends AbstractCommand
     {
         $prompt = (string) $input->getArgument('prompt');
         $provider = $input->getOption('provider');
-        
+
         $options = [];
-        
+
         if ($model = $input->getOption('model')) {
             $options['model'] = $model;
         }

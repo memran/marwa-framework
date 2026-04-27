@@ -117,7 +117,7 @@ final class ModuleBootstrapper
     {
         return $this->resolvePaths(
             'consoleDiscoverySources',
-            fn($module, $config) => $this->pathResolver->resolveCommandPaths($module, $config),
+            fn ($module, $config) => $this->pathResolver->resolveCommandPaths($module, $config),
             true
         );
     }
@@ -129,7 +129,7 @@ final class ModuleBootstrapper
     {
         return $this->resolvePaths(
             'migrationPaths',
-            fn($module, $config) => $this->pathResolver->resolveMigrationPaths($module, $config)
+            fn ($module, $config) => $this->pathResolver->resolveMigrationPaths($module, $config)
         );
     }
 
@@ -140,7 +140,7 @@ final class ModuleBootstrapper
     {
         return $this->resolvePaths(
             'seederPaths',
-            fn($module, $config) => $this->pathResolver->resolveSeederPaths($module, $config)
+            fn ($module, $config) => $this->pathResolver->resolveSeederPaths($module, $config)
         );
     }
 

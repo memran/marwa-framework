@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters\AI;
 
-use Marwa\Framework\Contracts\AIManagerInterface;
-use Marwa\Framework\Supports\Config;
-use Marwa\AI\Contracts\AIManagerInterface as VendorAIManagerInterface;
 use function Marwa\AI\ai;
 use function Marwa\AI\chat;
 use function Marwa\AI\complete;
+
+use Marwa\AI\Contracts\AIManagerInterface as VendorAIManagerInterface;
+
 use function Marwa\AI\conversation;
 use function Marwa\AI\embed;
 use function Marwa\AI\image;
 use function Marwa\AI\stream;
+
+use Marwa\Framework\Contracts\AIManagerInterface;
+use Marwa\Framework\Supports\Config;
 
 final class AIManagerAdapter implements AIManagerInterface
 {

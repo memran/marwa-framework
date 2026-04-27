@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Adapters\MCP;
 
-use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\MCP\MCPServerInterface;
 use Marwa\Framework\Contracts\MCP\PromptInterface;
 use Marwa\Framework\Contracts\MCP\PromptResult;

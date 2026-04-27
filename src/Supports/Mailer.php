@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Supports;
 
 use Marwa\Framework\Application;
-use Marwa\Framework\Config\MailConfig;
-use Marwa\Framework\Contracts\LoggerInterface;
 use Marwa\Framework\Contracts\MailerAdapterInterface;
 use Marwa\Framework\Mail\Mailable;
 use Marwa\Framework\Queue\MailJob;

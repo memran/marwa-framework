@@ -57,9 +57,7 @@ final class MailFake implements MailerAdapterInterface
                 return 'fake://';
             }
 
-            protected function doSend(SentMessage $message): void
-            {
-            }
+            protected function doSend(SentMessage $message): void {}
         };
 
         return $this->transport;

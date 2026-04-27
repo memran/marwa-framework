@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\DB\Connection\ConnectionManager;
-use Marwa\Framework\Application;
 use Marwa\Framework\Adapters\Event\NamedEvent;
+use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Contracts\EventDispatcherInterface;
 use Marwa\Framework\Contracts\HttpClientInterface;

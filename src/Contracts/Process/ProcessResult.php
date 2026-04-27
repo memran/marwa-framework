@@ -38,7 +38,7 @@ final class ProcessResult
     public static function fromSymfonyProcess(\Symfony\Component\Process\Process $process, float $startTime): self
     {
         $endTime = microtime(true);
-        
+
         return new self(
             $process->getCommandLine(),
             $process->getExitCode(),

@@ -16,7 +16,6 @@ use Marwa\Framework\Authorization\Contracts\GateInterface;
 use Marwa\Framework\Authorization\Gate;
 use Marwa\Framework\Authorization\PolicyRegistry;
 use Marwa\Framework\Config\ConsoleConfig;
-use Marwa\Framework\Config\LoggerConfig;
 use Marwa\Framework\Console\CommandDiscovery;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\ConsoleApplication;
@@ -49,7 +48,6 @@ use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Router\Contract\ValidatorInterface as RouterValidatorInterface;
 use Marwa\Support\Validation\RuleRegistry;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class CoreBindingsBootstrapper
 {
@@ -60,100 +58,100 @@ final class CoreBindingsBootstrapper
         $container->addShared(Application::class, $app);
         $container->addShared(Container::class, $container);
 
-        $container->addShared(Config::class, fn() => new Config($app->basePath('config')));
+        $container->addShared(Config::class, fn () => new Config($app->basePath('config')));
 
-        $container->addShared(Storage::class, fn() => new Storage(
+        $container->addShared(Storage::class, fn () => new Storage(
             $app,
             $container->get(Config::class)
         ));
 
         $container->addShared(MenuRegistry::class);
 
-        $container->addShared(EventDispatcherAdapter::class, fn() => new EventDispatcherAdapter(
+        $container->addShared(EventDispatcherAdapter::class, fn () => new EventDispatcherAdapter(
             $container,
             $container->get(Config::class)
         ));
 
-        $container->addShared(EventDispatcherInterface::class, fn() => $container->get(EventDispatcherAdapter::class));
+        $container->addShared(EventDispatcherInterface::class, fn () => $container->get(EventDispatcherAdapter::class));
 
-        $container->addShared(ScrapbookCacheAdapter::class, fn() => new ScrapbookCacheAdapter(
+        $container->addShared(ScrapbookCacheAdapter::class, fn () => new ScrapbookCacheAdapter(
             $app,
             $container->get(Config::class)
         ));
 
-        $container->addShared(CacheInterface::class, fn() => $container->get(ScrapbookCacheAdapter::class));
+        $container->addShared(CacheInterface::class, fn () => $container->get(ScrapbookCacheAdapter::class));
 
-        $container->addShared(Http::class, fn() => new Http(
+        $container->addShared(Http::class, fn () => new Http(
             $app,
             $container->get(Config::class)
         ));
 
-        $container->addShared(HttpClientInterface::class, fn() => $container->get(Http::class));
+        $container->addShared(HttpClientInterface::class, fn () => $container->get(Http::class));
 
-        $container->addShared(\Marwa\Framework\Contracts\AIManagerInterface::class, fn() => new \Marwa\Framework\Adapters\AI\AIManagerAdapter(
+        $container->addShared(\Marwa\Framework\Contracts\AIManagerInterface::class, fn () => new \Marwa\Framework\Adapters\AI\AIManagerAdapter(
             $container->get(Config::class)
         ));
 
         if (class_exists(\Memran\MarwaMcp\ServerFactory::class)) {
-        $container->addShared(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class, fn() => new \Marwa\Framework\Adapters\MCP\MCPAdapter(
-            $container->get(Config::class)
-        ));
+            $container->addShared(\Marwa\Framework\Contracts\MCP\MCPServerInterface::class, fn () => new \Marwa\Framework\Adapters\MCP\MCPAdapter(
+                $container->get(Config::class)
+            ));
         }
 
-        $container->addShared(\Marwa\Framework\Adapters\Process\ProcessAdapter::class, fn() => new \Marwa\Framework\Adapters\Process\ProcessAdapter(
+        $container->addShared(\Marwa\Framework\Adapters\Process\ProcessAdapter::class, fn () => new \Marwa\Framework\Adapters\Process\ProcessAdapter(
             $app,
             $container->get(Config::class)
         ));
 
-        $container->addShared(Mailer::class, fn() => new Mailer(
+        $container->addShared(Mailer::class, fn () => new Mailer(
             $app,
             $container->get(\Marwa\Framework\Contracts\MailerAdapterInterface::class)
         ));
 
-        $container->addShared(MailerInterface::class, fn() => $container->get(Mailer::class));
+        $container->addShared(MailerInterface::class, fn () => $container->get(Mailer::class));
 
-        $container->addShared(\Marwa\Framework\Contracts\MailerAdapterInterface::class, fn() => new \Marwa\Framework\Adapters\Mail\SymfonyMailerAdapter(
+        $container->addShared(\Marwa\Framework\Contracts\MailerAdapterInterface::class, fn () => new \Marwa\Framework\Adapters\Mail\SymfonyMailerAdapter(
             $app,
             $container->get(Config::class)
         ));
 
         if (!Runtime::isConsole()) {
-            $container->addShared(FrameworkView::class, fn() => new FrameworkView(
+            $container->addShared(FrameworkView::class, fn () => new FrameworkView(
                 $container->get(\Marwa\Framework\Adapters\ViewAdapter::class)
             ));
         }
 
-        $container->addShared(NotificationManager::class, fn() => new NotificationManager(
+        $container->addShared(NotificationManager::class, fn () => new NotificationManager(
             $app,
             $container->get(Config::class)
         ));
 
-        $container->addShared(KafkaChannel::class, fn() => new KafkaChannel($app));
+        $container->addShared(KafkaChannel::class, fn () => new KafkaChannel($app));
 
-        $container->addShared(EncryptedSession::class, fn() => new EncryptedSession(
+        $container->addShared(EncryptedSession::class, fn () => new EncryptedSession(
             $app,
             $container->get(Config::class)
         ));
 
-        $container->addShared(SessionInterface::class, fn() => $container->get(EncryptedSession::class));
+        $container->addShared(SessionInterface::class, fn () => $container->get(EncryptedSession::class));
 
         $container->addShared(RuleRegistry::class);
 
-        $container->addShared(RouterValidatorInterface::class, fn() => $container->get(RequestValidatorAdapter::class));
+        $container->addShared(RouterValidatorInterface::class, fn () => $container->get(RequestValidatorAdapter::class));
 
-        $container->addShared(RequestValidatorAdapter::class, fn() => new RequestValidatorAdapter(
+        $container->addShared(RequestValidatorAdapter::class, fn () => new RequestValidatorAdapter(
             new \Marwa\Support\Validation\RequestValidator($container->get(RuleRegistry::class)),
             $container->get(RuleRegistry::class)
         ));
 
-        $container->addShared(Security::class, fn() => new Security(
+        $container->addShared(Security::class, fn () => new Security(
             $app,
             $container->get(Config::class),
             $container->get(CacheInterface::class),
             $container->get(SessionInterface::class)
         ));
 
-        $container->addShared(SecurityInterface::class, fn() => $container->get(Security::class));
+        $container->addShared(SecurityInterface::class, fn () => $container->get(Security::class));
 
         $container->addShared(RiskAnalyzer::class, fn () => new RiskAnalyzer(
             $app,
@@ -161,25 +159,25 @@ final class CoreBindingsBootstrapper
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(ErrorHandlerAdapter::class, fn() => new ErrorHandlerAdapter(
+        $container->addShared(ErrorHandlerAdapter::class, fn () => new ErrorHandlerAdapter(
             $app,
             $container->get(Config::class),
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(ErrorHandlerBootstrapper::class, fn() => new ErrorHandlerBootstrapper(
+        $container->addShared(ErrorHandlerBootstrapper::class, fn () => new ErrorHandlerBootstrapper(
             $app,
             $container->get(ErrorHandlerAdapter::class)
         ));
 
-        $container->addShared(DatabaseBootstrapper::class, fn() => new DatabaseBootstrapper(
+        $container->addShared(DatabaseBootstrapper::class, fn () => new DatabaseBootstrapper(
             $app,
             $container,
             $container->get(Config::class),
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(AppBootstrapper::class, fn() => new AppBootstrapper(
+        $container->addShared(AppBootstrapper::class, fn () => new AppBootstrapper(
             $app,
             $container->get(Config::class),
             $container->get(ProviderBootstrapper::class),
@@ -188,53 +186,53 @@ final class CoreBindingsBootstrapper
             $container->get(ModuleBootstrapper::class)
         ));
 
-        $container->addShared(ModuleBootstrapper::class, fn() => new ModuleBootstrapper(
+        $container->addShared(ModuleBootstrapper::class, fn () => new ModuleBootstrapper(
             $app,
             $container,
             $container->get(Config::class)
         ));
 
-        $container->addShared(CommandRegistry::class, fn() => new CommandRegistry(
+        $container->addShared(CommandRegistry::class, fn () => new CommandRegistry(
             $app,
             $container,
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(PsyshShellFactory::class, fn() => new PsyshShellFactory());
+        $container->addShared(PsyshShellFactory::class, fn () => new PsyshShellFactory());
 
-        $container->addShared(ShellFactoryInterface::class, fn() => $container->get(PsyshShellFactory::class));
+        $container->addShared(ShellFactoryInterface::class, fn () => $container->get(PsyshShellFactory::class));
 
-        $container->addShared(CommandDiscovery::class, fn() => new CommandDiscovery(
+        $container->addShared(CommandDiscovery::class, fn () => new CommandDiscovery(
             $app,
             $container->get(LoggerInterface::class)
         ));
 
-        $container->addShared(QueueManager::class, fn() => new QueueManager(
+        $container->addShared(QueueManager::class, fn () => new QueueManager(
             $app,
             $container->get(Config::class)
         ));
-        $container->add(QueueInterface::class, fn() => $container->get(QueueManager::class)->resolve());
+        $container->add(QueueInterface::class, fn () => $container->get(QueueManager::class)->resolve());
 
-        $container->addShared(ScheduleStoreResolver::class, fn() => new ScheduleStoreResolver(
+        $container->addShared(ScheduleStoreResolver::class, fn () => new ScheduleStoreResolver(
             $container->get(DatabaseBootstrapper::class),
             $container->get(CacheInterface::class)
         ));
 
-        $container->addShared(ScheduleStoreResolverInterface::class, fn() => $container->get(ScheduleStoreResolver::class));
+        $container->addShared(ScheduleStoreResolverInterface::class, fn () => $container->get(ScheduleStoreResolver::class));
 
-        $container->addShared(Scheduler::class, fn() => new Scheduler(
+        $container->addShared(Scheduler::class, fn () => new Scheduler(
             $app,
             $container->get(LoggerInterface::class),
             $container->get(QueueInterface::class),
             $container->get(ScheduleStoreResolverInterface::class)
         ));
 
-        $container->addShared(ConsoleApplication::class, fn() => new ConsoleApplication(
+        $container->addShared(ConsoleApplication::class, fn () => new ConsoleApplication(
             ConsoleConfig::defaults($app)['name'],
             ConsoleConfig::defaults($app)['version']
         ));
 
-        $container->addShared(ConsoleKernel::class, fn() => new ConsoleKernel(
+        $container->addShared(ConsoleKernel::class, fn () => new ConsoleKernel(
             $app,
             $container->get(Config::class),
             $container->get(LoggerInterface::class),
@@ -250,19 +248,19 @@ final class CoreBindingsBootstrapper
 
     private function registerLogger(Container $container, Application $app): void
     {
-        $container->addShared(LoggerAdapter::class, fn() => (new LoggerAdapter(
+        $container->addShared(LoggerAdapter::class, fn () => (new LoggerAdapter(
             $app,
             $container->get(Config::class)
         ))->getLogger());
 
-        $container->addShared(LoggerInterface::class, fn() => $container->get(LoggerAdapter::class));
+        $container->addShared(LoggerInterface::class, fn () => $container->get(LoggerAdapter::class));
     }
 
     private function registerAuthorization(Container $container): void
     {
         $container->addShared(PolicyRegistry::class);
 
-        $container->addShared(Gate::class, fn() => (new Gate(
+        $container->addShared(Gate::class, fn () => (new Gate(
             $container->get(PolicyRegistry::class)
         ))->before(function ($user, $ability, $resource) {
             if ($user !== null && method_exists($user, 'isAdmin') && $user->isAdmin()) {
@@ -272,9 +270,9 @@ final class CoreBindingsBootstrapper
             return null;
         }));
 
-        $container->addShared(GateInterface::class, fn() => $container->get(Gate::class));
+        $container->addShared(GateInterface::class, fn () => $container->get(Gate::class));
 
-        $container->addShared(AuthManager::class, fn() => new AuthManager(
+        $container->addShared(AuthManager::class, fn () => new AuthManager(
             $container->get(Gate::class)
         ));
     }

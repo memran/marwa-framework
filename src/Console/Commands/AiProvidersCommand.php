@@ -24,7 +24,7 @@ final class AiProvidersCommand extends AbstractCommand
         $providers = $ai->providers();
 
         $output->writeln('<info>Available AI providers:</info>');
-        
+
         foreach ($providers as $provider) {
             $output->writeln("  - {$provider}");
         }

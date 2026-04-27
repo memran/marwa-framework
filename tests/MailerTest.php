@@ -6,7 +6,6 @@ namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Adapters\Mail\SymfonyMailerAdapter;
 use Marwa\Framework\Application;
-use Marwa\Framework\Contracts\MailerAdapterInterface;
 use Marwa\Framework\Contracts\MailerInterface;
 use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Mailer;
