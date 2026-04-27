@@ -104,3 +104,5 @@ composer test
 composer analyse
 composer lint
 ```
+
+Run `composer lint` after manual PHP edits before opening a PR. PHP CS Fixer output is the source of truth for import order, whitespace, braces, and blank lines.

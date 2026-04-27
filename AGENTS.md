@@ -98,6 +98,13 @@ Url::to('/dashboard');
 - Keep files small: max 200 lines per class, 20 lines per method
 - Use constants and enums for finite states
 
+### Formatting
+
+- Run `composer lint` after manual PHP edits and before finalizing a change.
+- Accept PHP CS Fixer output as the source of truth for whitespace, import order, and brace placement.
+- Keep files free of trailing whitespace and ensure exactly one blank line at EOF.
+- Do not hand-edit around formatter warnings when the fixer can apply the correct style.
+
 ## Engineering Principles
 
 - KISS, DRY, SOLID

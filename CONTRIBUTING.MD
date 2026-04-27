@@ -17,6 +17,8 @@ composer analyse
 composer lint
 ```
 
+Run `composer lint` after manual PHP edits and before submitting a PR. Treat PHP CS Fixer output as the source of truth for whitespace, import order, braces, and blank lines.
+
 ## Coding Expectations
 
 - Target PHP 8.2+ and keep `declare(strict_types=1);`
