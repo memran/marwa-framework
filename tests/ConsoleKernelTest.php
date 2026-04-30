@@ -536,7 +536,7 @@ PHP
         $command = $console->find('db:seed');
         $tester = new CommandTester($command);
         self::assertSame(0, $tester->execute([
-            'class' => 'DatabaseSeeder',
+            '--class' => 'DatabaseSeeder',
         ]));
 
         self::assertSame(5, DB::table('users')->count());

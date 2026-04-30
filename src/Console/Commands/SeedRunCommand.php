@@ -28,6 +28,7 @@ final class SeedRunCommand extends AbstractCommand
     {
         $this
             ->addArgument('class', InputArgument::OPTIONAL, 'Seeder class name or FQCN to run directly.')
+            ->addOption('class', null, InputOption::VALUE_OPTIONAL, 'Seeder class name or FQCN to run directly.')
             ->addOption('only', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Run only specific seeders by short class name.', [])
             ->addOption('except', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Skip specific seeders by short class name.', [])
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'List seeders without executing them.')
@@ -36,7 +37,7 @@ final class SeedRunCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $class = trim((string) $input->getArgument('class'));
+        $class = trim((string) ($input->getOption('class') ?? $input->getArgument('class')));
         $only = $this->normalizeList($input->getOption('only'));
         $except = $this->normalizeList($input->getOption('except'));
         $dryRun = (bool) $input->getOption('dry-run');

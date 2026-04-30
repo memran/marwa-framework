@@ -43,5 +43,5 @@ Supported keys:
 - `shell` opens an interactive PsySH session when `psy/psysh` is installed; otherwise it prints installation instructions and exits cleanly
 - `security:report` summarizes the security risk journal and can prune old entries for cron-driven reporting
 - `kafka:consume` starts the optional Kafka consumer loop for the configured topics
-- `db:seed` runs application seeders through the configured database seeder path
+- `db:seed [class]` or `db:seed --class=...` runs application seeders through the configured database seeder path
 - `db:create`, `db:drop`, `db:list`, `db:backup`, `db:restore`, `db:optimize`, and `db:analyze` accept `--connection` so you can target a named database connection
