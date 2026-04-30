@@ -6,6 +6,7 @@ namespace Marwa\Framework\Database;
 
 use Marwa\DB\ORM\Model as BaseModel;
 use Marwa\DB\ORM\QueryBuilder;
+use Marwa\DB\Support\Helpers;
 use PDO;
 
 /**
@@ -16,6 +17,11 @@ use PDO;
  */
 abstract class Model extends BaseModel
 {
+    /**
+     * @var array<string, list<callable>>
+     */
+    protected static array $auditObservers = [];
+
     public static function newQuery(): QueryBuilder
     {
         return static::query();
@@ -180,6 +186,154 @@ abstract class Model extends BaseModel
     }
 
     /**
+     * Register a listener for the framework-specific audit lifecycle events.
+     */
+    public static function onRestoring(callable $callback): void
+    {
+        static::observeAudit('restoring', $callback);
+    }
+
+    public static function onRestored(callable $callback): void
+    {
+        static::observeAudit('restored', $callback);
+    }
+
+    public static function onForceDeleting(callable $callback): void
+    {
+        static::observeAudit('forceDeleting', $callback);
+    }
+
+    public static function onForceDeleted(callable $callback): void
+    {
+        static::observeAudit('forceDeleted', $callback);
+    }
+
+    public static function onDestroying(callable $callback): void
+    {
+        static::observeAudit('destroying', $callback);
+    }
+
+    public static function onDestroyed(callable $callback): void
+    {
+        static::observeAudit('destroyed', $callback);
+    }
+
+    public static function flushAuditObservers(): void
+    {
+        static::$auditObservers = [];
+    }
+
+    public static function destroy(int|array $ids): int
+    {
+        $ids = array_values(array_unique(array_map(
+            static fn (int|string $id): int => (int) $id,
+            is_array($ids) ? $ids : [$ids]
+        ), SORT_REGULAR));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $instance = new static();
+        $primaryKey = $instance->getPrimaryKey();
+        $rows = static::baseQuery()
+            ->whereIn($primaryKey, $ids)
+            ->get();
+
+        if ($rows === []) {
+            return 0;
+        }
+
+        $models = array_map(
+            static fn (array|object $row): static => static::hydrateRow($row),
+            $rows
+        );
+
+        foreach ($models as $model) {
+            static::fireAuditEvent('destroying', $model);
+        }
+
+        $affected = 0;
+
+        if (static::$softDeletes) {
+            $deletedAt = Helpers::now();
+            $affected = static::baseQuery()
+                ->whereIn($primaryKey, array_map(static fn ($model) => $model->getKey(), $models))
+                ->update(['deleted_at' => $deletedAt]);
+
+            if ($affected > 0) {
+                foreach ($models as $model) {
+                    $model->attributes['deleted_at'] = $deletedAt;
+                    $model->original['deleted_at'] = $deletedAt;
+                    static::fireAuditEvent('destroyed', $model);
+                }
+            }
+
+            return $affected;
+        }
+
+        $affected = static::baseQuery()
+            ->whereIn($primaryKey, array_map(static fn ($model) => $model->getKey(), $models))
+            ->delete();
+
+        if ($affected > 0) {
+            foreach ($models as $model) {
+                $model->exists = false;
+                static::fireAuditEvent('destroyed', $model);
+            }
+        }
+
+        return $affected;
+    }
+
+    public function restore(): bool
+    {
+        if (!static::$softDeletes) {
+            return false;
+        }
+
+        static::fireAuditEvent('restoring', $this);
+
+        $affected = static::baseQuery()
+            ->where(static::$primaryKey, '=', $this->getKey())
+            ->update(['deleted_at' => null]);
+
+        if ($affected > 0) {
+            $this->attributes['deleted_at'] = null;
+            $this->original['deleted_at'] = null;
+            static::fireAuditEvent('restored', $this);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function forceDelete(): bool
+    {
+        if (!$this->exists) {
+            return false;
+        }
+
+        static::fireEvent('deleting', $this);
+        static::fireAuditEvent('forceDeleting', $this);
+
+        $affected = static::baseQuery()
+            ->where(static::$primaryKey, '=', $this->getKey())
+            ->delete();
+
+        if ($affected > 0) {
+            $this->exists = false;
+            static::fireEvent('deleted', $this);
+            static::fireAuditEvent('forceDeleted', $this);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -278,5 +432,17 @@ abstract class Model extends BaseModel
         }
 
         return $value;
+    }
+
+    protected static function observeAudit(string $event, callable $callback): void
+    {
+        static::$auditObservers[$event][] = $callback;
+    }
+
+    protected static function fireAuditEvent(string $event, BaseModel $model): void
+    {
+        foreach (static::$auditObservers[$event] ?? [] as $callback) {
+            $callback($model);
+        }
     }
 }

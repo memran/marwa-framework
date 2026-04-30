@@ -12,14 +12,14 @@ use Marwa\Framework\Contracts\MCP\ResourceResult;
 use Marwa\Framework\Contracts\MCP\ToolInterface;
 use Marwa\Framework\Contracts\MCP\ToolResult;
 use Marwa\Framework\Supports\Config;
-use Memran\MarwaMcp\Prompt\PromptResult as VendorPromptResult;
-use Memran\MarwaMcp\Resource\ResourceResult as VendorResourceResult;
-use Memran\MarwaMcp\Security\AllowAllPermissionPolicy;
-use Memran\MarwaMcp\Server\JsonRpcHandler;
-use Memran\MarwaMcp\Server\McpServer;
-use Memran\MarwaMcp\Server\ServerFactory;
-use Memran\MarwaMcp\Transport\HttpTransport;
-use Memran\MarwaMcp\Transport\StdioTransport;
+use Marwa\MCP\AllowAllPermissionPolicy;
+use Marwa\MCP\HttpTransport;
+use Marwa\MCP\JsonRpcHandler;
+use Marwa\MCP\McpServer;
+use Marwa\MCP\PromptResult as VendorPromptResult;
+use Marwa\MCP\ResourceResult as VendorResourceResult;
+use Marwa\MCP\ServerFactory;
+use Marwa\MCP\StdioTransport;
 
 final class MCPAdapter implements MCPServerInterface
 {
@@ -62,7 +62,7 @@ final class MCPAdapter implements MCPServerInterface
 
     public function registerTool(ToolInterface $tool): self
     {
-        $wrapper = new class ($tool) implements \Memran\MarwaMcp\Tool\ToolInterface {
+        $wrapper = new class ($tool) implements \Marwa\MCP\ToolInterface {
             public function __construct(private ToolInterface $tool) {}
 
             public function name(): string
@@ -86,11 +86,11 @@ final class MCPAdapter implements MCPServerInterface
             /**
              * @param array<string, mixed> $arguments
              */
-            public function call(array $arguments): \Memran\MarwaMcp\Tool\ToolResult
+            public function call(array $arguments): \Marwa\MCP\ToolResult
             {
                 $result = $this->tool->execute($arguments);
 
-                return \Memran\MarwaMcp\Tool\ToolResult::text(
+                return \Marwa\MCP\ToolResult::text(
                     $result->getContent(),
                     $result->isError()
                 );
@@ -105,7 +105,7 @@ final class MCPAdapter implements MCPServerInterface
 
     public function registerResource(ResourceInterface $resource): self
     {
-        $wrapper = new class ($resource) implements \Memran\MarwaMcp\Resource\ResourceInterface {
+        $wrapper = new class ($resource) implements \Marwa\MCP\ResourceInterface {
             public function __construct(private ResourceInterface $resource) {}
 
             public function uri(): string
@@ -123,7 +123,12 @@ final class MCPAdapter implements MCPServerInterface
                 return $this->resource->description();
             }
 
-            public function read(): \Memran\MarwaMcp\Resource\ResourceResult
+            public function mimeType(): string
+            {
+                return $this->resource->mimeType();
+            }
+
+            public function read(): \Marwa\MCP\ResourceResult
             {
                 $result = $this->resource->read();
 
@@ -143,7 +148,7 @@ final class MCPAdapter implements MCPServerInterface
 
     public function registerPrompt(PromptInterface $prompt): self
     {
-        $wrapper = new class ($prompt) implements \Memran\MarwaMcp\Prompt\PromptInterface {
+        $wrapper = new class ($prompt) implements \Marwa\MCP\PromptInterface {
             public function __construct(private PromptInterface $prompt) {}
 
             public function name(): string
@@ -167,7 +172,7 @@ final class MCPAdapter implements MCPServerInterface
             /**
              * @param array<string, mixed> $arguments
              */
-            public function get(array $arguments = []): \Memran\MarwaMcp\Prompt\PromptResult
+            public function get(array $arguments = []): \Marwa\MCP\PromptResult
             {
                 $result = $this->prompt->get($arguments);
 

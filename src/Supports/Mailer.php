@@ -128,9 +128,13 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
      */
     public function htmlTemplate(string $template, array $data = []): self
     {
-        $viewResponse = view($template, $data);
+        $settings = $this->configuration();
+        $templatePath = $this->normalizeTemplatePath((string) ($settings['template']['path'] ?? ''));
+        $viewTemplate = $templatePath !== '' ? $templatePath . '/' . ltrim($template, '/\\') : $template;
+
+        $viewResponse = view($viewTemplate, $data);
         if ($viewResponse === null) {
-            throw new \RuntimeException(sprintf('Template [%s] could not be rendered.', $template));
+            throw new \RuntimeException(sprintf('Template [%s] could not be rendered.', $viewTemplate));
         }
 
         return $this->html($viewResponse->getBody()->__toString());
@@ -365,6 +369,23 @@ final class Mailer implements \Marwa\Framework\Contracts\MailerInterface
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             throw new \InvalidArgumentException("Invalid email address: {$email}");
         }
+    }
+
+    private function normalizeTemplatePath(string $path): string
+    {
+        $path = trim(str_replace('\\', '/', $path), '/');
+
+        if ($path === '') {
+            return '';
+        }
+
+        foreach (['resources/views/', 'resources/views', 'views/'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return ltrim(substr($path, strlen($prefix)), '/');
+            }
+        }
+
+        return $path;
     }
 
     private static ?MailerAdapterInterface $swappedAdapter = null;

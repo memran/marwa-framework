@@ -10,6 +10,7 @@ use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
 use Marwa\Framework\Queue\QueuedJob;
 use Marwa\Framework\Scheduling\Scheduler;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreInterface;
+use Marwa\Framework\Scheduling\Task;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -142,6 +143,19 @@ final class SchedulerSupportTest extends TestCase
         $scheduler->runDue(new \DateTimeImmutable('@1700000011'));
 
         self::assertSame(['file', 'cache'], $resolver->drivers);
+    }
+
+    public function testEveryMinuteTasksAlignToWallClockBoundaries(): void
+    {
+        $app = new Application($this->basePath);
+        $createdAt = new \DateTimeImmutable('@1700000001');
+        $task = new Task('wall-clock-minute', static function (): void {}, $createdAt);
+
+        $task->everyMinute();
+
+        self::assertSame($createdAt, $task->createdAt());
+        self::assertFalse($task->isDue($app, new \DateTimeImmutable('@1700000039')));
+        self::assertTrue($task->isDue($app, new \DateTimeImmutable('@1700000040')));
     }
 
     private function removeDirectory(string $path): void

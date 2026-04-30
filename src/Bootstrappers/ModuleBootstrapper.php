@@ -223,14 +223,14 @@ final class ModuleBootstrapper
      */
     private function registerModuleListeners(ModuleRegistryInterface $registry): void
     {
-        if (!$this->container->has(\Psr\EventDispatcher\EventDispatcherInterface::class)) {
+        if (!$this->container->has(\Marwa\Framework\Contracts\EventDispatcherInterface::class)) {
             return;
         }
 
-        $eventDispatcher = $this->container->get(\Psr\EventDispatcher\EventDispatcherInterface::class);
+        $eventDispatcher = $this->container->get(\Marwa\Framework\Contracts\EventDispatcherInterface::class);
 
         foreach ($registry->all() as $module) {
-            $manifest = $module->manifest();
+            $manifest = $this->manifestReader->read($module);
             $listeners = $manifest['listeners'] ?? null;
 
             if (!is_array($listeners)) {
@@ -245,7 +245,11 @@ final class ModuleBootstrapper
                 /** @var string|mixed $listenerClass */
                 foreach ($listenerClasses as $listenerClass) {
                     if (is_string($listenerClass) && class_exists($listenerClass)) {
-                        $eventDispatcher->listen($eventName, new $listenerClass());
+                        $listener = $this->resolveModuleListener($listenerClass);
+
+                        if ($listener !== null) {
+                            $eventDispatcher->listen($eventName, $listener);
+                        }
                     }
                 }
             }
@@ -253,15 +257,52 @@ final class ModuleBootstrapper
     }
 
     /**
+     * @return callable|array<int, mixed>|null
+     */
+    private function resolveModuleListener(string $listenerClass): callable|array|null
+    {
+        try {
+            $listener = $this->container->get($listenerClass);
+        } catch (\Throwable $exception) {
+            if (!class_exists($listenerClass)) {
+                return null;
+            }
+
+            $reflection = new \ReflectionClass($listenerClass);
+
+            if (!$reflection->isInstantiable()) {
+                return null;
+            }
+
+            $constructor = $reflection->getConstructor();
+            if ($constructor !== null && $constructor->getNumberOfRequiredParameters() > 0) {
+                throw $exception;
+            }
+
+            $listener = new $listenerClass();
+        }
+
+        if (is_callable($listener)) {
+            return $listener;
+        }
+
+        if (is_object($listener) && method_exists($listener, 'handle')) {
+            return [$listener, 'handle'];
+        }
+
+        return null;
+    }
+
+    /**
      * Dispatch individual module events during bootstrap.
      */
     private function dispatchModuleEvents(ModuleRegistryInterface $registry): void
     {
-        if (!$this->container->has(\Psr\EventDispatcher\EventDispatcherInterface::class)) {
+        if (!$this->container->has(\Marwa\Framework\Contracts\EventDispatcherInterface::class)) {
             return;
         }
 
-        $eventDispatcher = $this->container->get(\Psr\EventDispatcher\EventDispatcherInterface::class);
+        $eventDispatcher = $this->container->get(\Marwa\Framework\Contracts\EventDispatcherInterface::class);
 
         foreach ($registry->all() as $module) {
             $slug = $module->slug();

@@ -23,6 +23,7 @@ final class QueueManager
         $queue = match ($settings['driver']) {
             'database' => $this->app->make(DatabaseQueue::class),
             'file' => $this->app->make(FileQueue::class),
+            'redis' => $this->app->make(RedisQueue::class),
             default => $this->app->make(FileQueue::class),
         };
 

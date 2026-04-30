@@ -11,28 +11,25 @@ use RuntimeException;
 final class DBForge
 {
     /** @var array<string, mixed> */
-    private $config;
+    private array $config;
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(
         private ConnectionManager $manager,
+        array $config,
         private string $connection = 'default'
     ) {
-        $this->config = $this->loadConfig();
+        $this->config = $config;
     }
 
-    /** @return array<string, mixed> */
-    private function loadConfig(): array
+    /**
+     * @param array<string, mixed> $config
+     */
+    public static function create(ConnectionManager $manager, array $config, string $connection = 'default'): self
     {
-        $reflection = new \ReflectionClass($this->manager);
-        $property = $reflection->getProperty('config');
-        $property->setAccessible(true);
-        $config = $property->getValue($this->manager);
-        return $config->get($this->connection);
-    }
-
-    public static function create(ConnectionManager $manager, string $connection = 'default'): self
-    {
-        return new self($manager, $connection);
+        return new self($manager, $config, $connection);
     }
 
     public function connection(): string

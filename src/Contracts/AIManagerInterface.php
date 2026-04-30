@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Contracts;
 
+use Marwa\AI\Contracts\AIClientInterface;
+
 interface AIManagerInterface
 {
     /**
@@ -11,10 +13,13 @@ interface AIManagerInterface
      */
     public function complete(string $prompt, array $options = []): mixed;
 
+    public function driver(?string $name = null): AIClientInterface;
+
     /**
-     * @param list<array<string, mixed>>|array<string, mixed> $messages
+     * @param list<array<string, mixed>>|array<string, mixed>|string $messages
+     * @param array<string, mixed> $options
      */
-    public function conversation(array $messages = []): mixed;
+    public function conversation(array|string $messages = [], array $options = []): mixed;
 
     /**
      * @param list<string> $texts
@@ -48,8 +53,6 @@ interface AIManagerInterface
      * @return list<string>
      */
     public function providers(): array;
-
-    public function driver(?string $name = null): self;
 
     /**
      * @return array<string, mixed>

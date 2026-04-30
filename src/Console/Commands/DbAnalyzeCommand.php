@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Framework\Console\Commands;
 
 use Marwa\Framework\Console\AbstractCommand;
-use Marwa\Framework\Database\DBForge;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,13 +24,7 @@ final class DbAnalyzeCommand extends AbstractCommand
     {
         $connection = $input->getOption('connection');
 
-        $forge = $this->app()->make(DBForge::class);
-        if ($connection !== 'default') {
-            $forge = DBForge::create(
-                $this->app()->make(\Marwa\DB\Connection\ConnectionManager::class),
-                $connection
-            );
-        }
+        $forge = $this->dbForge($connection);
 
         try {
             $forge->analyze();

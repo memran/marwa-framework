@@ -36,11 +36,14 @@ final class ModuleMigrateCommand extends AbstractCommand
         $output->writeln('<info>Running module migrations...</info>');
 
         $manager = $this->app()->make(\Marwa\DB\Connection\ConnectionManager::class);
+        sort($modulePaths, SORT_NATURAL | SORT_FLAG_CASE);
 
         $totalMigrated = 0;
 
         foreach ($modulePaths as $path) {
             if (!is_dir($path)) {
+                $output->writeln(sprintf('<comment>Skipping missing migration directory:</comment> %s', $path));
+
                 continue;
             }
 

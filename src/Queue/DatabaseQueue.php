@@ -84,7 +84,7 @@ final class DatabaseQueue implements QueueInterface
 
     public function pushAt(string $name, int $timestamp, array $payload = [], ?string $queue = null): QueuedJob
     {
-        return $this->push($name, $payload, $queue, $timestamp - time());
+        return $this->push($name, $payload, $queue, max(0, $timestamp - time()));
     }
 
     public function pushRecurring(string $name, array $schedule, array $payload = [], ?string $queue = null): QueuedJob

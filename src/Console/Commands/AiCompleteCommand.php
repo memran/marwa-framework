@@ -42,11 +42,12 @@ final class AiCompleteCommand extends AbstractCommand
             $options['max_tokens'] = (int) $maxTokens;
         }
 
-        if ($provider) {
-            $this->app()->make(\Marwa\Framework\Contracts\AIManagerInterface::class)->driver($provider);
+        $ai = $this->app()->make(\Marwa\Framework\Contracts\AIManagerInterface::class);
+
+        if (is_string($provider) && $provider !== '') {
+            $options['provider'] = $provider;
         }
 
-        $ai = $this->app()->make(\Marwa\Framework\Contracts\AIManagerInterface::class);
         $result = $ai->complete($prompt, $options);
 
         if (is_string($result)) {

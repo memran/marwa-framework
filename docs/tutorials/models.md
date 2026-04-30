@@ -243,6 +243,27 @@ If a failure should raise an exception:
 $user->deleteOrFail();
 ```
 
+### Audit Trail Hooks
+
+The framework model now exposes extra lifecycle hooks for audit trails on top of the ORM callbacks:
+
+- `onRestoring()` before a soft-deleted model is restored
+- `onRestored()` after a soft-deleted model is restored
+- `onForceDeleting()` before a hard delete
+- `onForceDeleted()` after a hard delete
+- `onDestroying()` before a bulk `destroy()`
+- `onDestroyed()` after a bulk `destroy()`
+
+Example:
+
+```php
+User::onRestored(static function (User $user): void {
+    logger()->info('User restored', ['id' => $user->getKey()]);
+});
+```
+
+Use these hooks when you need an audit trail that covers restore and force-delete flows as well as the usual create, update, and delete paths.
+
 ## Pagination
 
 The framework wrapper provides a `paginate()` helper that returns a structured array with hydrated model instances in `data`.
@@ -385,6 +406,7 @@ $page = User::paginate(10, 1);
 - Prefer `findBy()` and `firstWhere()` for straightforward lookups, and `newQuery()` when conditions become more complex.
 - Use `updateOrCreate()` for idempotent writes instead of open-coded lookup-then-save sequences.
 - Use `saveOrFail()` and `deleteOrFail()` in flows where silent failure would be a bug.
+- Use the audit hooks when you need a full trail for restore, force delete, or bulk destroy actions.
 - Treat `forceFill()` and `useConnection()` as deliberate tools, not defaults.
 
 ## Related Reading

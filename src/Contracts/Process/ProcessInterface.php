@@ -27,6 +27,8 @@ interface ProcessInterface
      */
     public function runInBackground(string $command, array $options = []): int|null;
 
+    public function command(string $command): self;
+
     public function input(string $input): self;
 
     public function timeout(int $timeout): self;

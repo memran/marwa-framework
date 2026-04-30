@@ -8,6 +8,7 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Exceptions\ModuleDependencyException;
 use Marwa\Framework\Navigation\MenuRegistry;
+use Marwa\Framework\Tests\Fixtures\Modules\Blog\BlogListenerState;
 use Marwa\Framework\Tests\Fixtures\Modules\Blog\BlogModuleServiceProvider;
 use Marwa\Module\ModuleBuilder;
 use PHPUnit\Framework\TestCase;
@@ -66,6 +67,8 @@ final class ModuleBootstrapperTest extends TestCase
         self::assertSame(1, BlogModuleServiceProvider::$bootCalls);
         self::assertTrue($app->has('module.blog.registered'));
         self::assertTrue($app->has('module.blog.booted'));
+        self::assertTrue($app->make(BlogListenerState::class)->handled);
+        self::assertSame('blog', $app->make(BlogListenerState::class)->slug);
         self::assertSame(['blog-http'], $GLOBALS['marwa_module_routes']);
         self::assertTrue($app->has(ModuleBuilder::class));
         self::assertTrue($app->hasModule('blog'));
@@ -102,6 +105,7 @@ final class ModuleBootstrapperTest extends TestCase
             self::assertSame(1, BlogModuleServiceProvider::$bootCalls);
             self::assertTrue($app->has('module.blog.registered'));
             self::assertTrue($app->has('module.blog.booted'));
+            self::assertTrue($app->make(BlogListenerState::class)->handled);
             self::assertTrue($app->hasModule('blog'));
             self::assertArrayNotHasKey('marwa_module_routes', $GLOBALS);
         } finally {
@@ -132,6 +136,7 @@ final class ModuleBootstrapperTest extends TestCase
         $app->make(AppBootstrapper::class)->bootstrap();
 
         self::assertTrue($app->has(\Marwa\Framework\Views\View::class));
+        self::assertTrue($app->make(BlogListenerState::class)->handled);
     }
 
     public function testModuleBootstrapperThrowsClearErrorWhenRequiredModuleIsMissing(): void

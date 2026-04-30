@@ -8,6 +8,11 @@ return [
     'providers' => [
         Marwa\Framework\Tests\Fixtures\Modules\Blog\BlogModuleServiceProvider::class,
     ],
+    'listeners' => [
+        Marwa\Framework\Adapters\Event\ModuleLoaded::class => [
+            Marwa\Framework\Tests\Fixtures\Modules\Blog\Listeners\BlogLoadedListener::class,
+        ],
+    ],
     'paths' => [
         'views' => 'resources/views',
         'commands' => 'Console/Commands',

@@ -23,7 +23,12 @@ interface MailerInterface
      *         authMode: string|null,
      *         timeout: int
      *     },
-     *     sendmail: array{path: string}
+     *     sendmail: array{path: string},
+     *     template?: array{
+     *         path: string,
+     *         autoPlainText: bool,
+     *         inlineCss: bool
+     *     }
      * }
      */
     public function configuration(): array;

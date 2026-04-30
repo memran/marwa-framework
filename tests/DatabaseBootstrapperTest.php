@@ -9,6 +9,7 @@ use Marwa\DB\ORM\Model;
 use Marwa\DB\Schema\Schema;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
+use Marwa\Framework\Bootstrappers\DatabaseBootstrapper;
 use PHPUnit\Framework\TestCase;
 
 final class DatabaseBootstrapperTest extends TestCase
@@ -123,6 +124,43 @@ PHP
 
         self::assertInstanceOf(ConnectionManager::class, $app->make(ConnectionManager::class));
         self::assertNull($app->make(ConnectionManager::class)->getDebugPanel());
+    }
+
+    public function testDatabaseBootstrapperCreatesForgeFromConfiguredConnection(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/database.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'default' => 'sqlite',
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'debug' => false,
+        ],
+        'reporting' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'debug' => true,
+        ],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+        $this->handlersBooted = true;
+
+        /** @var DatabaseBootstrapper $bootstrapper */
+        $bootstrapper = $app->make(DatabaseBootstrapper::class);
+
+        self::assertSame('sqlite', $bootstrapper->forge()->connection());
+        self::assertSame('reporting', $bootstrapper->forge('reporting')->connection());
     }
 
     private function readStaticProperty(string $class, string $property): mixed

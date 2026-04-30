@@ -54,6 +54,7 @@ final class ProcessAdapter implements ProcessInterface
      */
     public function execute(string $command, array $options = []): ProcessResult
     {
+        $this->options['command'] = $command;
         $options = array_merge($this->options, $options);
         $timeout = $options['timeout'] ?? $this->configuration()['timeout'];
         $cwd = $options['cwd'] ?? $this->configuration()['cwd'];
@@ -127,15 +128,23 @@ final class ProcessAdapter implements ProcessInterface
             return ProcessResult::error('parallel', 'No commands provided');
         }
 
+        $options = array_merge($this->options, $options);
+        $timeout = $options['timeout'] ?? $this->configuration()['timeout'];
+        $cwd = $options['cwd'] ?? $this->configuration()['cwd'];
+        $env = is_array($options['env'] ?? null) ? $options['env'] : [];
+        $input = $this->input;
         $startTime = microtime(true);
         $processes = [];
         $finished = [];
 
         foreach ($commands as $index => $cmd) {
-            $processes[$index] = Process::fromShellCommandLine($cmd);
+            $processes[$index] = Process::fromShellCommandLine($cmd, $cwd, $env, null, $timeout);
         }
 
         foreach ($processes as $process) {
+            if ($input !== null) {
+                $process->setInput($input);
+            }
             $process->start();
         }
 
@@ -193,6 +202,13 @@ final class ProcessAdapter implements ProcessInterface
     public function input(string $input): self
     {
         $this->input = $input;
+
+        return $this;
+    }
+
+    public function command(string $command): self
+    {
+        $this->options['command'] = $command;
 
         return $this;
     }
@@ -334,18 +350,47 @@ final class ProcessAdapter implements ProcessInterface
     {
         return [
             'command' => $this->options['command'] ?? '',
+            'input' => $this->input,
             'options' => [
                 'timeout' => $this->options['timeout'] ?? null,
                 'cwd' => $this->options['cwd'] ?? null,
                 'env' => is_array($this->options['env'] ?? null) ? $this->options['env'] : [],
                 'retry' => $this->retryAttempts,
+                'retry_delay_ms' => $this->retryDelayMs,
             ],
-            'output_handler' => $this->outputHandler !== null ? get_class($this->outputHandler) : null,
-            'events' => [
-                'on_start' => $this->onStartCallback instanceof Closure ? 'Closure' : null,
-                'on_complete' => $this->onCompleteCallback instanceof Closure ? 'Closure' : null,
-                'on_error' => $this->onErrorCallback instanceof Closure ? 'Closure' : null,
-            ],
+            'output_handler' => $this->outputHandler !== null ? $this->outputHandlerPayload() : null,
+        ];
+    }
+
+    /**
+     * @return array{type: string, config: array<string, mixed>}
+     */
+    private function outputHandlerPayload(): array
+    {
+        if ($this->outputHandler instanceof FileOutputHandler) {
+            return [
+                'type' => 'file',
+                'config' => $this->outputHandler->configuration(),
+            ];
+        }
+
+        if ($this->outputHandler instanceof DatabaseOutputHandler) {
+            return [
+                'type' => 'db',
+                'config' => $this->outputHandler->configuration(),
+            ];
+        }
+
+        if ($this->outputHandler instanceof RedisOutputHandler) {
+            return [
+                'type' => 'redis',
+                'config' => $this->outputHandler->configuration(),
+            ];
+        }
+
+        return [
+            'type' => 'unknown',
+            'config' => [],
         ];
     }
 }

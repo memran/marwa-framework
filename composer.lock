@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b3a6cb9207f2ba8f631d089b9c8afd6e",
+    "content-hash": "4f51f71dda01eae6c885795a1d34ac74",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -1651,16 +1651,16 @@
         },
         {
             "name": "memran/marwa-mcp",
-            "version": "v0.2.0",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/memran/marwa-mcp.git",
-                "reference": "d14ce8f12d3a978b79bbb2ace98369b87aa72f2b"
+                "reference": "17481a0d6cd18398944de45164d66067a1f85550"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/memran/marwa-mcp/zipball/d14ce8f12d3a978b79bbb2ace98369b87aa72f2b",
-                "reference": "d14ce8f12d3a978b79bbb2ace98369b87aa72f2b",
+                "url": "https://api.github.com/repos/memran/marwa-mcp/zipball/17481a0d6cd18398944de45164d66067a1f85550",
+                "reference": "17481a0d6cd18398944de45164d66067a1f85550",
                 "shasum": ""
             },
             "require": {
@@ -1678,7 +1678,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Memran\\MarwaMcp\\": "src/"
+                    "Marwa\\MCP\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1688,9 +1688,9 @@
             "description": "Lightweight Model Context Protocol server library for Marwa Framework and standalone PHP apps.",
             "support": {
                 "issues": "https://github.com/memran/marwa-mcp/issues",
-                "source": "https://github.com/memran/marwa-mcp/tree/v0.2.0"
+                "source": "https://github.com/memran/marwa-mcp/tree/v0.3.0"
             },
-            "time": "2026-04-27T11:19:11+00:00"
+            "time": "2026-04-30T21:42:45+00:00"
         },
         {
             "name": "memran/marwa-module",

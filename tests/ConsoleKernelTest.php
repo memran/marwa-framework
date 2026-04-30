@@ -158,6 +158,9 @@ PHP
         self::assertContains(MakeModuleCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeThemeCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(MakeAiHelperCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(\Marwa\Framework\Console\Commands\AiCompleteCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(\Marwa\Framework\Console\Commands\AiProvidersCommand::class, ConsoleConfig::defaults($app)['commands']);
+        self::assertContains(\Marwa\Framework\Console\Commands\MCPServeCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(\Marwa\Framework\Console\Commands\ShellCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(\Marwa\Framework\Console\Commands\SecurityReportCommand::class, ConsoleConfig::defaults($app)['commands']);
         self::assertContains(\Marwa\Framework\Console\Commands\KafkaConsumeCommand::class, ConsoleConfig::defaults($app)['commands']);
@@ -253,8 +256,12 @@ PHP
 
     public function testModuleMigrateRunsManifestDeclaredMigrationFilesThroughRepository(): void
     {
+        $alphaModulePath = $this->basePath . '/modules/Alpha';
+        $alphaMigrationPath = $alphaModulePath . '/database/migrations';
         $modulePath = $this->basePath . '/modules/Blog';
         $migrationPath = $modulePath . '/database/migrations';
+        mkdir($alphaModulePath, 0777, true);
+        mkdir($alphaMigrationPath, 0777, true);
         mkdir($modulePath, 0777, true);
         mkdir($migrationPath, 0777, true);
 
@@ -285,6 +292,48 @@ return [
         ],
     ],
 ];
+PHP
+        );
+
+        file_put_contents(
+            $alphaModulePath . '/manifest.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'name' => 'Alpha Module',
+    'slug' => 'alpha',
+    'migrations' => [
+        'database/migrations/2025_12_31_000000_create_alpha_items_table.php',
+    ],
+];
+PHP
+        );
+
+        file_put_contents(
+            $alphaMigrationPath . '/2025_12_31_000000_create_alpha_items_table.php',
+            <<<'PHP'
+<?php
+
+use Marwa\DB\CLI\AbstractMigration;
+use Marwa\DB\Schema\Schema;
+
+return new class extends AbstractMigration {
+    public function up(): void
+    {
+        Schema::create('alpha_items', function ($table): void {
+            $table->increments('id');
+            $table->string('name');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::drop('alpha_items');
+    }
+};
 PHP
         );
 
@@ -365,16 +414,18 @@ PHP
         self::assertSame(0, $tester->execute([]));
 
         $display = $tester->getDisplay();
-        self::assertSame(1, substr_count($display, 'Migrating directory:'));
-        self::assertStringContainsString('Module migrations completed. Total: 2', $display);
+        self::assertSame(2, substr_count($display, 'Migrating directory:'));
+        self::assertStringContainsString('Module migrations completed. Total: 3', $display);
 
         $pdo = new \PDO('sqlite:' . $this->databaseFile);
         $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table'")->fetchAll(\PDO::FETCH_COLUMN);
         $migrations = $pdo->query('SELECT migration FROM migrations ORDER BY id ASC')->fetchAll(\PDO::FETCH_COLUMN);
 
+        self::assertContains('alpha_items', $tables);
         self::assertContains('blog_posts', $tables);
         self::assertContains('blog_comments', $tables);
         self::assertSame([
+            '2025_12_31_000000_create_alpha_items_table',
             '2026_01_01_000000_create_blog_posts_table',
             '2026_01_01_000100_create_blog_comments_table',
         ], $migrations);

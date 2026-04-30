@@ -16,6 +16,7 @@ final class BlogModuleServiceProvider implements ModuleServiceProviderInterface
     {
         self::$registerCalls++;
         $app->set('module.blog.registered', true);
+        $app->set(BlogListenerState::class, new BlogListenerState());
     }
 
     public function boot($app): void

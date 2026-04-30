@@ -73,6 +73,7 @@ protected static array $withCount = ['posts'];
 | `deleteOrFail()` | Delete or throw | `$user->deleteOrFail()` |
 | `forceDelete()` | Force delete | `$user->forceDelete()` |
 | `restore()` | Restore soft delete | `$user->restore()` |
+| `destroy(int|array $ids)` | Bulk delete / soft delete records | `User::destroy([1, 2])` |
 
 ### Refresh & Fresh
 
@@ -160,6 +161,12 @@ Usage: `User::active()->get()`
 | `saved` | After save |
 | `deleting` | Before delete |
 | `deleted` | After delete |
+| `restoring` | Before restore |
+| `restored` | After restore |
+| `forceDeleting` | Before force delete |
+| `forceDeleted` | After force delete |
+| `destroying` | Before bulk destroy |
+| `destroyed` | After bulk destroy |
 
 ## Cast Types
 

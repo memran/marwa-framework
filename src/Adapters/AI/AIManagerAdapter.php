@@ -6,13 +6,15 @@ namespace Marwa\Framework\Adapters\AI;
 
 use function Marwa\AI\ai;
 use function Marwa\AI\chat;
-use function Marwa\AI\complete;
 
+use Marwa\AI\Contracts\AIClientInterface;
 use Marwa\AI\Contracts\AIManagerInterface as VendorAIManagerInterface;
 
-use function Marwa\AI\conversation;
 use function Marwa\AI\embed;
 use function Marwa\AI\image;
+
+use Marwa\AI\MarwaAI;
+
 use function Marwa\AI\stream;
 
 use Marwa\Framework\Contracts\AIManagerInterface;
@@ -22,7 +24,9 @@ final class AIManagerAdapter implements AIManagerInterface
 {
     public function __construct(
         private Config $config
-    ) {}
+    ) {
+        MarwaAI::initialize($this->configuration());
+    }
 
     /**
      * @return VendorAIManagerInterface
@@ -40,15 +44,26 @@ final class AIManagerAdapter implements AIManagerInterface
      */
     public function complete(string $prompt, array $options = []): mixed
     {
-        return complete($prompt, $options)->getContent();
+        return $this->conversation($prompt, $options)->send($options)->getContent();
+    }
+
+    public function driver(?string $name = null): AIClientInterface
+    {
+        $provider = $name ?? $this->configuration()['default'] ?? 'ollama';
+
+        /** @var AIClientInterface $driver */
+        $driver = ai((string) $provider);
+
+        return $driver;
     }
 
     /**
-     * @param list<array<string, mixed>>|array<string, mixed> $messages
+     * @param list<array<string, mixed>>|array<string, mixed>|string $messages
+     * @param array<string, mixed> $options
      */
-    public function conversation(array $messages = []): mixed
+    public function conversation(array|string $messages = [], array $options = []): mixed
     {
-        return conversation($messages);
+        return $this->getAiManager()->conversation($messages, $options);
     }
 
     /**
@@ -105,13 +120,6 @@ final class AIManagerAdapter implements AIManagerInterface
     public function providers(): array
     {
         return $this->getAiManager()->getAvailableProviders();
-    }
-
-    public function driver(?string $name = null): self
-    {
-        $this->getAiManager()->driver($name);
-
-        return $this;
     }
 
     /**

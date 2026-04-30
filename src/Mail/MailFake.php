@@ -79,6 +79,7 @@ final class MailFake implements MailerAdapterInterface
             'from' => ['address' => 'test@example.com', 'name' => 'Test'],
             'smtp' => ['host' => 'localhost', 'port' => 25, 'encryption' => null, 'username' => null, 'password' => null, 'authMode' => null, 'timeout' => 30],
             'sendmail' => ['path' => '/usr/sbin/sendmail'],
+            'template' => ['path' => 'resources/views/emails', 'autoPlainText' => true, 'inlineCss' => true],
         ];
     }
 

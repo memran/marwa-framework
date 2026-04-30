@@ -47,6 +47,11 @@ abstract class AbstractCommand extends Command
         return $this->container()->get(LoggerInterface::class);
     }
 
+    protected function dbForge(?string $connection = null): \Marwa\Framework\Database\DBForge
+    {
+        return $this->container()->get(\Marwa\Framework\Bootstrappers\DatabaseBootstrapper::class)->forge($connection);
+    }
+
     protected function basePath(string $path = ''): string
     {
         return $this->app()->basePath($path);

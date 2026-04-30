@@ -76,6 +76,24 @@ final class StorageSupportTest extends TestCase
         );
     }
 
+    public function testStorageDirectoryOperationsRejectTraversal(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+
+        $this->expectException(\RuntimeException::class);
+        $storage->makeDirectory('../outside');
+    }
+
+    public function testStorageDeleteDirectoryRejectsTraversal(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+
+        $this->expectException(\RuntimeException::class);
+        $storage->deleteDirectory('../outside');
+    }
+
     private function removeDirectory(string $path): void
     {
         if (!is_dir($path)) {

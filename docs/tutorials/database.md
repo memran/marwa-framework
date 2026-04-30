@@ -2,18 +2,19 @@
 
 The framework includes DBForge for database-level operations. DBForge complements `marwa-db` by providing commands for managing databases, backups, and optimization.
 
+Database commands accept a `--connection` option so you can target a non-default connection when your app defines more than one database config.
+
 ## Quick Reference
 
 | Command | Description |
 |---------|-------------|
-| `db:create <name>` | Create a new database |
-| `db:drop <name>` | Drop a database |
-| `db:list` | List all databases |
-| `db:list --tables` | List all tables in current database |
-| `db:backup` | Backup database to file |
-| `db:restore <path>` | Restore from backup file |
-| `db:optimize` | Optimize all tables |
-| `db:analyze` | Analyze all tables |
+| `db:create <name> [--connection=...]` | Create a new database |
+| `db:drop <name> [--connection=...]` | Drop a database |
+| `db:list [--tables] [--connection=...]` | List databases or tables |
+| `db:backup [--path=...] [--connection=...]` | Backup database to file |
+| `db:restore <path> [--connection=...]` | Restore from backup file |
+| `db:optimize [--connection=...]` | Optimize all tables |
+| `db:analyze [--connection=...]` | Analyze all tables |
 
 ## Usage
 
@@ -21,6 +22,9 @@ The framework includes DBForge for database-level operations. DBForge complement
 
 ```bash
 php marwa db:create myapp
+
+# Use a named connection
+php marwa db:create myapp --connection=reporting
 ```
 
 ### List Databases or Tables
@@ -31,6 +35,9 @@ php marwa db:list
 
 # List tables in current database
 php marwa db:list --tables
+
+# Inspect a named connection
+php marwa db:list --connection=reporting
 ```
 
 ### Backup Database
@@ -41,12 +48,17 @@ php marwa db:backup
 
 # Custom path
 php marwa db:backup --path=/path/to/backup.sql
+
+# Target a named connection
+php marwa db:backup --connection=reporting
 ```
 
 ### Restore from Backup
 
 ```bash
 php marwa db:restore backup.sql
+
+php marwa db:restore backup.sql --connection=reporting
 ```
 
 ### Optimize Tables
@@ -78,19 +90,19 @@ php marwa db:drop myapp --force
 ## Programmatic Usage
 
 ```php
-use Marwa\Framework\Facades\DbForge;
+use Marwa\Framework\Facades\DatabaseForge;
 
 // Create database
-DbForge::createDatabase('myapp');
+DatabaseForge::createDatabase('myapp');
 
 // List tables
-$tables = DbForge::listTables();
+$tables = DatabaseForge::listTables();
 
 // Backup to file
-DbForge::backup('/path/to/backup.sql');
+DatabaseForge::backup('/path/to/backup.sql');
 
 // Optimize
-DbForge::optimize();
+DatabaseForge::optimize();
 ```
 
 ## Supported Drivers

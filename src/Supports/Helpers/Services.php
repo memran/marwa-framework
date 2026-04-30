@@ -36,7 +36,7 @@ if (!function_exists('mailer')) {
 if (!function_exists('mail')) {
     function mail(): \Marwa\Framework\Contracts\MailerInterface
     {
-        return app(\Marwa\Framework\Supports\Mailer::class);
+        return mailer();
     }
 }
 

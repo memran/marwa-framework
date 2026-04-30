@@ -92,7 +92,8 @@ abstract class Mailable
      */
     protected function renderHtmlTemplate(string $template, array $data): string
     {
-        $fullTemplate = $this->templateConfig['path'] . '/' . ltrim($template, '/');
+        $templatePath = $this->normalizeTemplatePath((string) ($this->templateConfig['path'] ?? ''));
+        $fullTemplate = $templatePath !== '' ? $templatePath . '/' . ltrim($template, '/\\') : $template;
 
         $viewResponse = view($fullTemplate, $data);
         if ($viewResponse === null) {
@@ -161,6 +162,23 @@ abstract class Mailable
         return $html;
     }
 
+    private function normalizeTemplatePath(string $path): string
+    {
+        $path = trim(str_replace('\\', '/', $path), '/');
+
+        if ($path === '') {
+            return '';
+        }
+
+        foreach (['resources/views/', 'resources/views', 'views/'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return ltrim(substr($path, strlen($prefix)), '/');
+            }
+        }
+
+        return $path;
+    }
+
     abstract public function build(MailerInterface $mailer): MailerInterface;
 
     public function send(): int
@@ -169,6 +187,7 @@ abstract class Mailable
         $mailer = app(MailerInterface::class);
 
         $html = null;
+        $text = null;
         if (isset($this->data['__htmlTemplate'])) {
             $template = $this->data['__htmlTemplate'];
             $config = $this->templateConfig;
@@ -176,9 +195,12 @@ abstract class Mailable
             $html = $this->renderHtmlTemplate($template, $this->data);
 
             if (!empty($config['autoPlainText'])) {
-                $plainText = $this->htmlToPlainText($html);
-                $html = $html . "\n\n" . $plainText;
+                $text = $this->htmlToPlainText($html);
             }
+        }
+
+        if ($html !== null) {
+            $mailer->html($html, $text);
         }
 
         return $this->build($mailer)->send();

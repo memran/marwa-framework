@@ -29,11 +29,12 @@ final class Task
      */
     public function __construct(
         private string $name,
-        callable $callback
+        callable $callback,
+        ?\DateTimeImmutable $createdAt = null
     ) {
         $this->callback = $callback;
         $this->filter = static fn (): bool => true;
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
     }
 
     public function name(): string
@@ -118,9 +119,7 @@ final class Task
             return $elapsed >= 0 && ($elapsed % $this->intervalSeconds === 0);
         }
 
-        $elapsed = $time->getTimestamp() - $this->createdAt->getTimestamp();
-
-        return $elapsed >= 0 && ($elapsed % $this->intervalSeconds === 0);
+        return $time->getTimestamp() % $this->intervalSeconds === 0;
     }
 
     public function run(Application $app, \DateTimeImmutable $time): mixed
@@ -138,5 +137,10 @@ final class Task
     public function intervalSeconds(): int
     {
         return $this->intervalSeconds;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 }

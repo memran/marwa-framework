@@ -46,8 +46,8 @@ final class ProcessResult
             $process->getErrorOutput(),
             $endTime - $startTime,
             memory_get_peak_usage(true),
-            \DateTimeImmutable::createFromFormat('U', (string) $startTime),
-            \DateTimeImmutable::createFromFormat('U', (string) $endTime)
+            self::createDateTime($startTime),
+            self::createDateTime($endTime)
         );
     }
 
@@ -158,5 +158,17 @@ final class ProcessResult
     public function toJson(): string
     {
         return json_encode($this->toArray(), JSON_PRETTY_PRINT);
+    }
+
+    private static function createDateTime(float $timestamp): \DateTimeImmutable
+    {
+        $dateTime = \DateTimeImmutable::createFromFormat('U.u', sprintf('%.6F', $timestamp));
+
+        if ($dateTime instanceof \DateTimeImmutable) {
+            return $dateTime;
+        }
+
+        return (new \DateTimeImmutable('@' . (string) (int) $timestamp))
+            ->setTimezone(new \DateTimeZone(date_default_timezone_get()));
     }
 }

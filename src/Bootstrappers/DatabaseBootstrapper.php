@@ -81,7 +81,11 @@ final class DatabaseBootstrapper
             seedPath: $config['seedersPath'],
             seedNamespace: $config['seedersNamespace'],
         ));
-        $this->container->addShared(DBForge::class, fn () => DBForge::create($manager, $config['default']));
+        $this->container->addShared(DBForge::class, fn () => DBForge::create(
+            $manager,
+            $config['connections'][$config['default']] ?? [],
+            $config['default']
+        ));
         $this->app->set('db', $manager);
         $this->manager = $manager;
         $this->booted = true;
@@ -96,6 +100,30 @@ final class DatabaseBootstrapper
         }
 
         return $this->manager;
+    }
+
+    public function forge(?string $connection = null): DBForge
+    {
+        $manager = $this->manager();
+
+        if (!$manager instanceof ConnectionManager) {
+            throw new \RuntimeException('Database manager is not bootstrapped.');
+        }
+
+        $config = $this->databaseConfig();
+        $name = $connection !== null && $connection !== '' ? $connection : $config['default'];
+
+        $connectionConfig = $config['connections'][$name] ?? null;
+
+        if (!is_array($connectionConfig)) {
+            throw new \InvalidArgumentException(sprintf('Database connection [%s] is not configured.', $name));
+        }
+
+        return DBForge::create(
+            $manager,
+            $connectionConfig,
+            $name
+        );
     }
 
     /**

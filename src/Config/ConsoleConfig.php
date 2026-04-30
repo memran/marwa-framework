@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Framework\Config;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Console\Commands\AiCompleteCommand;
+use Marwa\Framework\Console\Commands\AiProvidersCommand;
 use Marwa\Framework\Console\Commands\BootstrapCacheCommand;
 use Marwa\Framework\Console\Commands\BootstrapClearCommand;
 use Marwa\Framework\Console\Commands\CacheClearCommand;
@@ -19,6 +21,7 @@ use Marwa\Framework\Console\Commands\MakeMailCommand;
 use Marwa\Framework\Console\Commands\MakeModelCommand;
 use Marwa\Framework\Console\Commands\MakeModuleCommand;
 use Marwa\Framework\Console\Commands\MakeThemeCommand;
+use Marwa\Framework\Console\Commands\MCPServeCommand;
 use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\ModuleMigrateCommand;
@@ -85,6 +88,9 @@ final class ConsoleConfig
                 MakeModuleCommand::class,
                 MakeThemeCommand::class,
                 MakeAiHelperCommand::class,
+                AiCompleteCommand::class,
+                AiProvidersCommand::class,
+                MCPServeCommand::class,
                 KafkaConsumeCommand::class,
                 ShellCommand::class,
             ],

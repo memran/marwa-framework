@@ -96,7 +96,7 @@ final class QueueConfig
 
         $driver = strtolower(trim($driver));
 
-        if (!in_array($driver, ['file', 'database'], true)) {
+        if (!in_array($driver, ['file', 'database', 'redis'], true)) {
             return $default;
         }
 

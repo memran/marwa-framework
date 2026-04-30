@@ -124,6 +124,7 @@ final class Storage
 
     public function deleteDirectory(string $path): bool
     {
+        $this->validatePath($path);
         $this->filesystem()->deleteDirectory($path);
 
         return true;
@@ -134,6 +135,7 @@ final class Storage
      */
     public function makeDirectory(string $path, array $config = []): bool
     {
+        $this->validatePath($path);
         $this->filesystem()->createDirectory($path, $config);
 
         return true;
