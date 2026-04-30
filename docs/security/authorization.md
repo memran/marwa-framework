@@ -95,39 +95,15 @@ public function register(): void
 
 ### Using Gate::policy() Method
 
-The `Gate::policy()` method provides auto-discovery of policies:
+The `Gate::policy()` method registers a policy class for a model or returns the current registration:
 
 ```php
-// Auto-discover from module
-gate()->policy(User::class);
-
-// Manual override
 gate()->policy(User::class, CustomUserPolicy::class);
 
-// Callable policy
-gate()->policy(User::class, function($user, $model) {
-    return $user->id === $model->user_id;
-});
+$policy = gate()->policy(User::class);
 ```
 
-**Resolution Order:**
-1. Previously registered via `Gate::policy()`
-2. Module Policies folder: `modules/{Module}/Policies/{Model}Policy.php`
-3. Global config: `config/permissions.policies`
-
-### Module Policy Auto-Discovery
-
-Policies can be placed in module's `Policies/` folder:
-
-```text
-modules/Users/
-  Models/
-    User.php
-  Policies/
-    UserPolicy.php
-```
-
-The framework extracts module name from model's namespace (e.g., `App\Modules\Users\Models\User` → `Users`) and looks for policies in `modules/Users/Policies/`.
+The framework does not auto-discover policy classes inside `Gate`. Register them explicitly through the policy registry or a service provider.
 
 ### Global Config Fallback
 

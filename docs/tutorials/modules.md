@@ -499,47 +499,20 @@ Register event listeners via manifest:
 
 ## Module Policies
 
-Policies for models can be auto-discovered from module's `Policies/` folder:
-
-```text
-modules/Users/
-  Models/
-    User.php
-  Policies/
-    UserPolicy.php
-```
-
-### Using Gate::policy()
+Module code can still define policy classes in a `Policies/` folder, but the framework does not auto-discover them in `Gate`.
+Register them explicitly:
 
 ```php
-// Auto-discover from module
-$policy = gate()->policy(User::class);
+use Marwa\Framework\Authorization\PolicyRegistry;
 
-// Manual override
+$registry = app(PolicyRegistry::class);
+$registry->register(App\Modules\Users\Models\User::class, App\Modules\Users\Policies\UserPolicy::class);
+```
+
+### Explicit Registration
+
+```php
 gate()->policy(User::class, CustomUserPolicy::class);
-
-// Callable policy
-gate()->policy(User::class, function($user, $model) {
-    return $user->id === $model->user_id;
-});
-```
-
-### Resolution Order
-
-1. Previously registered via `Gate::policy()`
-2. Module Policies folder: `modules/{Module}/Policies/{Model}Policy.php`
-3. Global config: `permissions.policies['App\\Models\\User']`
-
-### Global Config Fallback
-
-In `config/permissions.php`:
-
-```php
-return [
-    'policies' => [
-        App\Models\User::class => App\Policies\GlobalUserPolicy::class,
-    ],
-];
 ```
 
 ## Asset Publishing

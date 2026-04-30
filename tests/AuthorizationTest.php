@@ -218,6 +218,19 @@ final class AuthorizationTest extends TestCase
         $this->assertTrue($registry->hasPolicy(UserModel::class));
     }
 
+    public function testGatePolicyRegistersAndReturnsCurrentPolicy(): void
+    {
+        $registry = new PolicyRegistry();
+        $gate = new Gate($registry);
+
+        $this->assertSame($gate, $gate->policy(PostModel::class, PostPolicy::class));
+
+        $policy = $gate->policy(PostModel::class);
+
+        $this->assertInstanceOf(PostPolicy::class, $policy);
+        $this->assertTrue($registry->hasPolicy(PostModel::class));
+    }
+
     public function testGateForUserCreatesNewInstance(): void
     {
         $registry = new PolicyRegistry();

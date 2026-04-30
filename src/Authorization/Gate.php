@@ -7,6 +7,7 @@ namespace Marwa\Framework\Authorization;
 use Marwa\Framework\Authorization\Contracts\GateInterface;
 use Marwa\Framework\Authorization\Contracts\UserInterface;
 use Marwa\Framework\Exceptions\AuthorizationException;
+use Marwa\Framework\Exceptions\InvalidArgumentException;
 
 class Gate implements GateInterface
 {
@@ -139,168 +140,28 @@ class Gate implements GateInterface
     }
 
     /**
-     * Register a policy for a model class with auto-discovery.
-     *
-     * Resolution order:
-     * 1. Module Policies folder (modules/{Module}/Policies/{Model}Policy.php)
-     * 2. Global config (permissions.policies)
-     * 3. Registered via Gate::policy() before
-     *
-     * Usage:
-     *   gate()->policy(User::class);           // Auto-discover
-     *   gate()->policy(User::class, CustomPolicy::class); // Manual
+     * Register a policy for a model class or return the current registration.
      */
-    public function policy(string $modelClass, string|callable|null $policyClass = null): mixed
+    public function policy(string $modelClass, ?string $policyClass = null): object|null
     {
-        // Register manually if provided
         if ($policyClass !== null) {
-            if (is_callable($policyClass)) {
-                $this->registry->register($modelClass, $policyClass);
-            } else {
-                $this->registry->register($modelClass, $policyClass);
+            if (!class_exists($policyClass)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Policy class [%s] does not exist.',
+                    $policyClass
+                ));
             }
+
+            $this->registry->register($modelClass, $policyClass);
+
             return $this;
         }
 
-        // Auto-discover: first try module, then config, then registry
-        if ($this->registry->hasPolicy($modelClass)) {
-            return $this->registry->resolve($modelClass);
-        }
-
-        // Try module policy auto-discovery
-        $discoveredPolicy = $this->resolvePolicyFromModule($modelClass);
-        if ($discoveredPolicy !== null) {
-            $this->registry->register($modelClass, $discoveredPolicy);
-            return $this->registry->resolve($modelClass);
-        }
-
-        // Try global config fallback
-        $configPolicies = config('permissions.policies', []);
-        if (isset($configPolicies[$modelClass])) {
-            $policyFromConfig = $configPolicies[$modelClass];
-            if (is_string($policyFromConfig) && class_exists($policyFromConfig)) {
-                $this->registry->register($modelClass, $policyFromConfig);
-                return $this->registry->resolve($modelClass);
-            }
-        }
-
-        // Return null if not found - caller can handle
-        return null;
-    }
-
-    /**
-     * Resolve policy from module Policies folder using module registry.
-     */
-    private function resolvePolicyFromModule(string $modelClass): ?string
-    {
-        $modelName = (new \ReflectionClass($modelClass))->getShortName();
-        $policyClassName = $modelName . 'Policy';
-
-        // Get module slug from model namespace
-        $moduleSlug = $this->extractModuleSlug($modelClass);
-
-        // Try to find module via application module registry
-        $module = $this->findModule($moduleSlug);
-
-        if ($module === null) {
+        if (!$this->registry->hasPolicy($modelClass)) {
             return null;
         }
 
-        // Get custom policy path from manifest if configured
-        $policiesPath = $module->path('policies') ?? 'Policies';
-
-        // Build policy path using module's basePath()
-        $policyPath = $module->basePath() . DIRECTORY_SEPARATOR . $policiesPath . DIRECTORY_SEPARATOR . $policyClassName . '.php';
-
-        if (file_exists($policyPath)) {
-            // Try to construct namespace from module
-            $moduleName = ucfirst($moduleSlug);
-            $policyNamespace = "App\\Modules\\{$moduleName}\\Policies\\{$policyClassName}";
-
-            if (class_exists($policyNamespace)) {
-                return $policyNamespace;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Find module by slug from application module registry.
-     */
-    private function findModule(?string $slug): ?object
-    {
-        if ($slug === null) {
-            return null;
-        }
-
-        $modules = $this->getModuleRegistry();
-
-        if (isset($modules[$slug])) {
-            return $modules[$slug];
-        }
-
-        return null;
-    }
-
-    /**
-     * Get module registry from application.
-     *
-     * @return array<string, object>
-     */
-    private function getModuleRegistry(): array
-    {
-        static $modules = null;
-
-        if ($modules === null) {
-            $app = $this->getApplication();
-            if ($app !== null && method_exists($app, 'modules')) {
-                $modules = $app->modules();
-            }
-        }
-
-        return $modules ?? [];
-    }
-
-    /**
-     * Get Application instance.
-     */
-    private function getApplication(): ?object
-    {
-        static $app = null;
-
-        if ($app === null) {
-            global $app;
-        }
-
-        return $app;
-    }
-
-    /**
-     * Extract module slug from model class namespace.
-     */
-    private function extractModuleSlug(string $modelClass): ?string
-    {
-        $matches = [];
-
-        // App\Modules\Users\Models\User -> users
-        if (preg_match('/\\\\Modules\\\\([A-Za-z]+)\\\\Models\\\\/', $modelClass, $matches)) {
-            return strtolower($matches[1]);
-        }
-
-        // App\Models\User -> check for app/Policies
-        if (str_starts_with($modelClass, 'App\\Models\\')) {
-            $app = $this->getApplication();
-            if ($app !== null) {
-                $modelName = (new \ReflectionClass($modelClass))->getShortName();
-                $globalPolicyPath = base_path('app' . DIRECTORY_SEPARATOR . 'Policies' . DIRECTORY_SEPARATOR . $modelName . 'Policy.php');
-                if (file_exists($globalPolicyPath)) {
-                    return 'app';
-                }
-            }
-        }
-
-        return null;
+        return $this->registry->resolve($modelClass);
     }
 
     /**
