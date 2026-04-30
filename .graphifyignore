@@ -1,0 +1,26 @@
+# .graphifyignore
+vendor/
+node_modules/
+dist/
+docs/
+tests/
+routes/
+graphify-out/
+*.md
+*.MD
+*.xml
+composer.json
+composer.lock
+phpstan.neon
+.env.example
+LICENSE
+.gitignore
+.php-cs-fixer.*
+AGENTS.md
+SECURITY.md
+SUPPORT.md
+README.MD
+CONTRIBUTING.MD
+CODE_OF_CONDUCT.md
+.graphify_*.json
+*.generated.py

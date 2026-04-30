@@ -5,9 +5,11 @@ composer.lock
 .DS_Store
 .php-cs-fixer.cache
 .phpunit.cache/
+graphify-out/
 storage/*
 app/
 public/
 database/
 vendor/
 .kilo/
+.graphifyignore
