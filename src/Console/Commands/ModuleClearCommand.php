@@ -18,12 +18,13 @@ final class ModuleClearCommand extends AbstractCommand
     {
         $this->config()->loadIfExists(ModuleConfig::KEY . '.php');
         $config = array_replace_recursive(ModuleConfig::defaults($this->app()), $this->config()->getArray(ModuleConfig::KEY, []));
+        $cachePath = $config['cache'] ?? null;
 
-        if (is_file($config['cache'])) {
-            unlink($config['cache']);
+        if (is_string($cachePath) && $cachePath !== '' && is_file($cachePath)) {
+            unlink($cachePath);
         }
 
-        $output->writeln(sprintf('<info>Module cache cleared:</info> %s', $config['cache']));
+        $output->writeln(sprintf('<info>Module cache cleared:</info> %s', is_string($cachePath) ? $cachePath : '(not configured)'));
 
         return Command::SUCCESS;
     }
