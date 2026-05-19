@@ -96,7 +96,7 @@ php marwa schedule:table
 
 `make:seeder` generates a Faker-ready seeder in `database/seeders` that extends `Marwa\Framework\Database\Seeder`. Use it to bulk insert fake data with `faker()`, `insertMany()`, and `truncate()`.
 
-`make:module` generates a `marwa-module` compatible folder in the first configured `module.paths` location, including `manifest.php`, a module service provider, `routes/http.php`, `resources/views/index.twig`, and `Console/Commands`.
+`make:module` generates a `marwa-module` compatible folder in the first configured `module.paths` location, including `manifest.php`, `routes/http.php`, `resources/views/index.twig`, and `Console/Commands`. Pass `--provider` only when the module needs lifecycle hooks or custom bindings.
 
 For the generated provider to autoload in a host application, map `App\\Modules\\` to `modules/` in the consumer `composer.json`.
 

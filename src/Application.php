@@ -274,6 +274,11 @@ final class Application
         $this->add($id, $value);
     }
 
+    public function instance(string $id, mixed $value): void
+    {
+        $this->add($id, $value);
+    }
+
     public function addServiceProvider(string|ServiceProviderInterface|ModuleServiceProviderInterface $provider): void
     {
         if (is_string($provider)) {

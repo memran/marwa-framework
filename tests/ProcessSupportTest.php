@@ -124,7 +124,24 @@ PHP
         $outputs = json_decode($result->getOutput(), true, 512, JSON_THROW_ON_ERROR);
 
         self::assertSame(0, $result->getExitCode());
-        self::assertSame(['ok|' . str_replace('/', DIRECTORY_SEPARATOR, $this->basePath)], $outputs);
+        self::assertSame(
+            ['ok|' . $this->normalizePath($this->basePath)],
+            array_map(fn (string $output): string => $this->normalizeParallelOutput($output), $outputs)
+        );
+    }
+
+    private function normalizeParallelOutput(string $output): string
+    {
+        [$prefix, $path] = array_pad(explode('|', $output, 2), 2, '');
+
+        return $prefix . '|' . $this->normalizePath($path);
+    }
+
+    private function normalizePath(string $path): string
+    {
+        $resolved = realpath($path);
+
+        return $resolved === false ? $path : $resolved;
     }
 
     private function removeDirectory(string $path): void

@@ -37,6 +37,15 @@ Resolves a dependency from the container, registering it lazily when needed. Thi
 Short description:
 Registers and resolves a shared service.
 
+### `instance(string $abstract, mixed $value): void`
+
+```php
+$app->instance(App\Contracts\ClockInterface::class, $clock);
+```
+
+Short description:
+Registers a shared concrete instance. This is an alias of `add()` and `set()`.
+
 ### `basePath(string $path = ''): string`
 
 ```php

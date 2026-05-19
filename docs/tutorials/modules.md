@@ -9,7 +9,7 @@ Modules are discovered from configured directories, registered through `marwa-mo
 A module can contribute:
 
 - a `manifest.php` or `manifest.json`
-- one or more module service providers
+- optional module service providers
 - main navigation menu items
 - HTTP and API route files
 - Twig views
@@ -32,7 +32,6 @@ The generated structure matches the framework stubs:
 ```text
 modules/
 └── Blog/
-    ├── BlogServiceProvider.php
     ├── Console/
     │   └── Commands/
     ├── database/
@@ -119,9 +118,6 @@ return [
     'name' => 'Blog Module',
     'slug' => 'blog',
     'version' => '1.0.0',
-    'providers' => [
-        App\Modules\Blog\BlogServiceProvider::class,
-    ],
     'paths' => [
         'views' => 'resources/views',
         'commands' => 'Console/Commands',
@@ -143,7 +139,7 @@ Standard manifest fields that the runtime exposes are:
 - `name`
 - `slug`
 - `version`
-- `providers`
+- `providers` when present
 - `paths`
 - `routes`
 - `migrations`
@@ -152,7 +148,9 @@ The framework also reads `requires` and `dependencies` from the raw manifest for
 
 ## Module Service Provider
 
-Generated module providers implement `Marwa\Module\Contracts\ModuleServiceProviderInterface`:
+Module service providers are optional. You do not need one for manifest-driven view namespaces, route loading, command discovery, or module config loading.
+
+Generate a provider only when the module needs lifecycle hooks, container bindings, or runtime registration beyond what the manifest already provides. When needed, module providers implement `Marwa\Module\Contracts\ModuleServiceProviderInterface`:
 
 ```php
 <?php

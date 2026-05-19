@@ -172,7 +172,7 @@ final class CommandDiscovery
     private function autoloadPsr4Map(): array
     {
         foreach (spl_autoload_functions() ?: [] as $autoloadFunction) {
-            if (!is_array($autoloadFunction) || !isset($autoloadFunction[0]) || !$autoloadFunction[0] instanceof \Composer\Autoload\ClassLoader) {
+            if (!is_array($autoloadFunction) || !$autoloadFunction[0] instanceof \Composer\Autoload\ClassLoader) {
                 continue;
             }
 

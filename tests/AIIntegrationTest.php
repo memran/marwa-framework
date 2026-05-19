@@ -108,6 +108,58 @@ PHP);
         self::assertStringContainsString('fake completion: Hello framework', $tester->getDisplay());
     }
 
+    public function testKnownRemoteProviderRequiresApiKeyBeforeConversationStarts(): void
+    {
+        file_put_contents($this->basePath . '/config/ai.php', <<<'PHP'
+<?php
+
+return [
+    'default' => 'openai',
+    'providers' => [
+        'openai' => [
+            'model' => 'gpt-4o',
+        ],
+    ],
+];
+PHP);
+
+        putenv('OPENAI_API_KEY');
+
+        $app = $this->bootstrapApp();
+        $manager = $app->make(AIManagerInterface::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('AI provider [openai] requires an API key');
+
+        $manager->conversation('Hello framework');
+    }
+
+    public function testApiKeyValidationCanBeExplicitlyDisabledForLocalCompatibleEndpoints(): void
+    {
+        file_put_contents($this->basePath . '/config/ai.php', <<<'PHP'
+<?php
+
+return [
+    'default' => 'openai',
+    'providers' => [
+        'openai' => [
+            'model' => 'gpt-4o',
+            'base_url' => 'http://localhost:1234/v1/',
+            'require_api_key' => false,
+        ],
+    ],
+];
+PHP);
+
+        putenv('OPENAI_API_KEY');
+
+        $app = $this->bootstrapApp();
+        $manager = $app->make(AIManagerInterface::class);
+        $driver = $manager->driver('openai');
+
+        self::assertSame('openai', $driver->getProvider());
+    }
+
     private function bootstrapApp(): Application
     {
         return new Application($this->basePath);

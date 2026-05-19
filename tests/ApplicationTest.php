@@ -46,4 +46,15 @@ final class ApplicationTest extends TestCase
 
         self::assertSame($first, $second);
     }
+
+    public function testInstanceAliasesSharedBindingRegistration(): void
+    {
+        $app = new Application($this->basePath);
+        $service = new \stdClass();
+
+        $app->instance('demo.service', $service);
+
+        self::assertTrue($app->has('demo.service'));
+        self::assertSame($service, $app->make('demo.service'));
+    }
 }

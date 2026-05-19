@@ -834,15 +834,49 @@ PHP
 
         $modulePath = $this->basePath . '/modules/Blog';
         self::assertFileExists($modulePath . '/manifest.php');
-        self::assertFileExists($modulePath . '/BlogServiceProvider.php');
+        self::assertFileDoesNotExist($modulePath . '/BlogServiceProvider.php');
         self::assertFileExists($modulePath . '/routes/http.php');
         self::assertFileExists($modulePath . '/resources/views/index.twig');
         self::assertDirectoryExists($modulePath . '/Console/Commands');
 
         $manifest = (string) file_get_contents($modulePath . '/manifest.php');
         self::assertStringContainsString("'slug' => 'blog'", $manifest);
-        self::assertStringContainsString("App\\Modules\\Blog\\BlogServiceProvider::class", $manifest);
+        self::assertStringNotContainsString("'providers' => [", $manifest);
         self::assertStringContainsString("'commands' => 'Console/Commands'", $manifest);
+    }
+
+    public function testMakeModuleCommandCanGenerateOptionalProviderScaffold(): void
+    {
+        file_put_contents(
+            $this->basePath . '/config/module.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => ['{$this->basePath}/modules'],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('make:module');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([
+            'name' => 'Shop',
+            '--provider' => true,
+        ]);
+
+        self::assertSame(0, $status);
+
+        $modulePath = $this->basePath . '/modules/Shop';
+        self::assertFileExists($modulePath . '/ShopServiceProvider.php');
+
+        $manifest = (string) file_get_contents($modulePath . '/manifest.php');
+        self::assertStringContainsString("'App\\Modules\\Shop\\ShopServiceProvider'", $manifest);
     }
 
     public function testMakeThemeCommandCreatesThemeScaffoldInViewsThemesDirectory(): void

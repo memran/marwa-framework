@@ -20,6 +20,7 @@ use Marwa\MCP\PromptResult as VendorPromptResult;
 use Marwa\MCP\ResourceResult as VendorResourceResult;
 use Marwa\MCP\ServerFactory;
 use Marwa\MCP\StdioTransport;
+use Marwa\MCP\ToolResult as VendorToolResult;
 
 final class MCPAdapter implements MCPServerInterface
 {
@@ -52,9 +53,9 @@ final class MCPAdapter implements MCPServerInterface
 
         $config = $this->configuration();
         $this->server = ServerFactory::createDefault(
-            permissionPolicy: new AllowAllPermissionPolicy(),
-            name: (string) ($config['name'] ?? 'marwa-mcp'),
-            version: (string) ($config['version'] ?? '1.0.0')
+            new AllowAllPermissionPolicy(),
+            (string) ($config['name'] ?? 'marwa-mcp'),
+            (string) ($config['version'] ?? '1.0.0')
         );
 
         return $this->server;
@@ -86,11 +87,11 @@ final class MCPAdapter implements MCPServerInterface
             /**
              * @param array<string, mixed> $arguments
              */
-            public function call(array $arguments): \Marwa\MCP\ToolResult
+            public function call(array $arguments): VendorToolResult
             {
                 $result = $this->tool->execute($arguments);
 
-                return \Marwa\MCP\ToolResult::text(
+                return VendorToolResult::text(
                     $result->getContent(),
                     $result->isError()
                 );
@@ -123,12 +124,7 @@ final class MCPAdapter implements MCPServerInterface
                 return $this->resource->description();
             }
 
-            public function mimeType(): string
-            {
-                return $this->resource->mimeType();
-            }
-
-            public function read(): \Marwa\MCP\ResourceResult
+            public function read(): VendorResourceResult
             {
                 $result = $this->resource->read();
 
@@ -172,7 +168,7 @@ final class MCPAdapter implements MCPServerInterface
             /**
              * @param array<string, mixed> $arguments
              */
-            public function get(array $arguments = []): \Marwa\MCP\PromptResult
+            public function get(array $arguments = []): VendorPromptResult
             {
                 $result = $this->prompt->get($arguments);
 

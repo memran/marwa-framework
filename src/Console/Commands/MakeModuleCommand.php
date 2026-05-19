@@ -22,7 +22,8 @@ final class MakeModuleCommand extends AbstractCommand
     {
         $this
             ->addArgument('name', InputArgument::REQUIRED, 'Module name, for example Blog.')
-            ->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite an existing manifest and provider files.');
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite existing module files.')
+            ->addOption('provider', null, InputOption::VALUE_NONE, 'Generate an optional module service provider scaffold.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -41,6 +42,7 @@ final class MakeModuleCommand extends AbstractCommand
         $modulePath = rtrim($modulesRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $moduleName;
         $providerClass = $moduleName . 'ServiceProvider';
         $providerNamespace = 'App\\Modules\\' . $moduleName;
+        $generateProvider = (bool) $input->getOption('provider');
 
         $this->ensureDirectory($modulePath);
         $this->ensureDirectory($modulePath . '/routes');
@@ -49,7 +51,7 @@ final class MakeModuleCommand extends AbstractCommand
         $this->ensureDirectory($modulePath . '/database/migrations');
 
         $this->writeStubFile(
-            $this->frameworkStubPath('console/module-manifest.stub'),
+            $this->frameworkStubPath($generateProvider ? 'console/module-manifest-with-provider.stub' : 'console/module-manifest.stub'),
             $modulePath . '/manifest.php',
             [
                 '{{ module_name }}' => $moduleName . ' Module',
@@ -59,16 +61,18 @@ final class MakeModuleCommand extends AbstractCommand
             (bool) $input->getOption('force')
         );
 
-        $this->writeStubFile(
-            $this->frameworkStubPath('console/module-provider.stub'),
-            $modulePath . '/' . $providerClass . '.php',
-            [
-                '{{ namespace }}' => $providerNamespace,
-                '{{ class }}' => $providerClass,
-                '{{ slug }}' => $moduleSlug,
-            ],
-            (bool) $input->getOption('force')
-        );
+        if ($generateProvider) {
+            $this->writeStubFile(
+                $this->frameworkStubPath('console/module-provider.stub'),
+                $modulePath . '/' . $providerClass . '.php',
+                [
+                    '{{ namespace }}' => $providerNamespace,
+                    '{{ class }}' => $providerClass,
+                    '{{ slug }}' => $moduleSlug,
+                ],
+                (bool) $input->getOption('force')
+            );
+        }
 
         $this->writeStubFile(
             $this->frameworkStubPath('console/module-route.stub'),

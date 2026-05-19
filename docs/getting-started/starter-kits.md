@@ -90,7 +90,10 @@ This creates a `modules/Blog/` directory with:
 ```
 modules/Blog/
 ├── manifest.php
-├── BlogServiceProvider.php
+├── Console/
+│   └── Commands/
+├── routes/
+│   └── http.php
 ├── Controllers/
 ├── Models/
 ├── Resources/
