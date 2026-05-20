@@ -77,7 +77,7 @@ SQL);
             'meta' => ['role' => 'admin'],
         ]);
 
-        self::assertTrue($user->exists());
+        self::assertNotNull($user->getKey());
         self::assertSame('crud_users', CrudUser::tableName());
         self::assertSame(['role' => 'admin'], $user->toArray()['meta']);
         self::assertTrue($user->toArray()['active']);
