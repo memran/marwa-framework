@@ -133,6 +133,21 @@ PHP
         self::assertSame('1.2.3', $console->getVersion());
     }
 
+    public function testConfigCacheCommandIsSkippedOutsideProduction(): void
+    {
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('config:cache');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([]);
+
+        self::assertSame(0, $status);
+        self::assertStringContainsString('production-only', $tester->getDisplay());
+        self::assertFileDoesNotExist($this->basePath . '/storage/cache/config.php');
+    }
+
     public function testApplicationAllowsProgrammaticCommandRegistration(): void
     {
         $app = new Application($this->basePath);

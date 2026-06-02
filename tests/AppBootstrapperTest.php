@@ -9,6 +9,7 @@ use Marwa\Framework\Adapters\ErrorHandlerAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\ProviderBootstrapper;
+use Marwa\Framework\Providers\KernelServiceProvider;
 use Marwa\Framework\Tests\Fixtures\Providers\CountingServiceProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +22,7 @@ final class AppBootstrapperTest extends TestCase
         $this->basePath = sys_get_temp_dir() . '/marwa-bootstrapper-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        $this->writeEnvironment('testing');
 
         file_put_contents(
             $this->basePath . '/config/app.php',
@@ -71,7 +72,7 @@ PHP
         self::assertSame(0, CountingServiceProvider::$registerCalls);
     }
 
-    public function testBootstrapUsesConfigCacheWhenAvailable(): void
+    public function testBootstrapIgnoresConfigCacheOutsideProduction(): void
     {
         mkdir($this->basePath . '/storage/cache', 0777, true);
         file_put_contents(
@@ -96,6 +97,38 @@ PHP
         $bootstrapper = $app->make(AppBootstrapper::class);
         $appConfig = $bootstrapper->bootstrap();
 
+        self::assertCount(2, $appConfig['providers']);
+        self::assertFalse($appConfig['debugbar']);
+        self::assertSame([], $appConfig['collectors']);
+    }
+
+    public function testBootstrapUsesConfigCacheInProduction(): void
+    {
+        $this->writeEnvironment('production');
+        mkdir($this->basePath . '/storage/cache', 0777, true);
+        file_put_contents(
+            $this->basePath . '/storage/cache/config.php',
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    'app' => [
+        'providers' => [],
+        'middlewares' => [],
+        'debugbar' => true,
+        'collectors' => ['cached'],
+    ],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $bootstrapper = $app->make(AppBootstrapper::class);
+        $appConfig = $bootstrapper->bootstrap();
+
+        self::assertSame([KernelServiceProvider::class], $appConfig['providers']);
         self::assertTrue($appConfig['debugbar']);
         self::assertSame(['cached'], $appConfig['collectors']);
     }
@@ -122,5 +155,13 @@ PHP
         }
 
         self::assertInstanceOf(ErrorHandler::class, $app->make(ErrorHandlerAdapter::class)->handler());
+    }
+
+    private function writeEnvironment(string $environment): void
+    {
+        file_put_contents(
+            $this->basePath . '/.env',
+            sprintf("APP_ENV=%s\nAPP_DEBUG=%s\nTIMEZONE=UTC\n", $environment, $environment === 'production' ? 'false' : 'true')
+        );
     }
 }

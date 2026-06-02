@@ -79,8 +79,7 @@ final class FileQueue implements QueueInterface
             }
 
             try {
-                // Re-read job after acquiring lock to prevent race condition
-                $job = $this->readJob($file);
+                $job = $this->readJobFromHandle($handle, $file);
 
                 if ($job === null || $job->availableAt() > $timestamp) {
                     flock($handle, LOCK_UN);
@@ -260,9 +259,13 @@ final class FileQueue implements QueueInterface
         }
     }
 
-    private function readJob(string $path): ?QueuedJob
+    /**
+     * @param resource $handle
+     */
+    private function readJobFromHandle($handle, string $path): ?QueuedJob
     {
-        $contents = file_get_contents($path);
+        rewind($handle);
+        $contents = stream_get_contents($handle);
 
         if (!is_string($contents) || $contents === '') {
             $this->logger->warning('Skipping unreadable queued job file.', [

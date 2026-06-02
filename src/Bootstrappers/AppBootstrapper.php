@@ -41,7 +41,7 @@ final class AppBootstrapper
 
         $cacheFile = BootstrapConfig::defaults($this->app)['configCache'];
 
-        if (is_file($cacheFile)) {
+        if (BootstrapConfig::shouldCache() && is_file($cacheFile)) {
             $cached = require $cacheFile;
 
             if (!is_array($cached)) {

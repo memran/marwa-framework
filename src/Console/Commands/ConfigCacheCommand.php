@@ -16,6 +16,12 @@ final class ConfigCacheCommand extends AbstractCommand
 {
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if (!BootstrapConfig::shouldCache()) {
+            $output->writeln('<comment>Config cache is production-only. Skipping cache build.</comment>');
+
+            return Command::SUCCESS;
+        }
+
         $configDir = $this->basePath('config');
         $cacheFile = BootstrapConfig::defaults($this->app())['configCache'];
 

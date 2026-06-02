@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Middlewares;
 
+use GuzzleHttp\Psr7\Utils;
 use Marwa\Framework\Config\AppConfig;
 use Marwa\Framework\Supports\Config;
 use Psr\Http\Message\ResponseInterface;
@@ -40,24 +41,77 @@ final class DebugbarMiddleware implements MiddlewareInterface
             return $response;
         }
 
+        return $this->injectDebugBar($response, $barHtml);
+    }
+
+    private function injectDebugBar(ResponseInterface $response, string $barHtml): ResponseInterface
+    {
         $body = $response->getBody();
+
         if ($body->isSeekable()) {
             $body->rewind();
         }
-        $html = (string) $body;
 
-        $pos = stripos($html, '</body>');
-        if ($pos !== false) {
-            $html = substr($html, 0, $pos) . $barHtml . substr($html, $pos);
-        } else {
-            $html .= $barHtml;
+        $output = fopen('php://temp', 'w+b');
+
+        if ($output === false) {
+            return $response;
         }
 
-        $body->rewind();
-        $body->write($html);
+        $needle = '</body>';
+        $needleLength = strlen($needle);
+        $carry = '';
+        $injected = false;
+
+        while (!$body->eof()) {
+            $chunk = $body->read(8192);
+
+            if ($chunk === '') {
+                break;
+            }
+
+            $search = $carry . $chunk;
+
+            if (!$injected) {
+                $position = stripos($search, $needle);
+
+                if ($position !== false) {
+                    fwrite($output, substr($search, 0, $position));
+                    fwrite($output, $barHtml);
+                    fwrite($output, substr($search, $position));
+                    $injected = true;
+                    $carry = '';
+
+                    continue;
+                }
+
+                $carryLength = max(0, $needleLength - 1);
+
+                if (strlen($search) <= $carryLength) {
+                    $carry = $search;
+
+                    continue;
+                }
+
+                $writeLength = strlen($search) - $carryLength;
+                fwrite($output, substr($search, 0, $writeLength));
+                $carry = substr($search, -$carryLength);
+
+                continue;
+            }
+
+            fwrite($output, $chunk);
+        }
+
+        if (!$injected) {
+            fwrite($output, $carry . $barHtml);
+        }
+
+        rewind($output);
+        $rewrittenBody = Utils::streamFor($output);
 
         return $response
-            ->withBody($body)
-            ->withHeader('Content-Length', (string) strlen($html));
+            ->withBody($rewrittenBody)
+            ->withHeader('Content-Length', (string) ($rewrittenBody->getSize() ?? 0));
     }
 }

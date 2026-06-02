@@ -25,4 +25,9 @@ final class BootstrapConfig
             'moduleCache' => (string) env('APP_MODULE_CACHE', $app->basePath('storage/cache/modules.php')),
         ];
     }
+
+    public static function shouldCache(): bool
+    {
+        return (string) env('APP_ENV', 'production') === 'production';
+    }
 }

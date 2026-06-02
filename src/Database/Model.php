@@ -124,7 +124,7 @@ abstract class Model extends BaseModel
     /**
      * @param array<string, mixed>|object $row
      */
-    protected static function hydrateRow(array|object $row): static
+    public static function hydrateRow(array|object $row): static
     {
         $data = is_array($row) ? $row : (array) $row;
 

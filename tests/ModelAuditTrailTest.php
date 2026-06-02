@@ -102,18 +102,18 @@ SQL);
         ]);
         $restorable->delete();
 
-        $trashed = AuditUser::withTrashed()->findBy('email', 'restore@example.test');
+        $trashed = AuditUser::withTrashed()->where('email', '=', 'restore@example.test')->first();
         self::assertInstanceOf(AuditUser::class, $trashed);
         self::assertTrue($trashed->trashed());
         self::assertTrue($trashed->restore());
-        self::assertFalse(AuditUser::withTrashed()->findBy('email', 'restore@example.test')->trashed());
+        self::assertFalse(AuditUser::withTrashed()->where('email', '=', 'restore@example.test')->first()->trashed());
 
         $forceDeleted = AuditUser::create([
             'name' => 'Force Delete Me',
             'email' => 'force@example.test',
         ]);
         self::assertTrue($forceDeleted->forceDelete());
-        self::assertNull(AuditUser::withTrashed()->findBy('email', 'force@example.test'));
+        self::assertNull(AuditUser::withTrashed()->where('email', '=', 'force@example.test')->first());
 
         $destroyedOne = AuditUser::create([
             'name' => 'Destroy One',
