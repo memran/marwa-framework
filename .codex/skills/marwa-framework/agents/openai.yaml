@@ -1,0 +1,6 @@
+interface:
+  display_name: "Marwa Framework"
+  short_description: "Repo guidance for Marwa Framework"
+  default_prompt: "Use $marwa-framework to work in the Marwa Framework repo with the project conventions."
+policy:
+  allow_implicit_invocation: true
