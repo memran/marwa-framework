@@ -233,7 +233,7 @@ final class ViewAdapter
     {
         $engineReflection = new \ReflectionObject($this->engine);
         $twigProperty = $engineReflection->getProperty('twig');
-        $twigProperty->setAccessible(true);
+        //$twigProperty->setAccessible(true);
         /** @var \Twig\Environment $twig */
         $twig = $twigProperty->getValue($this->engine);
         $twig->setCache(false);
