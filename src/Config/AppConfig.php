@@ -23,9 +23,10 @@ final class AppConfig
      *     debugbar: bool,
      *     useDebugPanel: bool,
      *     collectors: list<string>,
-     *     maintenance: array{template: string|null, message: string},
-     *     error404: array{template: string|null}
-     * }
+ *     maintenance: array{template: string|null, message: string},
+ *     error404: array{template: string|null},
+ *     error500: array{template: string|null}
+ * }
      */
     public static function defaults(): array
     {
@@ -50,6 +51,9 @@ final class AppConfig
             ],
             'error404' => [
                 'template' => 'errors/404.twig',
+            ],
+            'error500' => [
+                'template' => 'errors/500.twig',
             ],
         ];
     }
