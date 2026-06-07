@@ -129,15 +129,25 @@ final class ErrorHandlerAdapter
 
     private function resolveRenderer(?string $rendererClass): RendererInterface
     {
+        $base = null;
+
         if (is_string($rendererClass)
             && class_exists($rendererClass)
             && is_subclass_of($rendererClass, RendererInterface::class)) {
             /** @var RendererInterface $renderer */
-            $renderer = new $rendererClass();
-
-            return $renderer;
+            $base = new $rendererClass();
         }
 
-        return new FallbackRenderer();
+        if ($base === null) {
+            $base = new FallbackRenderer();
+        }
+
+        $template = $this->config->getString(AppConfig::KEY . '.error500.template', '');
+
+        if ($template !== '' && !($base instanceof ErrorViewRenderer)) {
+            return new ErrorViewRenderer(fallback: $base, template: $template);
+        }
+
+        return $base;
     }
 }
