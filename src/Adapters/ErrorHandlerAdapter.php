@@ -134,7 +134,7 @@ final class ErrorHandlerAdapter
         if (is_string($rendererClass)
             && class_exists($rendererClass)
             && is_subclass_of($rendererClass, RendererInterface::class)) {
-            /** @var RendererInterface $renderer */
+            /** @var RendererInterface $base */
             $base = new $rendererClass();
         }
 

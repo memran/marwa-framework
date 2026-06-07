@@ -25,7 +25,7 @@ final class ErrorViewRenderer implements RendererInterface
                 'appName' => $appName,
                 'dev' => $dev,
                 'requestId' => $this->requestId(),
-            ])->withStatus(500)->body();
+            ])->withStatus(500)->getBody()->getContents();
 
             echo $html;
         } catch (Throwable) {
@@ -43,7 +43,7 @@ final class ErrorViewRenderer implements RendererInterface
                 'appName' => $appName,
                 'dev' => false,
                 'requestId' => $this->requestId(),
-            ])->withStatus(500)->body();
+            ])->withStatus(500)->getBody()->getContents();
 
             echo $html;
         } catch (Throwable) {
