@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 use Marwa\Support\Helper;
 use Marwa\Support\Random;
+use Symfony\Component\VarDumper\VarDumper;
 
 if (!function_exists('generate_key')) {
     /**
@@ -87,9 +88,22 @@ if (!function_exists('tap')) {
     }
 }
 
+if (!function_exists('d')) {
+    function d(mixed ...$vars): void
+    {
+        foreach ($vars as $var) {
+            VarDumper::dump($var);
+        }
+    }
+}
+
 if (!function_exists('dd')) {
     function dd(mixed ...$vars): never
     {
-        Helper::dd(...$vars);
+        foreach ($vars as $var) {
+            VarDumper::dump($var);
+        }
+
+        exit(1);
     }
 }
