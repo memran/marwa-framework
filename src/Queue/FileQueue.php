@@ -34,7 +34,7 @@ final class FileQueue implements QueueInterface
             throw new \RuntimeException('Queue support is disabled.');
         }
 
-        $queueName = $queue !== null && $queue !== '' ? $queue : $config['default'];
+        $queueName = $this->resolveQueueName($queue, $config['default']);
         $job = new QueuedJob(
             id: bin2hex(random_bytes(16)),
             name: $name,
@@ -64,7 +64,7 @@ final class FileQueue implements QueueInterface
             return null;
         }
 
-        $queueName = $queue !== null && $queue !== '' ? $queue : $config['default'];
+        $queueName = $this->resolveQueueName($queue, $config['default']);
         $this->ensureQueueDirectories($queueName);
         $timestamp = ($now ?? new \DateTimeImmutable())->getTimestamp();
 
@@ -164,7 +164,7 @@ final class FileQueue implements QueueInterface
 
     public function size(?string $queue = null): int
     {
-        $queueName = $queue !== null && $queue !== '' ? $queue : $this->configuration()['default'];
+        $queueName = $this->resolveQueueName($queue, $this->configuration()['default']);
 
         return count($this->pendingFiles($queueName));
     }
@@ -202,7 +202,24 @@ final class FileQueue implements QueueInterface
 
     private function queueDirectory(string $queue): string
     {
+        $this->validateQueueName($queue);
+
         return rtrim($this->configuration()['path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $queue;
+    }
+
+    private function resolveQueueName(?string $queue, string $default): string
+    {
+        $queueName = $queue !== null && $queue !== '' ? $queue : $default;
+        $this->validateQueueName($queueName);
+
+        return $queueName;
+    }
+
+    private function validateQueueName(string $queue): void
+    {
+        if ($queue === '' || preg_match('/\A[A-Za-z0-9_.-]+\z/', $queue) !== 1 || $queue === '.' || $queue === '..') {
+            throw new \InvalidArgumentException(sprintf('Invalid queue name [%s].', $queue));
+        }
     }
 
     private function ensureQueueDirectories(string $queue): void

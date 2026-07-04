@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use FilesystemIterator;
+use Marwa\Framework\Adapters\Cache\FileStore;
 use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 use Marwa\Framework\Application;
 use Marwa\Framework\Contracts\CacheInterface;
@@ -178,6 +179,41 @@ PHP,
         self::assertNull($app->cache()->get('runtime-only'));
     }
 
+    public function testFileCacheDoesNotWakeObjectsFromSerializedPayloads(): void
+    {
+        $store = new FileStore($this->basePath . '/storage/cache/framework');
+
+        self::assertTrue($store->set('payload', 'safe', 60));
+
+        $cacheFiles = $this->collectFiles($this->basePath . '/storage/cache/framework');
+        self::assertCount(1, $cacheFiles);
+
+        CacheWakeupProbe::$woken = false;
+        file_put_contents($cacheFiles[0], serialize([
+            'value' => new CacheWakeupProbe(),
+            'expiresAt' => time() + 60,
+            'version' => 1,
+        ]));
+
+        $value = $store->get('payload');
+
+        self::assertFalse(CacheWakeupProbe::$woken);
+        self::assertNotInstanceOf(CacheWakeupProbe::class, $value);
+    }
+
+    public function testFileCacheStillSupportsFrameworkWrittenObjects(): void
+    {
+        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nAPP_KEY=test-cache-key\nTIMEZONE=UTC\n");
+        $store = new FileStore($this->basePath . '/storage/cache/framework');
+
+        self::assertTrue($store->set('payload', new CacheObjectPayload('ready'), 60));
+
+        $value = $store->get('payload');
+
+        self::assertInstanceOf(CacheObjectPayload::class, $value);
+        self::assertSame('ready', $value->status);
+    }
+
     private function createBasePathWithoutCacheConfig(): string
     {
         $basePath = sys_get_temp_dir() . '/marwa-cache-file-' . bin2hex(random_bytes(6));
@@ -236,4 +272,19 @@ PHP,
 
         @rmdir($directory);
     }
+}
+
+final class CacheWakeupProbe
+{
+    public static bool $woken = false;
+
+    public function __wakeup(): void
+    {
+        self::$woken = true;
+    }
+}
+
+final class CacheObjectPayload
+{
+    public function __construct(public string $status) {}
 }

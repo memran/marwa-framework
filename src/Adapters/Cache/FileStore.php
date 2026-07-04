@@ -9,6 +9,7 @@ use MatthiasMullie\Scrapbook\KeyValueStore;
 final class FileStore implements KeyValueStore
 {
     private const EXPIRE_RELATIVE_THRESHOLD = 2592000;
+    private const PAYLOAD_VERSION = 2;
 
     public function __construct(
         private string $root,
@@ -230,13 +231,9 @@ final class FileStore implements KeyValueStore
             return null;
         }
 
-        try {
-            $payload = unserialize($contents, ['allowed_classes' => true]);
-        } catch (\Throwable) {
-            $payload = false;
-        }
+        $payload = $this->decodePayload($contents);
 
-        if (!is_array($payload) || !array_key_exists('value', $payload) || !array_key_exists('expiresAt', $payload) || !array_key_exists('version', $payload)) {
+        if ($payload === null) {
             @unlink($path);
 
             return null;
@@ -280,7 +277,7 @@ final class FileStore implements KeyValueStore
                 $currentVersion = is_array($existing) ? ((int) $existing['version']) + 1 : 1;
             }
 
-            $payload = serialize([
+            $payload = $this->encodePayload([
                 'value' => $value,
                 'expiresAt' => $this->normalizeExpire($expire),
                 'version' => $currentVersion,
@@ -314,21 +311,9 @@ final class FileStore implements KeyValueStore
             return null;
         }
 
-        try {
-            $payload = unserialize($contents, ['allowed_classes' => true]);
-        } catch (\Throwable) {
-            return null;
-        }
+        $payload = $this->decodePayload($contents);
 
-        if (!is_array($payload) || !array_key_exists('value', $payload) || !array_key_exists('expiresAt', $payload) || !array_key_exists('version', $payload)) {
-            return null;
-        }
-
-        return [
-            'value' => $payload['value'],
-            'expiresAt' => (int) $payload['expiresAt'],
-            'version' => (int) $payload['version'],
-        ];
+        return $payload;
     }
 
     private function changeNumericValue(string $key, int $offset, int $initial, int $expire, bool $increment): int|false
@@ -360,7 +345,7 @@ final class FileStore implements KeyValueStore
 
             $current = $increment ? $current + $offset : $current - $offset;
 
-            $serialized = serialize([
+            $serialized = $this->encodePayload([
                 'value' => $current,
                 'expiresAt' => $this->normalizeExpire($expire),
                 'version' => $payload === null ? 1 : $payload['version'] + 1,
@@ -383,6 +368,88 @@ final class FileStore implements KeyValueStore
         $hash = hash('sha256', $this->namespace . '|' . $key);
 
         return $this->collectionRoot() . DIRECTORY_SEPARATOR . substr($hash, 0, 2) . DIRECTORY_SEPARATOR . $hash . '.cache';
+    }
+
+    /**
+     * @param array{value: mixed, expiresAt: int, version: int} $payload
+     */
+    private function encodePayload(array $payload): string
+    {
+        $serialized = serialize($payload);
+
+        return serialize([
+            'version' => self::PAYLOAD_VERSION,
+            'payload' => $serialized,
+            'mac' => hash_hmac('sha256', $serialized, $this->signatureKey()),
+        ]);
+    }
+
+    /**
+     * @return array{value: mixed, expiresAt: int, version: int}|null
+     */
+    private function decodePayload(string $contents): ?array
+    {
+        try {
+            $envelope = unserialize($contents, ['allowed_classes' => false]);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if (is_array($envelope) && $this->isSignedEnvelope($envelope)) {
+            $serialized = $envelope['payload'];
+
+            try {
+                $payload = unserialize($serialized, ['allowed_classes' => true]);
+            } catch (\Throwable) {
+                return null;
+            }
+
+            return $this->normalizePayload($payload);
+        }
+
+        return $this->normalizePayload($envelope);
+    }
+
+    /**
+     * @param array<mixed> $envelope
+     */
+    private function isSignedEnvelope(array $envelope): bool
+    {
+        if (($envelope['version'] ?? null) !== self::PAYLOAD_VERSION) {
+            return false;
+        }
+
+        if (!is_string($envelope['payload'] ?? null) || !is_string($envelope['mac'] ?? null)) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $envelope['payload'], $this->signatureKey());
+
+        return hash_equals($expected, $envelope['mac']);
+    }
+
+    /**
+     * @return array{value: mixed, expiresAt: int, version: int}|null
+     */
+    private function normalizePayload(mixed $payload): ?array
+    {
+        if (!is_array($payload) || !array_key_exists('value', $payload) || !array_key_exists('expiresAt', $payload) || !array_key_exists('version', $payload)) {
+            return null;
+        }
+
+        return [
+            'value' => $payload['value'],
+            'expiresAt' => (int) $payload['expiresAt'],
+            'version' => (int) $payload['version'],
+        ];
+    }
+
+    private function signatureKey(): string
+    {
+        $appKey = env('APP_KEY');
+        $secret = is_string($appKey) && trim($appKey) !== '' ? trim($appKey) : $this->root;
+
+        return hash('sha256', $secret . '|' . $this->namespace, true);
     }
 
     private function collectionRoot(): string

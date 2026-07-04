@@ -85,6 +85,51 @@ final class StorageSupportTest extends TestCase
         $storage->makeDirectory('../outside');
     }
 
+    public function testStorageWriteRejectsTraversalBeforeFilesystemAdapter(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+
+        $this->expectException(\RuntimeException::class);
+        $storage->write('../outside.txt', 'blocked');
+    }
+
+    public function testStorageWriteStreamRejectsTraversalBeforeFilesystemAdapter(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+        $stream = fopen('php://temp', 'r+');
+
+        self::assertIsResource($stream);
+        fwrite($stream, 'blocked');
+        rewind($stream);
+
+        try {
+            $this->expectException(\RuntimeException::class);
+            $storage->writeStream('../outside.txt', $stream);
+        } finally {
+            fclose($stream);
+        }
+    }
+
+    public function testStorageListingRejectsTraversalBeforeFilesystemAdapter(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+
+        $this->expectException(\RuntimeException::class);
+        $storage->files('../', true);
+    }
+
+    public function testStoragePathRejectsTraversal(): void
+    {
+        $app = new Application($this->basePath);
+        $storage = $app->storage();
+
+        $this->expectException(\RuntimeException::class);
+        $storage->path('../outside.txt');
+    }
+
     public function testStorageDeleteDirectoryRejectsTraversal(): void
     {
         $app = new Application($this->basePath);

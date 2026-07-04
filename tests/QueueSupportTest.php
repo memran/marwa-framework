@@ -33,18 +33,7 @@ final class QueueSupportTest extends TestCase
             restore_exception_handler();
         }
 
-        foreach ([
-            $this->basePath . '/config/queue.php',
-            $this->basePath . '/config/database.php',
-            $this->basePath . '/.env',
-            $this->basePath . '/database/database.sqlite',
-        ] as $file) {
-            @unlink($file);
-        }
-
-        @rmdir($this->basePath . '/config');
-        @rmdir($this->basePath . '/database');
-        @rmdir($this->basePath);
+        $this->removeDirectory($this->basePath);
 
         unset($GLOBALS['marwa_app']);
     }
@@ -137,5 +126,64 @@ SQL);
         self::assertGreaterThanOrEqual($now, $job->availableAt());
         self::assertLessThanOrEqual($now + 2, $job->availableAt());
         self::assertSame($job->availableAt(), (int) $manager->getPdo()->query('SELECT available_at FROM jobs LIMIT 1')->fetchColumn());
+    }
+
+    public function testFileQueueRejectsTraversalQueueNames(): void
+    {
+        $app = new Application($this->basePath);
+        $queue = $app->queue();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $queue->push('mail:send', [], '../../outside');
+    }
+
+    public function testFileQueueRejectsTraversalQueueNamesWhenPopping(): void
+    {
+        $app = new Application($this->basePath);
+        $queue = $app->queue();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $queue->pop('../escape');
+    }
+
+    public function testFileQueueAllowsCommonQueueNameCharacters(): void
+    {
+        $app = new Application($this->basePath);
+        $queue = $app->queue();
+
+        $job = $queue->push('mail:send', [], 'emails.high-priority_1');
+
+        self::assertSame('emails.high-priority_1', $job->queue());
+        self::assertSame(1, $queue->size('emails.high-priority_1'));
+    }
+
+    private function removeDirectory(string $path): void
+    {
+        if (!is_dir($path)) {
+            return;
+        }
+
+        $items = scandir($path);
+
+        if (!is_array($items)) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $current = $path . DIRECTORY_SEPARATOR . $item;
+
+            if (is_dir($current)) {
+                $this->removeDirectory($current);
+                continue;
+            }
+
+            @unlink($current);
+        }
+
+        @rmdir($path);
     }
 }

@@ -44,6 +44,8 @@ final class Storage
 
     public function path(string $path = ''): string
     {
+        $this->validatePath($path);
+
         $root = $this->diskConfig()['root'] ?? '';
 
         return rtrim($root . ($path !== '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''), DIRECTORY_SEPARATOR);
@@ -87,6 +89,7 @@ final class Storage
      */
     public function write(string $path, string $contents, array $config = []): bool
     {
+        $this->validatePath($path);
         $this->filesystem()->write($path, $contents, $config);
 
         return true;
@@ -109,6 +112,7 @@ final class Storage
      */
     public function writeStream(string $path, $stream, array $config = []): bool
     {
+        $this->validatePath($path);
         $this->filesystem()->writeStream($path, $stream, $config);
 
         return true;
@@ -201,6 +205,8 @@ final class Storage
      */
     public function files(string $directory = '', bool $deep = false): array
     {
+        $this->validatePath($directory);
+
         return $this->extractPaths($this->filesystem()->listContents($directory, $deep), FileAttributes::class);
     }
 
@@ -209,6 +215,8 @@ final class Storage
      */
     public function directories(string $directory = '', bool $deep = false): array
     {
+        $this->validatePath($directory);
+
         return $this->extractPaths($this->filesystem()->listContents($directory, $deep), DirectoryAttributes::class);
     }
 
@@ -286,9 +294,17 @@ final class Storage
 
     private function validatePath(string $path): void
     {
-        $normalizedPath = '/' . ltrim(str_replace(['\\', '..'], ['/', ''], $path), '/');
+        if ($path === '') {
+            return;
+        }
 
-        if (str_contains($normalizedPath, '../') || str_contains($normalizedPath, '/..')) {
+        if (str_contains($path, "\0")) {
+            throw new \RuntimeException(sprintf('Invalid null byte detected in path [%s].', $path));
+        }
+
+        $segments = explode('/', str_replace('\\', '/', $path));
+
+        if (in_array('..', $segments, true)) {
             throw new \RuntimeException(sprintf('Path traversal attempt detected in path [%s].', $path));
         }
     }
