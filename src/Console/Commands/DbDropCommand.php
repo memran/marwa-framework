@@ -20,14 +20,14 @@ final class DbDropCommand extends AbstractCommand
         $this
             ->addArgument('name', InputArgument::REQUIRED, 'Database name')
             ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'Connection name', 'default')
-            ->addOption('force', 'f', InputOption::VALUE_OPTIONAL, 'Force drop without confirmation', false);
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force drop without confirmation');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = $input->getArgument('name');
         $connection = $input->getOption('connection');
-        $force = $input->getOption('force');
+        $force = (bool) $input->getOption('force');
 
         $forge = $this->dbForge($connection);
 

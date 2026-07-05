@@ -17,6 +17,12 @@ interface ProcessInterface
     public function execute(string $command, array $options = []): ProcessResult;
 
     /**
+     * @param list<string> $command
+     * @param array<string, mixed> $options
+     */
+    public function executeArray(array $command, array $options = []): ProcessResult;
+
+    /**
      * @param list<string> $commands
      * @param array<string, mixed> $options
      */

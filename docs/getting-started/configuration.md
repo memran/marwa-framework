@@ -114,8 +114,9 @@ return [
         'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'],
         'except' => [],
     ],
-    'trustedHosts' => [],
-    'trustedOrigins' => [],
+    // Defaults are derived from APP_URL when it is set.
+    'trustedHosts' => ['example.com'],
+    'trustedOrigins' => ['https://example.com'],
     'throttle' => [
         'enabled' => true,
         'prefix' => 'security',

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Marwa\Framework\Supports\Helpers;
-
 if (!function_exists('module_config')) {
     /**
      * Get module-specific config value.
@@ -14,7 +12,12 @@ if (!function_exists('module_config')) {
      */
     function module_config(string $key, mixed $default = null): mixed
     {
-        $config = app()->config();
+        $config = app(\Marwa\Framework\Supports\Config::class);
+        $moduleKey = 'modules.' . ltrim($key, '.');
+
+        if ($config->has($moduleKey)) {
+            return $config->get($moduleKey, $default) ?? $default;
+        }
 
         $value = $config->get($key, $default);
 

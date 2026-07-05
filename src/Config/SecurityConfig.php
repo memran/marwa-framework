@@ -49,8 +49,8 @@ final class SecurityConfig
                 'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'],
                 'except' => [],
             ],
-            'trustedHosts' => [],
-            'trustedOrigins' => [],
+            'trustedHosts' => self::trustedHosts(),
+            'trustedOrigins' => self::trustedOrigins(),
             'throttle' => [
                 'enabled' => true,
                 'prefix' => 'security',
@@ -64,5 +64,74 @@ final class SecurityConfig
                 'topCount' => 10,
             ],
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function trustedHosts(): array
+    {
+        $configured = self::stringList(env('SECURITY_TRUSTED_HOSTS', ''));
+
+        if ($configured !== []) {
+            return $configured;
+        }
+
+        $host = self::appUrlPart('host');
+
+        return $host === null ? [] : [$host];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function trustedOrigins(): array
+    {
+        $configured = self::stringList(env('SECURITY_TRUSTED_ORIGINS', ''));
+
+        if ($configured !== []) {
+            return $configured;
+        }
+
+        $scheme = self::appUrlPart('scheme');
+        $host = self::appUrlPart('host');
+
+        if ($scheme === null || $host === null) {
+            return [];
+        }
+
+        $origin = $scheme . '://' . $host;
+        $port = self::appUrlPart('port');
+
+        return [$port === null ? $origin : $origin . ':' . $port];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function stringList(mixed $value): array
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $item): bool => $item !== ''));
+    }
+
+    private static function appUrlPart(string $part): ?string
+    {
+        $url = env('APP_URL');
+
+        if (!is_string($url) || trim($url) === '') {
+            return null;
+        }
+
+        $parts = parse_url(trim($url));
+
+        if (!is_array($parts) || !isset($parts[$part])) {
+            return null;
+        }
+
+        return (string) $parts[$part];
     }
 }

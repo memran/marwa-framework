@@ -119,6 +119,7 @@ PHP
         self::assertTrue($console->has('schedule:table'));
         self::assertTrue($console->has('route:cache'));
         self::assertTrue($console->has('module:cache'));
+        self::assertTrue($console->has('module:publish'));
         self::assertTrue($console->has('security:report'));
         self::assertTrue($console->has('kafka:consume'));
         self::assertTrue($console->has('make:command'));
@@ -892,6 +893,51 @@ PHP
 
         $manifest = (string) file_get_contents($modulePath . '/manifest.php');
         self::assertStringContainsString("'App\\Modules\\Shop\\ShopServiceProvider'", $manifest);
+    }
+
+    public function testModulePublishKeepsAssetsInsidePublicAssetsForUnsafeSlugs(): void
+    {
+        $modulePath = $this->basePath . '/modules/Escape';
+        mkdir($modulePath . '/public', 0777, true);
+        file_put_contents($modulePath . '/public/app.js', 'console.log("ok");');
+        file_put_contents(
+            $modulePath . '/manifest.php',
+            <<<'PHP'
+<?php
+
+return [
+    'name' => 'Escape Module',
+    'slug' => '../../escape',
+    'providers' => [],
+    'paths' => [],
+    'routes' => [],
+    'migrations' => [],
+];
+PHP
+        );
+        file_put_contents(
+            $this->basePath . '/config/module.php',
+            <<<PHP
+<?php
+
+return [
+    'enabled' => true,
+    'paths' => ['{$this->basePath}/modules'],
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $command = $console->find('module:publish');
+        $tester = new CommandTester($command);
+        $status = $tester->execute([]);
+
+        self::assertSame(0, $status);
+        self::assertFileExists($this->basePath . '/public/assets/escape/app.js');
+        self::assertFileDoesNotExist($this->basePath . '/escape/app.js');
     }
 
     public function testMakeThemeCommandCreatesThemeScaffoldInViewsThemesDirectory(): void

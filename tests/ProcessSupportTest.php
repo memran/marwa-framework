@@ -130,6 +130,27 @@ PHP
         );
     }
 
+    public function testProcessAdapterExecutesArrayCommandsWithoutShellExpansion(): void
+    {
+        $script = $this->basePath . '/argv-process.php';
+        file_put_contents(
+            $script,
+            <<<'PHP'
+<?php
+echo $argv[1] ?? '';
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        /** @var ProcessAdapter $adapter */
+        $adapter = $app->make(ProcessAdapter::class);
+
+        $result = $adapter->executeArray([PHP_BINARY, $script, 'literal; echo injected']);
+
+        self::assertSame(0, $result->getExitCode());
+        self::assertSame('literal; echo injected', $result->getOutput());
+    }
+
     private function normalizeParallelOutput(string $output): string
     {
         [$prefix, $path] = array_pad(explode('|', $output, 2), 2, '');

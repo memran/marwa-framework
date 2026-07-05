@@ -54,11 +54,43 @@ final class ProcessAdapter implements ProcessInterface
      */
     public function execute(string $command, array $options = []): ProcessResult
     {
+        return $this->executeProcess(
+            $command,
+            static fn (string $command, string $cwd, array $env, int|float $timeout): Process => Process::fromShellCommandLine($command, $cwd, $env, null, $timeout),
+            $options
+        );
+    }
+
+    /**
+     * @param list<string> $command
+     * @param array<string, mixed> $options
+     */
+    public function executeArray(array $command, array $options = []): ProcessResult
+    {
+        if ($command === []) {
+            return ProcessResult::error('', 'Process command array cannot be empty.');
+        }
+
+        $displayCommand = implode(' ', array_map($this->quoteCommandArgument(...), $command));
+
+        return $this->executeProcess(
+            $displayCommand,
+            static fn (string $displayCommand, string $cwd, array $env, int|float $timeout): Process => new Process($command, $cwd, $env, null, $timeout),
+            $options
+        );
+    }
+
+    /**
+     * @param callable(string, string, array<string, string>, int|float): Process $factory
+     * @param array<string, mixed> $options
+     */
+    private function executeProcess(string $command, callable $factory, array $options = []): ProcessResult
+    {
         $this->options['command'] = $command;
         $options = array_merge($this->options, $options);
         $timeout = $options['timeout'] ?? $this->configuration()['timeout'];
         $cwd = $options['cwd'] ?? $this->configuration()['cwd'];
-        $env = is_array($options['env'] ?? null) ? $options['env'] : [];
+        $env = $this->normalizeEnvironment($options['env'] ?? []);
         $maxAttempts = (int) ($options['retry'] ?? $this->retryAttempts);
         $attempt = 0;
         $result = null;
@@ -71,7 +103,7 @@ final class ProcessAdapter implements ProcessInterface
             }
 
             try {
-                $process = Process::fromShellCommandLine($command, $cwd, $env, null, $timeout);
+                $process = $factory($command, (string) $cwd, $env, is_numeric($timeout) ? (int) $timeout : 300);
 
                 if ($this->input !== null) {
                     $process->setInput($this->input);
@@ -360,6 +392,34 @@ final class ProcessAdapter implements ProcessInterface
             ],
             'output_handler' => $this->outputHandler !== null ? $this->outputHandlerPayload() : null,
         ];
+    }
+
+    /**
+     * @param mixed $environment
+     * @return array<string, string>
+     */
+    private function normalizeEnvironment(mixed $environment): array
+    {
+        if (!is_array($environment)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($environment as $key => $value) {
+            if (is_string($key) && is_scalar($value)) {
+                $normalized[$key] = (string) $value;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private function quoteCommandArgument(string $argument): string
+    {
+        return preg_match('#^[A-Za-z0-9_@%+=:,./-]+$#', $argument) === 1
+            ? $argument
+            : escapeshellarg($argument);
     }
 
     /**

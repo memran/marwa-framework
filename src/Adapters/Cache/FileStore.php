@@ -13,10 +13,12 @@ final class FileStore implements KeyValueStore
 
     public function __construct(
         private string $root,
-        private string $namespace = ''
+        private string $namespace = '',
+        private string $signatureSecret = ''
     ) {
         $this->root = rtrim($this->root, DIRECTORY_SEPARATOR);
         $this->namespace = trim($this->namespace);
+        $this->signatureSecret = trim($this->signatureSecret);
     }
 
     public function get(string $key, mixed &$token = null): mixed
@@ -194,7 +196,7 @@ final class FileStore implements KeyValueStore
             ? $collection
             : $this->namespace . ':' . $collection;
 
-        return new self($this->root, $namespace);
+        return new self($this->root, $namespace, $this->signatureSecret);
     }
 
     /**
@@ -399,7 +401,7 @@ final class FileStore implements KeyValueStore
             $serialized = $envelope['payload'];
 
             try {
-                $payload = unserialize($serialized, ['allowed_classes' => true]);
+                $payload = unserialize($serialized, ['allowed_classes' => false]);
             } catch (\Throwable) {
                 return null;
             }
@@ -407,7 +409,7 @@ final class FileStore implements KeyValueStore
             return $this->normalizePayload($payload);
         }
 
-        return $this->normalizePayload($envelope);
+        return null;
     }
 
     /**
@@ -446,8 +448,42 @@ final class FileStore implements KeyValueStore
 
     private function signatureKey(): string
     {
+        if ($this->signatureSecret !== '') {
+            return hash('sha256', $this->signatureSecret . '|' . $this->namespace, true);
+        }
+
         $appKey = env('APP_KEY');
-        $secret = is_string($appKey) && trim($appKey) !== '' ? trim($appKey) : $this->root;
+        if (!is_string($appKey) || trim($appKey) === '') {
+            return $this->localSignatureKey();
+        }
+
+        return hash('sha256', trim($appKey) . '|' . $this->namespace, true);
+    }
+
+    private function localSignatureKey(): string
+    {
+        $path = $this->root . DIRECTORY_SEPARATOR . '.signature-key';
+        $directory = dirname($path);
+
+        if (!is_dir($directory)) {
+            $this->ensureDirectory($directory);
+        }
+
+        if (!is_file($path)) {
+            $secret = bin2hex(random_bytes(32));
+
+            if (file_put_contents($path, $secret, LOCK_EX) === false) {
+                throw new \RuntimeException(sprintf('Unable to write cache signing key [%s].', $path));
+            }
+
+            @chmod($path, 0600);
+        }
+
+        $secret = trim((string) file_get_contents($path));
+
+        if ($secret === '') {
+            throw new \RuntimeException(sprintf('Cache signing key [%s] is empty.', $path));
+        }
 
         return hash('sha256', $secret . '|' . $this->namespace, true);
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Framework\Tests;
 
 use Marwa\Framework\Application;
+use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use PHPUnit\Framework\TestCase;
 
@@ -129,5 +130,25 @@ PHP
         $app = new Application($this->basePath);
 
         self::assertSame($app->make(\Marwa\Framework\Navigation\MenuRegistry::class), menu());
+    }
+
+    public function testModuleConfigHelperReadsModuleNamespace(): void
+    {
+        $app = new Application($this->basePath);
+        $config = $app->make(Config::class);
+        $config->set('modules.users.theme', 'dark');
+        $config->set('users.theme', 'legacy');
+
+        self::assertSame('dark', module_config('users.theme'));
+        self::assertSame('fallback', module_config('users.missing', 'fallback'));
+    }
+
+    public function testModuleConfigHelperFallsBackToLegacyDirectKey(): void
+    {
+        $app = new Application($this->basePath);
+        $config = $app->make(Config::class);
+        $config->set('users.theme', 'legacy');
+
+        self::assertSame('legacy', module_config('users.theme'));
     }
 }

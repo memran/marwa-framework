@@ -23,7 +23,7 @@ final class CacheSupportTest extends TestCase
         $this->basePath = sys_get_temp_dir() . '/marwa-cache-' . bin2hex(random_bytes(6));
         mkdir($this->basePath, 0777, true);
         mkdir($this->basePath . '/config', 0777, true);
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nAPP_KEY=test-cache-key\nTIMEZONE=UTC\n");
         file_put_contents(
             $this->basePath . '/config/cache.php',
             <<<'PHP'
@@ -49,7 +49,7 @@ PHP
         @unlink($this->basePath . '/.env');
         @rmdir($this->basePath . '/config');
         @rmdir($this->basePath);
-        unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
+        unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['APP_KEY'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['APP_KEY'], $_SERVER['TIMEZONE']);
     }
 
     public function testCacheDefaultDriverPersistsValuesOnDisk(): void
@@ -181,7 +181,7 @@ PHP,
 
     public function testFileCacheDoesNotWakeObjectsFromSerializedPayloads(): void
     {
-        $store = new FileStore($this->basePath . '/storage/cache/framework');
+        $store = new FileStore($this->basePath . '/storage/cache/framework', signatureSecret: 'tests');
 
         self::assertTrue($store->set('payload', 'safe', 60));
 
@@ -201,17 +201,17 @@ PHP,
         self::assertNotInstanceOf(CacheWakeupProbe::class, $value);
     }
 
-    public function testFileCacheStillSupportsFrameworkWrittenObjects(): void
+    public function testFileCacheDoesNotRehydrateFrameworkWrittenObjects(): void
     {
-        file_put_contents($this->basePath . '/.env', "APP_ENV=testing\nAPP_KEY=test-cache-key\nTIMEZONE=UTC\n");
-        $store = new FileStore($this->basePath . '/storage/cache/framework');
+        $store = new FileStore($this->basePath . '/storage/cache/framework', signatureSecret: 'tests');
 
-        self::assertTrue($store->set('payload', new CacheObjectPayload('ready'), 60));
+        CacheWakeupProbe::$woken = false;
+        self::assertTrue($store->set('payload', new CacheWakeupProbe(), 60));
 
         $value = $store->get('payload');
 
-        self::assertInstanceOf(CacheObjectPayload::class, $value);
-        self::assertSame('ready', $value->status);
+        self::assertFalse(CacheWakeupProbe::$woken);
+        self::assertNotInstanceOf(CacheWakeupProbe::class, $value);
     }
 
     private function createBasePathWithoutCacheConfig(): string
@@ -219,7 +219,7 @@ PHP,
         $basePath = sys_get_temp_dir() . '/marwa-cache-file-' . bin2hex(random_bytes(6));
         mkdir($basePath, 0777, true);
         mkdir($basePath . '/config', 0777, true);
-        file_put_contents($basePath . '/.env', "APP_ENV=testing\nTIMEZONE=UTC\n");
+        file_put_contents($basePath . '/.env', "APP_ENV=testing\nAPP_KEY=test-cache-key\nTIMEZONE=UTC\n");
 
         return $basePath;
     }
@@ -282,9 +282,4 @@ final class CacheWakeupProbe
     {
         self::$woken = true;
     }
-}
-
-final class CacheObjectPayload
-{
-    public function __construct(public string $status) {}
 }

@@ -29,7 +29,23 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     stampede: array{enabled: bool, sla: int},
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
-     *     memory: array{limit: int|string|null}
+     *     memory: array{limit: int|string|null},
+     *     nats: array{
+     *         bucket: string,
+     *         host: string,
+     *         port: int,
+     *         servers: list<string>,
+     *         user: string|null,
+     *         pass: string|null,
+     *         token: string|null,
+     *         jwt: string|null,
+     *         nkey: string|null,
+     *         credentials: string|null,
+     *         tlsCaFile: string|null,
+     *         tlsCertFile: string|null,
+     *         tlsKeyFile: string|null,
+     *         timeout: int
+     *     }
      * }|null
      */
     private ?array $cacheConfig = null;
@@ -160,7 +176,23 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     stampede: array{enabled: bool, sla: int},
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
-     *     memory: array{limit: int|string|null}
+     *     memory: array{limit: int|string|null},
+     *     nats: array{
+     *         bucket: string,
+     *         host: string,
+     *         port: int,
+     *         servers: list<string>,
+     *         user: string|null,
+     *         pass: string|null,
+     *         token: string|null,
+     *         jwt: string|null,
+     *         nkey: string|null,
+     *         credentials: string|null,
+     *         tlsCaFile: string|null,
+     *         tlsCertFile: string|null,
+     *         tlsKeyFile: string|null,
+     *         timeout: int
+     *     }
      * }
      */
     public function configuration(): array
@@ -222,6 +254,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
             'apcu', 'apc' => $this->buildApcStore(),
             'file' => $this->buildFileStore($config['file']['path']),
             'memory', 'array' => new MemoryStore($this->resolveMemoryLimit($config['memory']['limit'])),
+            'nats' => $this->buildNatsStore($config['nats']),
             'sqlite' => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
             default => $this->buildFileStore($config['file']['path']),
         };
@@ -281,7 +314,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
             $path = $this->app->basePath('storage/cache/framework');
         }
 
-        return new FileStore($path);
+        return new FileStore($path, signatureSecret: $this->optionalCacheSignatureSecret());
     }
 
     private function buildSqliteStore(string $path, string $table): KeyValueStore
@@ -299,6 +332,48 @@ final class ScrapbookCacheAdapter implements CacheInterface
         $pdo = new \PDO('sqlite:' . $path);
 
         return new SQLite($pdo, $table);
+    }
+
+    /**
+     * @param array{
+     *     bucket: string,
+     *     host: string,
+     *     port: int,
+     *     servers: list<string>,
+     *     user: string|null,
+     *     pass: string|null,
+     *     token: string|null,
+     *     jwt: string|null,
+     *     nkey: string|null,
+     *     credentials: string|null,
+     *     tlsCaFile: string|null,
+     *     tlsCertFile: string|null,
+     *     tlsKeyFile: string|null,
+     *     timeout: int
+     * } $config
+     */
+    private function buildNatsStore(array $config): KeyValueStore
+    {
+        $bucket = (new NatsBucketConnector())->connect($config);
+        return new NatsStore($bucket, '', $this->cacheSignatureSecret('NATS cache'));
+    }
+
+    private function cacheSignatureSecret(string $driver): string
+    {
+        $appKey = env('APP_KEY');
+
+        if (!is_string($appKey) || trim($appKey) === '') {
+            throw new \RuntimeException(sprintf('APP_KEY must be configured to use signed %s payloads.', $driver));
+        }
+
+        return trim($appKey);
+    }
+
+    private function optionalCacheSignatureSecret(): string
+    {
+        $appKey = env('APP_KEY');
+
+        return is_string($appKey) && trim($appKey) !== '' ? trim($appKey) : '';
     }
 
     private function collectionNamespace(string $name): string

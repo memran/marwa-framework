@@ -74,7 +74,7 @@ final class PublishAssetsCommand extends AbstractCommand
             return 0;
         }
 
-        $targetDir = public_path('assets' . DIRECTORY_SEPARATOR . $slug);
+        $targetDir = $this->moduleAssetTargetDirectory($slug);
 
         if (!$dryRun) {
             if (!is_dir($targetDir)) {
@@ -105,6 +105,53 @@ final class PublishAssetsCommand extends AbstractCommand
         }
 
         return $count;
+    }
+
+    private function moduleAssetTargetDirectory(string $slug): string
+    {
+        $safeSlug = preg_replace('/[^A-Za-z0-9_-]+/', '-', trim($slug)) ?: '';
+        $safeSlug = trim($safeSlug, '-_');
+
+        if ($safeSlug === '') {
+            throw new \RuntimeException(sprintf('Module [%s] has an invalid asset slug.', $slug));
+        }
+
+        $assetRoot = public_path('assets');
+        $targetDir = $assetRoot . DIRECTORY_SEPARATOR . $safeSlug;
+        $normalizedRoot = $this->normalizePath($assetRoot);
+        $normalizedTarget = $this->normalizePath($targetDir);
+
+        if (
+            $normalizedTarget !== $normalizedRoot
+            && !str_starts_with($normalizedTarget, $normalizedRoot . DIRECTORY_SEPARATOR)
+        ) {
+            throw new \RuntimeException(sprintf('Module [%s] resolves outside the public asset directory.', $slug));
+        }
+
+        return $targetDir;
+    }
+
+    private function normalizePath(string $path): string
+    {
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $segments = [];
+
+        foreach (explode(DIRECTORY_SEPARATOR, $path) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+
+            if ($segment === '..') {
+                array_pop($segments);
+                continue;
+            }
+
+            $segments[] = $segment;
+        }
+
+        $prefix = str_starts_with($path, DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR : '';
+
+        return $prefix . implode(DIRECTORY_SEPARATOR, $segments);
     }
 
     protected function configure(): void

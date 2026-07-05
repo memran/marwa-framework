@@ -290,44 +290,32 @@ final class DBForge
 
     private function mysqlBackup(string $path): bool
     {
-        $host = $this->config['host'] ?? '127.0.0.1';
-        $port = $this->config['port'] ?? 3306;
-        $user = $this->config['username'] ?? 'root';
-        $pass = $this->config['password'] ?? '';
-        $db = $this->config['database'] ?? '';
-
-        $cmd = sprintf(
-            'mysqldump --host=%s --port=%d --user=%s --password=%s %s > %s',
-            escapeshellarg($host),
-            $port,
-            escapeshellarg($user),
-            escapeshellarg($pass),
-            escapeshellarg($db),
-            escapeshellarg($path)
+        return $this->runProcess(
+            [
+                'mysqldump',
+                '--host=' . $this->stringConfig('host', '127.0.0.1'),
+                '--port=' . $this->stringConfig('port', '3306'),
+                '--user=' . $this->stringConfig('username', 'root'),
+                $this->stringConfig('database'),
+            ],
+            $this->mysqlProcessEnvironment(),
+            outputFile: $path
         );
-
-        exec($cmd, $output, $exitCode);
-        return $exitCode === 0;
     }
 
     private function pgsqlBackup(string $path): bool
     {
-        $host = $this->config['host'] ?? '127.0.0.1';
-        $port = $this->config['port'] ?? 5432;
-        $user = $this->config['username'] ?? 'postgres';
-        $db = $this->config['database'] ?? '';
-
-        $cmd = sprintf(
-            'pg_dump --host=%s --port=%d --user=%s --dbname=%s --file=%s',
-            escapeshellarg($host),
-            $port,
-            escapeshellarg($user),
-            escapeshellarg($db),
-            escapeshellarg($path)
+        return $this->runProcess(
+            [
+                'pg_dump',
+                '--host=' . $this->stringConfig('host', '127.0.0.1'),
+                '--port=' . $this->stringConfig('port', '5432'),
+                '--user=' . $this->stringConfig('username', 'postgres'),
+                '--dbname=' . $this->stringConfig('database'),
+                '--file=' . $path,
+            ],
+            $this->pgsqlProcessEnvironment()
         );
-
-        exec($cmd, $output, $exitCode);
-        return $exitCode === 0;
     }
 
     private function sqliteBackup(string $path): bool
@@ -342,44 +330,32 @@ final class DBForge
 
     private function mysqlRestore(string $path): bool
     {
-        $host = $this->config['host'] ?? '127.0.0.1';
-        $port = $this->config['port'] ?? 3306;
-        $user = $this->config['username'] ?? 'root';
-        $pass = $this->config['password'] ?? '';
-        $db = $this->config['database'] ?? '';
-
-        $cmd = sprintf(
-            'mysql --host=%s --port=%d --user=%s --password=%s %s < %s',
-            escapeshellarg($host),
-            $port,
-            escapeshellarg($user),
-            escapeshellarg($pass),
-            escapeshellarg($db),
-            escapeshellarg($path)
+        return $this->runProcess(
+            [
+                'mysql',
+                '--host=' . $this->stringConfig('host', '127.0.0.1'),
+                '--port=' . $this->stringConfig('port', '3306'),
+                '--user=' . $this->stringConfig('username', 'root'),
+                $this->stringConfig('database'),
+            ],
+            $this->mysqlProcessEnvironment(),
+            inputFile: $path
         );
-
-        exec($cmd, $output, $exitCode);
-        return $exitCode === 0;
     }
 
     private function pgsqlRestore(string $path): bool
     {
-        $host = $this->config['host'] ?? '127.0.0.1';
-        $port = $this->config['port'] ?? 5432;
-        $user = $this->config['username'] ?? 'postgres';
-        $db = $this->config['database'] ?? '';
-
-        $cmd = sprintf(
-            'psql --host=%s --port=%d --user=%s --dbname=%s --file=%s',
-            escapeshellarg($host),
-            $port,
-            escapeshellarg($user),
-            escapeshellarg($db),
-            escapeshellarg($path)
+        return $this->runProcess(
+            [
+                'psql',
+                '--host=' . $this->stringConfig('host', '127.0.0.1'),
+                '--port=' . $this->stringConfig('port', '5432'),
+                '--user=' . $this->stringConfig('username', 'postgres'),
+                '--dbname=' . $this->stringConfig('database'),
+                '--file=' . $path,
+            ],
+            $this->pgsqlProcessEnvironment()
         );
-
-        exec($cmd, $output, $exitCode);
-        return $exitCode === 0;
     }
 
     private function sqliteRestore(string $path): bool
@@ -426,6 +402,72 @@ final class DBForge
     {
         $this->execute("ANALYZE");
         return true;
+    }
+
+    /**
+     * @param list<string> $command
+     * @param array<string, string> $environment
+     */
+    private function runProcess(
+        array $command,
+        array $environment = [],
+        ?string $inputFile = null,
+        ?string $outputFile = null
+    ): bool {
+        $descriptors = [
+            0 => $inputFile === null ? ['pipe', 'r'] : ['file', $inputFile, 'r'],
+            1 => $outputFile === null ? ['pipe', 'w'] : ['file', $outputFile, 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open(
+            $command,
+            $descriptors,
+            $pipes,
+            null,
+            array_replace($this->processEnvironment(), $environment)
+        );
+
+        if (!is_resource($process)) {
+            return false;
+        }
+
+        foreach ($pipes as $pipe) {
+            if (is_resource($pipe)) {
+                fclose($pipe);
+            }
+        }
+
+        return proc_close($process) === 0;
+    }
+
+    /** @return array<string, string> */
+    private function mysqlProcessEnvironment(): array
+    {
+        $password = $this->stringConfig('password');
+
+        return $password === '' ? [] : ['MYSQL_PWD' => $password];
+    }
+
+    /** @return array<string, string> */
+    private function pgsqlProcessEnvironment(): array
+    {
+        $password = $this->stringConfig('password');
+
+        return $password === '' ? [] : ['PGPASSWORD' => $password];
+    }
+
+    private function stringConfig(string $key, string $default = ''): string
+    {
+        $value = $this->config[$key] ?? $default;
+
+        return is_scalar($value) ? (string) $value : $default;
+    }
+
+    /** @return array<string, string> */
+    private function processEnvironment(): array
+    {
+        return getenv();
     }
 
     private function app(): \Marwa\Framework\Application

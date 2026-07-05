@@ -258,15 +258,23 @@ Defined by `Marwa\Framework\Config\CacheConfig`.
 Supported keys:
 
 - `enabled`: enable the framework cache service
-- `driver`: `sqlite`, `memory`, or `apcu`
+- `driver`: `file`, `sqlite`, `memory`, `array`, `apcu`, `apc`, or `nats`
 - `namespace`: collection/prefix namespace for application keys
 - `buffered`: enable Scrapbook local buffering
 - `transactional`: wrap the store in Scrapbook transactions
 - `stampede.enabled`: enable Scrapbook stampede protection
 - `stampede.sla`: protection window in milliseconds
+- `file.path`: file cache directory
 - `sqlite.path`: SQLite cache database path
 - `sqlite.table`: cache table name
 - `memory.limit`: optional in-memory store limit
+- `nats.bucket`: JetStream Key-Value bucket name
+- `nats.host`, `nats.port`, `nats.servers`: NATS connection target. When `nats.servers` is set, the first server is used by the optional PHP NATS client.
+- `nats.user`, `nats.pass`, `nats.token`, `nats.jwt`, `nats.nkey`, `nats.credentials`: NATS authentication
+- `nats.tlsCaFile`, `nats.tlsCertFile`, `nats.tlsKeyFile`: TLS files
+- `nats.timeout`: connection timeout in seconds
+
+File and NATS cache payloads are signed. File cache uses `APP_KEY` when configured, otherwise it creates a private local signing key under the cache directory. NATS cache requires `APP_KEY` because payloads are stored in an external/shared service.
 
 Example:
 
@@ -284,6 +292,28 @@ return [
     'sqlite' => [
         'path' => storage_path('cache/framework.sqlite'),
         'table' => 'framework_cache',
+    ],
+];
+```
+
+NATS cache requires the optional client package:
+
+```bash
+composer require basis-company/nats
+```
+
+```php
+return [
+    'driver' => 'nats',
+    'namespace' => 'app',
+    'nats' => [
+        'bucket' => 'marwa_cache',
+        'host' => env('NATS_HOST', '127.0.0.1'),
+        'port' => (int) env('NATS_PORT', 4222),
+        'user' => env('NATS_USER'),
+        'pass' => env('NATS_PASS'),
+        'token' => env('NATS_TOKEN'),
+        'credentials' => env('NATS_CREDENTIALS'),
     ],
 ];
 ```
@@ -327,8 +357,8 @@ Supported keys:
 - `csrf.token`: session key used to store the CSRF token
 - `csrf.methods`: HTTP methods subject to CSRF checks
 - `csrf.except`: list of path patterns exempt from CSRF
-- `trustedHosts`: list of trusted hostnames or wildcard patterns
-- `trustedOrigins`: list of trusted origin URLs or wildcard patterns
+- `trustedHosts`: list of trusted hostnames or wildcard patterns; defaults to the host from `APP_URL` when set, or `SECURITY_TRUSTED_HOSTS` when provided
+- `trustedOrigins`: list of trusted origin URLs or wildcard patterns; defaults to the origin from `APP_URL` when set, or `SECURITY_TRUSTED_ORIGINS` when provided
 - `throttle.enabled`: enable cache-backed request throttling
 - `throttle.prefix`: cache key prefix for throttle counters
 - `throttle.limit`: request limit per window

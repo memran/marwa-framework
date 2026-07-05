@@ -69,7 +69,19 @@ PHP
         @rmdir($this->basePath . '/storage/security');
         @rmdir($this->basePath . '/storage');
         @rmdir($this->basePath);
-        unset($GLOBALS['marwa_app'], $_ENV['APP_ENV'], $_ENV['TIMEZONE'], $_SERVER['APP_ENV'], $_SERVER['TIMEZONE']);
+        unset(
+            $GLOBALS['marwa_app'],
+            $_ENV['APP_ENV'],
+            $_ENV['APP_URL'],
+            $_ENV['SECURITY_TRUSTED_HOSTS'],
+            $_ENV['SECURITY_TRUSTED_ORIGINS'],
+            $_ENV['TIMEZONE'],
+            $_SERVER['APP_ENV'],
+            $_SERVER['APP_URL'],
+            $_SERVER['SECURITY_TRUSTED_HOSTS'],
+            $_SERVER['SECURITY_TRUSTED_ORIGINS'],
+            $_SERVER['TIMEZONE']
+        );
     }
 
     public function testSecurityConfigExposesSafeDefaults(): void
@@ -92,6 +104,34 @@ PHP
             str_replace('/', DIRECTORY_SEPARATOR, $defaults['risk']['logPath'])
         );
         self::assertSame(30, $defaults['risk']['pruneAfterDays']);
+    }
+
+    public function testSecurityConfigDerivesTrustedHostAndOriginFromAppUrl(): void
+    {
+        $_ENV['APP_URL'] = 'https://secure.example.com:8443';
+        $_SERVER['APP_URL'] = 'https://secure.example.com:8443';
+
+        $app = new Application($this->basePath);
+        $defaults = SecurityConfig::defaults($app);
+
+        self::assertSame(['secure.example.com'], $defaults['trustedHosts']);
+        self::assertSame(['https://secure.example.com:8443'], $defaults['trustedOrigins']);
+    }
+
+    public function testSecurityConfigUsesExplicitTrustedHostAndOriginLists(): void
+    {
+        $_ENV['APP_URL'] = 'https://secure.example.com';
+        $_SERVER['APP_URL'] = 'https://secure.example.com';
+        $_ENV['SECURITY_TRUSTED_HOSTS'] = 'app.example.com,*.example.org';
+        $_SERVER['SECURITY_TRUSTED_HOSTS'] = 'app.example.com,*.example.org';
+        $_ENV['SECURITY_TRUSTED_ORIGINS'] = 'https://app.example.com,https://admin.example.org';
+        $_SERVER['SECURITY_TRUSTED_ORIGINS'] = 'https://app.example.com,https://admin.example.org';
+
+        $app = new Application($this->basePath);
+        $defaults = SecurityConfig::defaults($app);
+
+        self::assertSame(['app.example.com', '*.example.org'], $defaults['trustedHosts']);
+        self::assertSame(['https://app.example.com', 'https://admin.example.org'], $defaults['trustedOrigins']);
     }
 
     public function testSecurityServiceGeneratesTokensAndValidatesState(): void

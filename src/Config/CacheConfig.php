@@ -11,18 +11,34 @@ final class CacheConfig
     public const KEY = 'cache';
 
     /**
- * @return array{
- *     enabled: bool,
- *     driver: string,
- *     namespace: string,
- *     buffered: bool,
- *     transactional: bool,
- *     stampede: array{enabled: bool, sla: int},
- *     file: array{path: string},
- *     sqlite: array{path: string, table: string},
- *     memory: array{limit: int|string|null}
- * }
- */
+     * @return array{
+     *     enabled: bool,
+     *     driver: string,
+     *     namespace: string,
+     *     buffered: bool,
+     *     transactional: bool,
+     *     stampede: array{enabled: bool, sla: int},
+     *     file: array{path: string},
+     *     sqlite: array{path: string, table: string},
+     *     memory: array{limit: int|string|null},
+     *     nats: array{
+     *         bucket: string,
+     *         host: string,
+     *         port: int,
+     *         servers: list<string>,
+     *         user: string|null,
+     *         pass: string|null,
+     *         token: string|null,
+     *         jwt: string|null,
+     *         nkey: string|null,
+     *         credentials: string|null,
+     *         tlsCaFile: string|null,
+     *         tlsCertFile: string|null,
+     *         tlsKeyFile: string|null,
+     *         timeout: int
+     *     }
+     * }
+     */
     public static function defaults(Application $app): array
     {
         return [
@@ -45,6 +61,22 @@ final class CacheConfig
             'memory' => [
                 'limit' => null,
             ],
+            'nats' => [
+                'bucket' => 'marwa_cache',
+                'host' => '127.0.0.1',
+                'port' => 4222,
+                'servers' => [],
+                'user' => null,
+                'pass' => null,
+                'token' => null,
+                'jwt' => null,
+                'nkey' => null,
+                'credentials' => null,
+                'tlsCaFile' => null,
+                'tlsCertFile' => null,
+                'tlsKeyFile' => null,
+                'timeout' => 1,
+            ],
         ];
     }
 
@@ -52,16 +84,32 @@ final class CacheConfig
      * @param array<string, mixed> $overrides
      * @return array{
      *     enabled: bool,
- *     driver: string,
- *     namespace: string,
- *     buffered: bool,
- *     transactional: bool,
- *     stampede: array{enabled: bool, sla: int},
- *     file: array{path: string},
- *     sqlite: array{path: string, table: string},
- *     memory: array{limit: int|string|null}
- * }
- */
+     *     driver: string,
+     *     namespace: string,
+     *     buffered: bool,
+     *     transactional: bool,
+     *     stampede: array{enabled: bool, sla: int},
+     *     file: array{path: string},
+     *     sqlite: array{path: string, table: string},
+     *     memory: array{limit: int|string|null},
+     *     nats: array{
+     *         bucket: string,
+     *         host: string,
+     *         port: int,
+     *         servers: list<string>,
+     *         user: string|null,
+     *         pass: string|null,
+     *         token: string|null,
+     *         jwt: string|null,
+     *         nkey: string|null,
+     *         credentials: string|null,
+     *         tlsCaFile: string|null,
+     *         tlsCertFile: string|null,
+     *         tlsKeyFile: string|null,
+     *         timeout: int
+     *     }
+     * }
+     */
     public static function merge(Application $app, array $overrides): array
     {
         $defaults = self::defaults($app);
@@ -77,6 +125,9 @@ final class CacheConfig
         $memory = is_array($overrides['memory'] ?? null)
             ? array_replace($defaults['memory'], $overrides['memory'])
             : $defaults['memory'];
+        $nats = is_array($overrides['nats'] ?? null)
+            ? array_replace($defaults['nats'], $overrides['nats'])
+            : $defaults['nats'];
 
         return [
             'enabled' => (bool) ($overrides['enabled'] ?? $defaults['enabled']),
@@ -108,6 +159,84 @@ final class CacheConfig
             'memory' => [
                 'limit' => $memory['limit'] ?? $defaults['memory']['limit'],
             ],
+            'nats' => self::resolveNatsConfig($nats, $defaults['nats']),
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $nats
+     * @param array{
+     *     bucket: string,
+     *     host: string,
+     *     port: int,
+     *     servers: list<string>,
+     *     user: string|null,
+     *     pass: string|null,
+     *     token: string|null,
+     *     jwt: string|null,
+     *     nkey: string|null,
+     *     credentials: string|null,
+     *     tlsCaFile: string|null,
+     *     tlsCertFile: string|null,
+     *     tlsKeyFile: string|null,
+     *     timeout: int
+     * } $defaults
+     * @return array{
+     *     bucket: string,
+     *     host: string,
+     *     port: int,
+     *     servers: list<string>,
+     *     user: string|null,
+     *     pass: string|null,
+     *     token: string|null,
+     *     jwt: string|null,
+     *     nkey: string|null,
+     *     credentials: string|null,
+     *     tlsCaFile: string|null,
+     *     tlsCertFile: string|null,
+     *     tlsKeyFile: string|null,
+     *     timeout: int
+     * }
+     */
+    private static function resolveNatsConfig(array $nats, array $defaults): array
+    {
+        return [
+            'bucket' => self::nonEmptyString($nats['bucket'] ?? null, $defaults['bucket']),
+            'host' => self::nonEmptyString($nats['host'] ?? null, $defaults['host']),
+            'port' => max(1, (int) ($nats['port'] ?? $defaults['port'])),
+            'servers' => self::stringList($nats['servers'] ?? $defaults['servers']),
+            'user' => self::nullableString($nats['user'] ?? null),
+            'pass' => self::nullableString($nats['pass'] ?? null),
+            'token' => self::nullableString($nats['token'] ?? null),
+            'jwt' => self::nullableString($nats['jwt'] ?? null),
+            'nkey' => self::nullableString($nats['nkey'] ?? null),
+            'credentials' => self::nullableString($nats['credentials'] ?? null),
+            'tlsCaFile' => self::nullableString($nats['tlsCaFile'] ?? null),
+            'tlsCertFile' => self::nullableString($nats['tlsCertFile'] ?? null),
+            'tlsKeyFile' => self::nullableString($nats['tlsKeyFile'] ?? null),
+            'timeout' => max(1, (int) ($nats['timeout'] ?? $defaults['timeout'])),
+        ];
+    }
+
+    private static function nonEmptyString(mixed $value, string $default): string
+    {
+        return is_string($value) && $value !== '' ? $value : $default;
+    }
+
+    private static function nullableString(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function stringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter($value, 'is_string'));
     }
 }

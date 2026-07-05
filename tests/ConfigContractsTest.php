@@ -42,7 +42,21 @@ final class ConfigContractsTest extends TestCase
         @unlink($this->basePath . DIRECTORY_SEPARATOR . '.env');
         @rmdir($this->basePath . DIRECTORY_SEPARATOR . 'config');
         @rmdir($this->basePath);
-        unset($GLOBALS['marwa_app'], $_ENV['APP_DEBUG'], $_ENV['LOG_ENABLE'], $_ENV['TIMEZONE'], $_SERVER['APP_DEBUG'], $_SERVER['LOG_ENABLE'], $_SERVER['TIMEZONE']);
+        unset(
+            $GLOBALS['marwa_app'],
+            $_ENV['APP_DEBUG'],
+            $_ENV['APP_URL'],
+            $_ENV['LOG_ENABLE'],
+            $_ENV['SECURITY_TRUSTED_HOSTS'],
+            $_ENV['SECURITY_TRUSTED_ORIGINS'],
+            $_ENV['TIMEZONE'],
+            $_SERVER['APP_DEBUG'],
+            $_SERVER['APP_URL'],
+            $_SERVER['LOG_ENABLE'],
+            $_SERVER['SECURITY_TRUSTED_HOSTS'],
+            $_SERVER['SECURITY_TRUSTED_ORIGINS'],
+            $_SERVER['TIMEZONE']
+        );
     }
 
     public function testAppConfigExposesExpectedDefaultKeys(): void
@@ -82,6 +96,10 @@ final class ConfigContractsTest extends TestCase
         self::assertSame('default', ViewConfig::defaults($app)['activeTheme']);
         self::assertSame('default', ViewConfig::defaults($app)['fallbackTheme']);
         self::assertSame('file', CacheConfig::defaults($app)['driver']);
+        self::assertSame('marwa_cache', CacheConfig::defaults($app)['nats']['bucket']);
+        self::assertSame('127.0.0.1', CacheConfig::defaults($app)['nats']['host']);
+        self::assertSame(4222, CacheConfig::defaults($app)['nats']['port']);
+        self::assertSame([], CacheConfig::defaults($app)['nats']['servers']);
         self::assertSame(
             str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/framework'),
             str_replace('/', DIRECTORY_SEPARATOR, CacheConfig::defaults($app)['file']['path'])
@@ -102,6 +120,30 @@ final class ConfigContractsTest extends TestCase
             str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/logs'),
             str_replace('/', DIRECTORY_SEPARATOR, LoggerConfig::defaults($app)['storage']['path'])
         );
+    }
+
+    public function testCacheConfigMergesNatsOverrides(): void
+    {
+        $app = new Application($this->basePath);
+        $config = CacheConfig::merge($app, [
+            'driver' => 'nats',
+            'nats' => [
+                'bucket' => 'app_cache',
+                'host' => 'nats.internal',
+                'port' => 4223,
+                'servers' => ['tls://nats-1:4222', 'tls://nats-2:4222'],
+                'token' => 'token-value',
+                'timeout' => 3,
+            ],
+        ]);
+
+        self::assertSame('nats', $config['driver']);
+        self::assertSame('app_cache', $config['nats']['bucket']);
+        self::assertSame('nats.internal', $config['nats']['host']);
+        self::assertSame(4223, $config['nats']['port']);
+        self::assertSame(['tls://nats-1:4222', 'tls://nats-2:4222'], $config['nats']['servers']);
+        self::assertSame('token-value', $config['nats']['token']);
+        self::assertSame(3, $config['nats']['timeout']);
     }
 
     public function testEventConfigDefaultsAreEmptyLists(): void

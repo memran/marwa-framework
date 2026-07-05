@@ -26,6 +26,7 @@ use Marwa\Framework\Console\Commands\ModuleCacheCommand;
 use Marwa\Framework\Console\Commands\ModuleClearCommand;
 use Marwa\Framework\Console\Commands\ModuleMigrateCommand;
 use Marwa\Framework\Console\Commands\ModuleSeedCommand;
+use Marwa\Framework\Console\Commands\PublishAssetsCommand;
 use Marwa\Framework\Console\Commands\QueueClearCommand;
 use Marwa\Framework\Console\Commands\QueueListCommand;
 use Marwa\Framework\Console\Commands\QueueTableCommand;
@@ -81,6 +82,7 @@ final class ConsoleConfig
                 ModuleClearCommand::class,
                 ModuleMigrateCommand::class,
                 ModuleSeedCommand::class,
+                PublishAssetsCommand::class,
                 MakeCommandCommand::class,
                 MakeControllerCommand::class,
                 MakeMailCommand::class,
