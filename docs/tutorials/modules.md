@@ -75,6 +75,7 @@ return [
         base_path('modules'),
     ],
     'cache' => bootstrap_path('cache/modules.php'),
+    'bootstrapCache' => bootstrap_path('cache/module-bootstrap.php'),
     'forceRefresh' => false,
     'commandPaths' => [
         'commands',
@@ -97,6 +98,7 @@ Important keys:
 - `enabled`: turns module integration on or off
 - `paths`: module root directories to scan
 - `cache`: manifest cache file path used by `module:cache`
+- `bootstrapCache`: compiled bootstrap cache path (set to `null` to disable); see [Caching](#caching)
 - `forceRefresh`: ignore cached module manifests and rescan
 - `commandPaths`: manifest `paths` keys treated as command directories
 - `commandConventions`: module-relative fallback command directories
@@ -589,6 +591,13 @@ Run module migrations:
 php marwa module:migrate
 ```
 
+To destructively roll back and rerun both application and discovered module
+migrations, use the unified refresh command:
+
+```bash
+php marwa migrate:refresh
+```
+
 Run module seeders:
 
 ```bash
@@ -720,6 +729,23 @@ php marwa module:clear
 ```
 
 The cache file path is controlled by `config/module.php` and is also used by bootstrap cache commands.
+
+### Compiled bootstrap cache
+
+Module bootstrap also writes a compiled cache file (`module.bootstrapCache`,
+default `storage/cache/module-bootstrap.php`). It stores the discovered module
+rows, provider classes, and Twig view namespaces in a single PHP file so a
+request can skip the module scan and manifest `require` calls.
+
+- Outside of production, the cache is invalidated automatically whenever a
+  module directory is added or removed, or any `manifest.php` / `manifest.json`
+  changes (mtime + size fingerprint, similar to Twig's `auto_reload`).
+- In production the file is trusted as-is; rebuild or drop it with
+  `module:cache` / `module:clear` (or `bootstrap:cache` / `bootstrap:clear`)
+  after deployments.
+- Set `'bootstrapCache' => null` in `config/module.php` to disable it.
+- Provider `register()` and `boot()` still run on every request; only module
+  discovery, manifest loading, and view namespace resolution are compiled.
 
 ## Troubleshooting
 

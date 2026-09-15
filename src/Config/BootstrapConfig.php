@@ -14,7 +14,8 @@ final class BootstrapConfig
      * @return array{
      *     configCache:string,
      *     routeCache:string,
-     *     moduleCache:string
+     *     moduleCache:string,
+     *     moduleBootstrapCache:string
      * }
      */
     public static function defaults(Application $app): array
@@ -23,6 +24,7 @@ final class BootstrapConfig
             'configCache' => (string) env('APP_CONFIG_CACHE', $app->basePath('storage/cache/config.php')),
             'routeCache' => (string) env('APP_ROUTE_CACHE', $app->basePath('storage/cache/routes.php')),
             'moduleCache' => (string) env('APP_MODULE_CACHE', $app->basePath('storage/cache/modules.php')),
+            'moduleBootstrapCache' => (string) env('APP_MODULE_BOOTSTRAP_CACHE', $app->basePath('storage/cache/module-bootstrap.php')),
         ];
     }
 

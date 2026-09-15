@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Console\Commands;
 
+use Marwa\Framework\Bootstrappers\ModuleBootstrapCache;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Console\AbstractCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,6 +26,18 @@ final class ModuleClearCommand extends AbstractCommand
         }
 
         $output->writeln(sprintf('<info>Module cache cleared:</info> %s', is_string($cachePath) ? $cachePath : '(not configured)'));
+
+        $bootstrapCache = new ModuleBootstrapCache(
+            is_string($config['bootstrapCache'] ?? null) ? trim($config['bootstrapCache']) : '',
+            $config['paths']
+        );
+
+        $bootstrapCache->clear();
+
+        $output->writeln(sprintf(
+            '<info>Module bootstrap cache cleared:</info> %s',
+            $bootstrapCache->enabled() ? $bootstrapCache->path() : '(not configured)'
+        ));
 
         return Command::SUCCESS;
     }

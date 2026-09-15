@@ -272,6 +272,7 @@ PHP
 
     public function testModuleMigrateRunsManifestDeclaredMigrationFilesThroughRepository(): void
     {
+        $applicationMigrationPath = $this->basePath . '/database/migrations';
         $alphaModulePath = $this->basePath . '/modules/Alpha';
         $alphaMigrationPath = $alphaModulePath . '/database/migrations';
         $modulePath = $this->basePath . '/modules/Blog';
@@ -280,6 +281,32 @@ PHP
         mkdir($alphaMigrationPath, 0777, true);
         mkdir($modulePath, 0777, true);
         mkdir($migrationPath, 0777, true);
+        mkdir($applicationMigrationPath, 0777, true);
+
+        file_put_contents(
+            $applicationMigrationPath . '/2025_01_01_000000_create_application_settings_table.php',
+            <<<'PHP'
+<?php
+
+use Marwa\DB\CLI\AbstractMigration;
+use Marwa\DB\Schema\Schema;
+
+return new class extends AbstractMigration {
+    public function up(): void
+    {
+        Schema::create('application_settings', function ($table): void {
+            $table->increments('id');
+            $table->string('name');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::drop('application_settings');
+    }
+};
+PHP
+        );
 
         file_put_contents(
             $this->basePath . '/config/module.php',
@@ -448,6 +475,37 @@ PHP
 
         self::assertSame(0, $tester->execute([]));
         self::assertStringContainsString('Module migrations completed. Total: 0', $tester->getDisplay());
+
+        $refresh = new CommandTester($console->find('migrate:refresh'));
+        self::assertSame(0, $refresh->execute([]));
+        self::assertStringContainsString(
+            'Refreshed application and module migrations. Down: 3, Up: 4',
+            $refresh->getDisplay(),
+        );
+
+        $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table'")->fetchAll(\PDO::FETCH_COLUMN);
+        self::assertContains('application_settings', $tables);
+        self::assertContains('alpha_items', $tables);
+        self::assertContains('blog_posts', $tables);
+        self::assertContains('blog_comments', $tables);
+
+        unlink($migrationPath . '/2026_01_01_000000_create_blog_posts_table.php');
+
+        try {
+            $refresh->execute([]);
+            self::fail('Refresh should fail before rollback when a migration file is missing.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame(
+                'Cannot refresh because migration [2026_01_01_000000_create_blog_posts_table] is no longer available.',
+                $exception->getMessage(),
+            );
+        }
+
+        $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table'")->fetchAll(\PDO::FETCH_COLUMN);
+        self::assertContains('application_settings', $tables);
+        self::assertContains('alpha_items', $tables);
+        self::assertContains('blog_posts', $tables);
+        self::assertContains('blog_comments', $tables);
     }
 
     public function testMakeControllerCommandCreatesNestedResourceController(): void

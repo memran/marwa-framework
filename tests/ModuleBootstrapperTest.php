@@ -48,6 +48,8 @@ final class ModuleBootstrapperTest extends TestCase
         @rmdir($this->basePath . '/resources/views');
         @rmdir($this->basePath . '/resources');
         @unlink($this->basePath . '/storage/cache/modules.php');
+        @unlink($this->basePath . '/storage/cache/module-bootstrap.php');
+        @unlink($this->basePath . '/storage/cache/routes.php');
         @rmdir($this->basePath . '/storage/cache');
         @rmdir($this->basePath . '/storage');
         @rmdir($this->basePath);

@@ -182,6 +182,10 @@ final class ConfigContractsTest extends TestCase
             str_replace('/', DIRECTORY_SEPARATOR, ModuleConfig::defaults($app)['cache'])
         );
         self::assertSame(
+            str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/storage/cache/module-bootstrap.php'),
+            str_replace('/', DIRECTORY_SEPARATOR, ModuleConfig::defaults($app)['bootstrapCache'])
+        );
+        self::assertSame(
             [str_replace('/', DIRECTORY_SEPARATOR, $this->basePath . '/modules')],
             array_map(fn ($p) => str_replace('/', DIRECTORY_SEPARATOR, $p), ModuleConfig::defaults($app)['paths'])
         );

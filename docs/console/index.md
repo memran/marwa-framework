@@ -39,7 +39,7 @@ php marwa --env=production <command>
 | `db:analyze` | Analyze tables | `php marwa db:analyze` |
 | `migrate` | Run migrations | `php marwa migrate` |
 | `migrate:rollback` | Rollback migrations | `php marwa migrate:rollback` |
-| `migrate:refresh` | Refresh migrations | `php marwa migrate:refresh` |
+| `migrate:refresh` | Refresh application and discovered module migrations | `php marwa migrate:refresh` |
 | `db:seed` | Run seeders | `php marwa db:seed` |
 
 ### Make Commands

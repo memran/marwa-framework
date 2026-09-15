@@ -39,15 +39,19 @@ final class ModuleManifestReader
     }
 
     /**
+     * Required module slugs declared in the hydrated manifest.
+     *
+     * Uses the manifest already loaded into the module object so bootstrap
+     * does not re-require every manifest.php on the compiled-cache path.
+     *
      * @return list<string>
      */
     public function getRequiredModules(Module $module): array
     {
-        $manifest = $this->read($module);
         $requiredModules = [];
 
         foreach (['requires', 'dependencies'] as $key) {
-            $values = $manifest[$key] ?? [];
+            $values = $module->manifest()[$key] ?? [];
 
             if (!is_array($values)) {
                 continue;

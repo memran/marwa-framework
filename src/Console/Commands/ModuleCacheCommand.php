@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marwa\Framework\Console\Commands;
 
+use Marwa\Framework\Bootstrappers\ModuleBootstrapCache;
 use Marwa\Framework\Config\ModuleConfig;
 use Marwa\Framework\Console\AbstractCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -30,6 +31,16 @@ final class ModuleCacheCommand extends AbstractCommand
 
         $output->writeln(sprintf('<info>Module cache created:</info> %s', $config['cache']));
         $output->writeln(sprintf('<info>Discovered modules:</info> %d', count($modules)));
+
+        $bootstrapCache = new ModuleBootstrapCache(
+            is_string($config['bootstrapCache'] ?? null) ? trim($config['bootstrapCache']) : '',
+            $config['paths'],
+            true
+        );
+
+        if ($bootstrapCache->enabled() && $bootstrapCache->save($bootstrapCache->compile($modules))) {
+            $output->writeln(sprintf('<info>Module bootstrap cache created:</info> %s', $bootstrapCache->path()));
+        }
 
         return Command::SUCCESS;
     }

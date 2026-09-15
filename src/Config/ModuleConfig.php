@@ -15,6 +15,7 @@ final class ModuleConfig
      *     enabled: bool,
      *     paths: list<string>,
      *     cache: string,
+     *     bootstrapCache: string,
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
@@ -30,6 +31,7 @@ final class ModuleConfig
                 $app->basePath('modules'),
             ],
             'cache' => BootstrapConfig::defaults($app)['moduleCache'],
+            'bootstrapCache' => BootstrapConfig::defaults($app)['moduleBootstrapCache'],
             'forceRefresh' => false,
             'commandPaths' => [
                 'commands',

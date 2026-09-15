@@ -393,6 +393,7 @@ return [
     'configCache' => base_path('bootstrap/cache/config.php'),
     'routeCache' => base_path('bootstrap/cache/routes.php'),
     'moduleCache' => base_path('bootstrap/cache/modules.php'),
+    'moduleBootstrapCache' => base_path('bootstrap/cache/module-bootstrap.php'),
 ];
 ```
 
@@ -403,6 +404,7 @@ return [
 | `configCache` | `string` | - | Config cache path |
 | `routeCache` | `string` | - | Route cache path |
 | `moduleCache` | `string` | - | Module cache path |
+| `moduleBootstrapCache` | `string` | - | Compiled module bootstrap cache path |
 
 ---
 

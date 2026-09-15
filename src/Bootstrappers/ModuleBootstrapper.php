@@ -15,6 +15,13 @@ use Marwa\Framework\Supports\Config;
 use Marwa\Framework\Supports\Runtime;
 use Marwa\Framework\Views\View as FrameworkView;
 use Marwa\Module\Contracts\ModuleRegistryInterface;
+use Marwa\Module\Contracts\ModuleRepositoryInterface;
+use Marwa\Module\Contracts\ModuleServiceProviderInterface;
+use Marwa\Module\Exception\ModuleConfigurationException;
+use Marwa\Module\Module;
+use Marwa\Module\ModuleBuilder;
+use Marwa\Module\ModuleRegistry;
+use Marwa\Module\ModuleRepository;
 use Marwa\Module\ModulesServiceProvider;
 
 final class ModuleBootstrapper
@@ -26,6 +33,7 @@ final class ModuleBootstrapper
      *     enabled: bool,
      *     paths: list<string>,
      *     cache: string,
+     *     bootstrapCache: string,
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
@@ -36,6 +44,11 @@ final class ModuleBootstrapper
     private ?array $moduleConfig = null;
 
     private ?ModuleRegistryInterface $registry = null;
+
+    /**
+     * @var array<string, list<string>>|null
+     */
+    private ?array $compiledViewNamespaces = null;
 
     /**
      * @var list<array{path:string,optional?:bool}>|null
@@ -76,13 +89,22 @@ final class ModuleBootstrapper
             return;
         }
 
-        $provider = new ModulesServiceProvider(
-            $moduleConfig['paths'],
-            $moduleConfig['cache'],
-            $moduleConfig['forceRefresh']
-        );
+        $cache = $this->createBootstrapCache($moduleConfig);
+        $compiled = $cache->load();
 
-        $provider->register($this->app);
+        if ($compiled !== null) {
+            $this->registerCompiledModules($compiled['modules'], $compiled['providers'], $moduleConfig);
+            $this->compiledViewNamespaces = $compiled['view_namespaces'];
+        } else {
+            $provider = new ModulesServiceProvider(
+                $moduleConfig['paths'],
+                $moduleConfig['cache'],
+                $moduleConfig['forceRefresh']
+            );
+
+            $provider->register($this->app);
+        }
+
         $this->registry = $this->resolveRegistry();
         $this->assertModuleDependencies($this->registry);
         $this->app->bootModuleServiceProviders();
@@ -97,6 +119,10 @@ final class ModuleBootstrapper
         }
 
         $this->app->dispatch(new ModulesBootstrapped(modules: array_keys($this->registry->all())));
+
+        if ($compiled === null && $cache->enabled() && $this->registry->all() !== []) {
+            $cache->save($cache->compile($this->registry->all()));
+        }
 
         $this->booted = true;
     }
@@ -180,6 +206,112 @@ final class ModuleBootstrapper
         return $this->{$cacheKey};
     }
 
+    /**
+     * @param array{
+     *     enabled: bool,
+     *     paths: list<string>,
+     *     cache: string,
+     *     bootstrapCache: string,
+     *     forceRefresh: bool,
+     *     commandPaths: list<string>,
+     *     commandConventions: list<string>,
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
+     * } $moduleConfig
+     */
+    private function createBootstrapCache(array $moduleConfig): ModuleBootstrapCache
+    {
+        return new ModuleBootstrapCache(
+            $moduleConfig['bootstrapCache'],
+            $moduleConfig['paths'],
+            $moduleConfig['forceRefresh'],
+            BootstrapConfig::shouldCache()
+        );
+    }
+
+    /**
+     * Bind an in-memory registry from the compiled payload and register the
+     * compiled provider list without scanning the filesystem.
+     *
+     * @param array<string, mixed> $rows
+     * @param list<string> $providers
+     * @param array{
+     *     enabled: bool,
+     *     paths: list<string>,
+     *     cache: string,
+     *     bootstrapCache: string,
+     *     forceRefresh: bool,
+     *     commandPaths: list<string>,
+     *     commandConventions: list<string>,
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
+     * } $moduleConfig
+     */
+    private function registerCompiledModules(array $rows, array $providers, array $moduleConfig): void
+    {
+        $modules = $this->hydrateModules($rows);
+
+        if ($modules === []) {
+            throw new \RuntimeException('Compiled module cache did not contain any usable modules.');
+        }
+
+        $repository = new CompiledModuleRepository($modules);
+        $registry = new ModuleRegistry($repository, false);
+        $builder = new ModuleBuilder($registry);
+
+        $this->app->add(ModuleRepositoryInterface::class, $repository);
+        $this->app->add(ModuleRegistryInterface::class, $registry);
+        $this->app->add(ModuleRepository::class, new ModuleRepository($moduleConfig['paths'], $moduleConfig['cache']));
+        $this->app->add(ModuleRegistry::class, $registry);
+        $this->app->add(ModuleBuilder::class, $builder);
+
+        foreach ($providers as $provider) {
+            $this->assertValidProvider($provider);
+            $this->app->addServiceProvider($provider);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $rows
+     * @return array<string, Module>
+     */
+    private function hydrateModules(array $rows): array
+    {
+        $modules = [];
+
+        foreach ($rows as $slug => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $resolvedSlug = $row['slug'] ?? $slug;
+            $basePath = $row['basePath'] ?? null;
+            $manifest = $row['manifest'] ?? null;
+
+            if (!is_string($resolvedSlug) || $resolvedSlug === '' || !is_string($basePath) || !is_array($manifest)) {
+                continue;
+            }
+
+            /** @var array<string, mixed> $manifest */
+            $modules[$resolvedSlug] = new Module($resolvedSlug, $basePath, $manifest);
+        }
+
+        return $modules;
+    }
+
+    private function assertValidProvider(string $provider): void
+    {
+        if (!class_exists($provider)) {
+            throw new ModuleConfigurationException("Module service provider [$provider] does not exist.");
+        }
+
+        if (!is_subclass_of($provider, ModuleServiceProviderInterface::class)) {
+            throw new ModuleConfigurationException(
+                "Module service provider [$provider] must implement " . ModuleServiceProviderInterface::class . '.'
+            );
+        }
+    }
+
     private function loadModuleConfigs(ModuleRegistryInterface $registry): void
     {
         foreach ($registry->all() as $module) {
@@ -230,7 +362,7 @@ final class ModuleBootstrapper
         $eventDispatcher = $this->container->get(\Marwa\Framework\Contracts\EventDispatcherInterface::class);
 
         foreach ($registry->all() as $module) {
-            $manifest = $this->manifestReader->read($module);
+            $manifest = $module->manifest();
             $listeners = $manifest['listeners'] ?? null;
 
             if (!is_array($listeners)) {
@@ -323,51 +455,32 @@ final class ModuleBootstrapper
         }
 
         $view = $this->container->get(FrameworkView::class);
+        $namespaces = $this->compiledViewNamespaces ?? ModuleBootstrapCache::viewNamespaces($registry->all());
 
-        if ($this->isDebug()) {
-            $this->clearTwigCacheIfDev();
-        }
+        foreach ($namespaces as $namespace => $paths) {
+            $registered = 0;
 
-        foreach ($registry->all() as $module) {
-            $namespace = $this->moduleNamespace($module->slug());
-            $viewPaths = $this->resolveModuleViewsPaths($module);
+            foreach ($paths as $path) {
+                if (!is_dir($path)) {
+                    continue;
+                }
 
-            if (empty($viewPaths)) {
+                $view->addNamespace($namespace, $path);
+                $registered++;
+            }
+
+            if ($registered === 0) {
                 if ($this->isDebug()) {
                     error_log("[ModuleViews] {$namespace}: no views path found");
                 }
+
                 continue;
             }
 
-            foreach ($viewPaths as $path) {
-                $view->addNamespace($namespace, $path);
-            }
-
             if ($this->isDebug()) {
-                error_log("[ModuleViews] {$namespace}: registered " . count($viewPaths) . " path(s)");
+                error_log("[ModuleViews] {$namespace}: registered {$registered} path(s)");
             }
         }
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function resolveModuleViewsPaths(\Marwa\Module\Module $module): array
-    {
-        $paths = [];
-        $basePath = $module->basePath();
-
-        $conventionalPath = $basePath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
-        if (is_dir($conventionalPath)) {
-            $paths[] = $conventionalPath;
-        }
-
-        $viewPathValue = $module->path('views');
-        if ($viewPathValue !== null && is_dir($viewPathValue)) {
-            $paths[] = $viewPathValue;
-        }
-
-        return array_values(array_unique($paths));
     }
 
     private function isDebug(): bool
@@ -379,23 +492,6 @@ final class ModuleBootstrapper
         }
 
         return $debug;
-    }
-
-    private function clearTwigCacheIfDev(): void
-    {
-        $cachePath = $this->config->getString('view.cachePath');
-
-        if ($cachePath !== '' && is_dir($cachePath)) {
-            $files = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS)
-            );
-
-            foreach ($files as $file) {
-                if ($file->isFile() && $file->getExtension() === 'php') {
-                    @unlink($file->getPathname());
-                }
-            }
-        }
     }
 
     private function loadModuleRoutes(ModuleRegistryInterface $registry): void
@@ -423,22 +519,12 @@ final class ModuleBootstrapper
         $this->app->setModuleRoutesLoaded(true);
     }
 
-    private function moduleNamespace(string $slug): string
-    {
-        $namespace = preg_replace('/[^A-Za-z0-9_]/', '_', $slug) ?: 'Module';
-
-        if (preg_match('/^[A-Za-z]/', $namespace) !== 1) {
-            $namespace = 'Module_' . $namespace;
-        }
-
-        return $namespace;
-    }
-
     /**
      * @return array{
      *     enabled: bool,
      *     paths: list<string>,
      *     cache: string,
+     *     bootstrapCache: string,
      *     forceRefresh: bool,
      *     commandPaths: list<string>,
      *     commandConventions: list<string>,
@@ -458,6 +544,7 @@ final class ModuleBootstrapper
          *     enabled: bool,
          *     paths: list<string>,
          *     cache: string,
+         *     bootstrapCache: string,
          *     forceRefresh: bool,
          *     commandPaths: list<string>,
          *     commandConventions: list<string>,
@@ -474,6 +561,7 @@ final class ModuleBootstrapper
         $moduleConfig['forceRefresh'] = (bool) $moduleConfig['forceRefresh'];
         $moduleConfig['enabled'] = (bool) $moduleConfig['enabled'];
         $moduleConfig['cache'] = $moduleConfig['cache'];
+        $moduleConfig['bootstrapCache'] = trim((string) $moduleConfig['bootstrapCache']);
 
         $this->moduleConfig = $moduleConfig;
 

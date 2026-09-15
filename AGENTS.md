@@ -1,238 +1,54 @@
 # Repository Guidelines
 
-<!-- Last scope wins. Folder AGENTS.md overrides this. Keep under 500 lines. Review monthly. -->
+<!-- Last scope wins. Folder AGENTS.md overrides this. Keep this file short and verifiable. -->
 
-## Project
+## What this repo is
 
-Marwa Framework is a lightweight, PSR-aligned PHP 8.2+ framework core for modular web apps, console tools, and reusable runtime services.
-
-## Structure
-
-- Namespace: `Marwa\Framework\`
-- Core: `src/`
-- Main folders: `Adapters/`, `Bootstrappers/`, `Config/`, `Console/`, `Contracts/`, `Controllers/`, `Database/`, `Exceptions/`, `Facades/`, `Mail/`, `Middlewares/`, `Navigation/`, `Notifications/`, `Providers/`, `Queue/`, `Scheduling/`, `Security/`, `Stubs/`, `Supports/`, `Validation/`, `View/`, `Views/`
-- Key files: `src/Application.php`, `src/HttpKernel.php`
-- Routes: `routes/web.php`
-- CLI entrypoint: `marwa`
-- Tests: `tests/`
-- Helpers: `src/Supports/Helpers.php` re-exports modular helpers from `src/Supports/Helpers/`
-- Validation: `Marwa\Support\Validation` is the canonical validation engine; `src/Validation/` keeps backward-compatible framework adapters
-- DB library: `memran\marwa-db`
-- Support library: `memran\marwa-support`
-- Debugbar: `memran\marwa-debugbar`
-- View: `memran\marwa-view`
-- Module: `memran\marwa-module`
-- Entity: `memran\marwa-entity` is the source of truth for schema and validation across controllers, requests, models, migrations, and views
-- Events: `memran\marwa-event`
-- Router : `memran\marwa-router`
-- Logger : `memran\marwa-logger`
-- Error handler: `memran\marwa-error-handler`
-
-## Marwa Module Library
-
-`marwa-module` is the modular unit of the system. Each module must be self-contained and feature-based.
-
-### Structure
-
-Modules may contain controllers, models, views, routes, config, migrations, resources, policies, supports, actions, entities, widgets, and services.
-
-### Registration
-
-Each module must provide a manifest with name, dependencies, permissions, widgets, routes, migrations, menu, and status.
-
-### Dependency Rules
-
-- Declare dependencies explicitly
-- Load independent modules before dependent modules
-
-### Agent Rules
-
-- Build features as modules, not core
-- Keep modules decoupled and reusable
-- Avoid cross-module tight coupling
-- Use manifests for integrations
-
-## Marwa-Support Library
-
-Use `marwa-support` utility classes for common operations. Do not write custom helpers when an equivalent exists.
-
-### Available Classes
-
-`Arr`, `CSRF`, `Collection`, `Crypt`, `Date`, `File`, `Finder`, `Hash`, `Helper`, `Html`, `Json`, `Number`, `Obj`, `Random`, `Sanitizer`, `Security`, `Str`, `Url`, `Validation`, `Validator`, `XSS`
-
-### Usage Examples
-
-```php
-Str::slug($title);
-Arr::get($data, 'user.name');
-Validator::make($input, $rules);
-Hash::make($password);
-Url::to('/dashboard');
-```
-
-### Agent Instructions
-
-- Pick the required utility first, then use the matching class
-- Avoid mixing utilities unnecessarily
-- Validate and sanitize input with `Validator`, `Sanitizer`, `XSS`, or `Security`
-- Use `Collection` for array transformations
-- Use `Str`, `Arr`, and `Obj` for data handling
+- `memran/marwa-framework` is a **library**, not an app. There is no `public/`, `marwa` CLI file, or `modules/` directory here — those belong to consuming apps (recommended skeleton: `memran/marwa-php`).
+- All `Marwa\Framework\*` code is in `src/` (PSR-4). Everything else — `Marwa\DB\*`, `Marwa\Support\*`, `Marwa\Module\*`, `Marwa\Router\*`, `Marwa\View\*`, `Marwa\Entity\*`, `Marwa\Event\*`, `Marwa\Logger\*` — comes from separate `memran/*` packages in `vendor/`.
+- Vendor packages are wrapped by `src/Adapters/` (AI, Cache, Event, Http, Logger, Mail, MCP, Process, Validation, Router, View, Debugbar, ErrorHandler). New integrations go through adapters, never vendor edits.
+- Core entrypoints: `src/Application.php` (container, env, config, providers) and `src/HttpKernel.php` (middleware pipeline). The first `Application` constructed becomes `$GLOBALS['marwa_app']` (later ones don't replace it); `src/Supports/Helpers/` resolves services through it, so tests unset the global between apps.
+- A concise API map already exists in `.opencode/skill/marwa-framework/SKILL.md` and `.codex/skills/marwa-framework/references/framework-api.md`; deep docs live in `docs/`. Prefer these over re-deriving structure.
 
 ## Commands
 
-- `composer install` - install dependencies
-- `composer test` - run PHPUnit
-- `composer stan` - run PHPStan level 6
-- `php marwa` - run the CLI
-- `php -S localhost:8000 -t public` - local manual check
-
-## Style
-
-- `declare(strict_types=1);`
-- PSR-1, PSR-12, PSR-4
-- 4-space indentation
-- Typed properties and explicit return types
-- PascalCase classes
-- `*Interface`, `*Exception`, `*ServiceProvider`
-- Prefer small, single-purpose classes
-- Keep files small: max 200 lines per class, 20 lines per method
-- Use constants and enums for finite states
-
-### Formatting
-
-- Run `composer lint` after manual PHP edits and before finalizing a change.
-- Accept PHP CS Fixer output as the source of truth for whitespace, import order, and brace placement.
-- Keep files free of trailing whitespace and ensure exactly one blank line at EOF.
-- Do not hand-edit around formatter warnings when the fixer can apply the correct style.
-
-## Engineering Principles
-
-- KISS, DRY, SOLID
-- Understand context before coding
-- Prefer composition over inheritance
-- Keep architecture modular and decoupled
-- Write production-ready, maintainable, scalable code
-- Prefer clarity over cleverness
-- Align with project architecture
-- Edit existing code instead of creating duplicates
-- Maintain backward compatibility
-- Keep changes minimal and scoped
-- Validate all inputs
-- Use composer packages by creating adapters
-- Choose the correct class for the responsibility
-- Keep code clean and minimal
-- Avoid duplicating utility logic
-- Check before writing code to avoid duplicate code
-- Every package has agents.md and README.md for Learning
+- `composer test` — full PHPUnit 11.5 suite.
+  - one file: `php vendor/bin/phpunit tests/ModuleBootstrapperTest.php`
+  - one test: `php vendor/bin/phpunit --filter=testName`
+- `composer stan` (= `composer analyse`) — PHPStan level 6. Level, paths, and ignores live in `phpstan.neon`; don't pass those flags again.
+- `composer lint` — PHP CS Fixer **dry-run**; `composer fix` — apply formatting. Never hand-format around lint output.
+- `composer ci` — full gate in CI order: PHPStan → CS Fixer dry-run → PHPUnit. Extra `bin/ci` args are forwarded to PHPUnit.
+- `composer test:coverage` — coverage run.
+- Finish changes with `composer ci` green.
+- PHP CS Fixer runs on newer local PHP than the 8.2 platform pin; composer scripts deliberately pass `--allow-unsupported-php-version=yes`. Leave it in place.
 
 ## Testing
 
-- Add tests in `tests/`
-- Use `*Test.php` or `*_test.php`
-- Cover routing, bootstrapping, middleware, and adapters
-- Prefer `php vendor/bin/phpunit` for direct verification and `composer test` for the repo shortcut
-- Prefer `php vendor/bin/phpstan analyse --level 6 --memory-limit=1G --no-progress` for static analysis and `composer stan` for the repo shortcut
-- Run PHPUnit first, then PHPStan level 6 before considering a change complete
-- Aim for 80% minimum coverage
-- Every public service method needs unit tests
-- For PHPUnit tests:
-  - Use `declare(strict_types=1);` in every test file
-  - Prefer `final class ... extends TestCase`
-  - Keep tests isolated and deterministic
-  - Use temp directories under `sys_get_temp_dir()` for filesystem work
-  - Clean up in `tearDown()` for every file, directory, env var, and global created by the test
-  - Avoid network, time, randomness, and external services unless explicitly mocked
-  - Prefer explicit assertions:
-    - `assertSame()` for scalars and arrays
-    - `assertTrue()` / `assertFalse()` for booleans
-    - `assertNull()` / `assertNotNull()` for nullable values
-    - `assertInstanceOf()` for types
-    - `assertFileExists()` / `assertDirectoryExists()` for filesystem effects
-  - Test behavior, not implementation details
-  - Add a regression test whenever fixing a bug
-  - Keep assertions precise and minimal
-  - Do not depend on test order
-  - Do not allow warnings, risky tests, or stray output
-- For PHPStan:
-  - Treat level 6 as the minimum acceptable standard
-  - Prefer explicit typing: typed properties, explicit parameter types, explicit return types, and `declare(strict_types=1);`
-  - Avoid `mixed` unless a boundary truly requires it
-  - Use accurate array shapes in PHPDoc when a method returns structured arrays
-  - Add PHPDoc only when types cannot be expressed directly in code
-  - Prefer concrete types over generic containers
-  - Fix the source code rather than suppressing warnings
-  - Keep ignores narrowly scoped and documented when unavoidable
-  - Watch for nullable/union mismatches, missing return types, undefined array keys, invalid access, and iterable value ambiguity
+- `phpunit.xml.dist` enables `failOnRisky`, `failOnWarning`, `beStrictAboutOutputDuringTests` — tests must not emit output, warnings, or risky behavior.
+- `tests/bootstrap.php` forces HTTP mode via `Runtime::setConsoleOverride(false)` and redirects sessions to `sys_get_temp_dir()`. CLI-mode tests flip the override and restore it.
+- Tests build throwaway apps: temp base path with `.env`, `config/*.php`, and fixtures, then unlink everything in `tearDown()` and unset `$GLOBALS['marwa_app']`, `$_ENV`/`$_SERVER` keys they set.
+- Call `restore_error_handler()` / `restore_exception_handler()` after tests that swap handlers.
+- Fixtures live in `tests/Fixtures/` (e.g. `Modules/` drives `ModuleBootstrapperTest`). Test namespace `Marwa\Framework\Tests\` maps to `tests/` via autoload-dev.
+- Add a regression test when fixing a bug; cover new public service behavior.
 
-## Commit & PR
+## Conventions
 
-- Use short, imperative commit subjects
-- Keep commits focused on one logical change
-- PRs should explain the problem, approach, and verification
-- Link related issues
-- Include CLI output or request/response examples when user-facing behavior changes
-
-## Configuration
-
-- Copy `.env.example` to `.env` in consuming apps
-- Never commit secrets
-- Document new env keys in `README.MD` or the relevant docs
+- `declare(strict_types=1);` in every file. Target PHP 8.2 (`config.platform` pins 8.2.30; CI runs 8.2 and 8.3).
+- `.php-cs-fixer.dist.php` is the style source of truth: `@PSR12`, strict types, no unused imports, ordered imports, single-line empty bodies.
+- Prefer `marwa-support` utilities (`Arr`, `Str`, `Collection`, `Json`, `Date`, `File`, `Crypt`, `Hash`, `Validator`, `Sanitizer`, `Security`, `XSS`, ...) over custom helpers. `src/Supports/Helpers.php` only re-exports function files from `src/Supports/Helpers/`.
+- Validation engine is `Marwa\Support\Validation\RequestValidator` + `RuleRegistry` (vendor `marwa-support`); `src/Validation/` keeps backward-compatible framework adapters (`RequestValidator`, `FormRequest`).
+- Modules are manifest-driven through `marwa-module`. Framework-side wiring: `src/Bootstrappers/ModuleBootstrapper.php`, `src/Config/ModuleConfig.php`, `src/Console/Commands/Module*`. App module dirs/manifests are not in this repo — only test fixtures.
+- Build app-facing features as modules, not core; keep core module-agnostic.
+- Cache tooling is paired: `config:cache`/`config:clear`, `route:cache`/`route:clear`, `module:cache`/`module:clear`, `bootstrap:cache`/`bootstrap:clear`.
 
 ## Never
 
-- Never change `vendor/*`
-- Never expose secrets or passwords
-- Suggest changes to vendor code instead of editing it
-- Never run raw SQL operations
-
-## Error Handling
-
-- Use centralized exception handling
-- Log critical errors
-- Fail gracefully with meaningful responses
-
-## Performance
-
-- Optimize for readability first
-- Avoid premature optimization
-- Cache where necessary
-
-## Documentation
-
-- Documentation lives in `docs/*`
-- Update docs when code changes require it
-- Keep explanations useful
-- Add section anchors for navigation
-- Add examples
-- Add diagrams only when they help
-
-## Versioning
-
-- Version: `v1.0.0`
-- Updated: `2026-04-18`
-
-## Change Log
-
-- `2026-04-18` - Cleaned wording, removed duplication, and aligned validation guidance with the support-backed engine
-- `2026-04-17` - Refactored Helpers.php into modular files
-  - Extracted 8 helper categories into `src/Supports/Helpers/`
-  - `Helpers.php` reduced from 544 to 16 lines
-  - New files: `Paths`, `Container`, `SessionRequest`, `Services`, `Security`, `ValidationResponse`, `ViewDebug`, `Utilities`
-  - Backward compatible
-- `2026-04-17` - Refactored validation system
-  - Extracted validation rules into `src/Validation/ValidationRule/`
-  - Created `RuleRegistry` for rule management with custom rule support
-  - Extracted helper classes to `src/Validation/Helpers/`
-  - Reduced `RequestValidator.php` from 687 to 245 lines
-  - Added support for custom validation rules via constructor or method injection
-- `2026-04-17` - Updated workflows
+- Edit `vendor/*` or any `memran/*` package source — changes belong in that package's repo.
+- Commit `.env` or secrets. `composer.lock` is intentionally gitignored here.
 
 ## graphify
 
-This project has a graphify knowledge graph at graphify-out/.
-
-Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
-- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
+The knowledge graph lives in `graphify-out/` (gitignored).
+- Read `graphify-out/GRAPH_REPORT.md` before architecture questions; if `graphify-out/wiki/index.md` exists, navigate it instead of raw files.
+- Prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, `graphify explain "<concept>"` for cross-module questions.
+- After code changes, run `graphify update .` to refresh it.

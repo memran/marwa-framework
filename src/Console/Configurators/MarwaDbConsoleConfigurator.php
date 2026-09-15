@@ -6,14 +6,15 @@ namespace Marwa\Framework\Console\Configurators;
 
 use Marwa\DB\CLI\Commands\MakeMigrationCommand;
 use Marwa\DB\CLI\Commands\MigrateCommand;
-use Marwa\DB\CLI\Commands\MigrateRefreshCommand;
 use Marwa\DB\CLI\Commands\MigrateRollbackCommand;
 use Marwa\DB\CLI\Commands\MigrateStatusCommand;
 use Marwa\DB\Seeder\SeedRunner;
 use Marwa\Framework\Application;
 use Marwa\Framework\Bootstrappers\DatabaseBootstrapper;
+use Marwa\Framework\Bootstrappers\ModuleBootstrapper;
 use Marwa\Framework\Console\CommandRegistry;
 use Marwa\Framework\Console\Commands\MakeSeederCommand;
+use Marwa\Framework\Console\Commands\MigrateRefreshCommand;
 use Marwa\Framework\Console\Commands\SeedRunCommand;
 use Marwa\Framework\Contracts\ConsoleCommandConfiguratorInterface;
 
@@ -38,7 +39,11 @@ final class MarwaDbConsoleConfigurator implements ConsoleCommandConfiguratorInte
 
         $registry->register(new MigrateCommand($manager, $config['migrationsPath']));
         $registry->register(new MigrateRollbackCommand($manager, $config['migrationsPath']));
-        $registry->register(new MigrateRefreshCommand($manager, $config['migrationsPath']));
+        $registry->register(new MigrateRefreshCommand(
+            $manager,
+            $config['migrationsPath'],
+            $this->app->make(ModuleBootstrapper::class),
+        ));
         $registry->register(new MigrateStatusCommand($manager, $config['migrationsPath']));
         $registry->register(new MakeMigrationCommand($config['migrationsPath']));
         $registry->register(new MakeSeederCommand($config['seedersPath'], $config['seedersNamespace']));

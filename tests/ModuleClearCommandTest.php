@@ -23,6 +23,10 @@ final class ModuleClearCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        @unlink($this->basePath . '/storage/cache/modules.php');
+        @unlink($this->basePath . '/storage/cache/module-bootstrap.php');
+        @rmdir($this->basePath . '/storage/cache');
+        @rmdir($this->basePath . '/storage');
         @unlink($this->basePath . '/config/module.php');
         @unlink($this->basePath . '/.env');
         @rmdir($this->basePath . '/config');
@@ -57,5 +61,38 @@ PHP
         self::assertSame(0, $tester->execute([]));
         self::assertStringContainsString('Module cache cleared:', $tester->getDisplay());
         self::assertStringContainsString('(not configured)', $tester->getDisplay());
+    }
+
+    public function testModuleClearCommandRemovesManifestAndCompiledBootstrapCaches(): void
+    {
+        $cacheFile = $this->basePath . '/storage/cache/modules.php';
+        $bootstrapCacheFile = $this->basePath . '/storage/cache/module-bootstrap.php';
+
+        mkdir($this->basePath . '/storage/cache', 0777, true);
+        file_put_contents($cacheFile, '<?php return [];');
+        file_put_contents($bootstrapCacheFile, '<?php return [];');
+
+        file_put_contents(
+            $this->basePath . '/config/module.php',
+            <<<PHP
+<?php
+
+return [
+    'cache' => '{$cacheFile}',
+    'bootstrapCache' => '{$bootstrapCacheFile}',
+];
+PHP
+        );
+
+        $app = new Application($this->basePath);
+        $console = $app->console()->application();
+        $this->handlersBooted = true;
+
+        $tester = new CommandTester($console->find('module:clear'));
+        self::assertSame(0, $tester->execute([]));
+        self::assertStringContainsString('Module bootstrap cache cleared:', $tester->getDisplay());
+
+        self::assertFileDoesNotExist($cacheFile);
+        self::assertFileDoesNotExist($bootstrapCacheFile);
     }
 }

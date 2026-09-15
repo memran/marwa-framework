@@ -438,12 +438,14 @@ Supported keys:
 - `configCache`: full path to cached merged config output
 - `routeCache`: full path to compiled route cache output
 - `moduleCache`: full path to module manifest cache output
+- `moduleBootstrapCache`: full path to compiled module bootstrap cache output
 
 Default paths:
 
 - `bootstrap/cache/config.php`
 - `bootstrap/cache/routes.php`
 - `bootstrap/cache/modules.php`
+- `bootstrap/cache/module-bootstrap.php`
 
 ## `config/session.php`
 
@@ -624,6 +626,7 @@ return [
         base_path('modules'),
     ],
     'cache' => base_path('bootstrap/cache/modules.php'),
+    'bootstrapCache' => base_path('bootstrap/cache/module-bootstrap.php'),
     'forceRefresh' => false,
     'commandPaths' => ['commands'],
     'commandConventions' => ['Console/Commands', 'src/Console/Commands'],
