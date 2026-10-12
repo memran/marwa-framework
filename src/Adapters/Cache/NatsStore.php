@@ -313,7 +313,7 @@ final class NatsStore implements KeyValueStore
     {
         try {
             $envelope = unserialize($contents, ['allowed_classes' => false]);
-        } catch (\Throwable) {
+        } catch (\Throwable) { // @phpstan-ignore catch.neverThrown (unserialize() can throw on malformed or hostile cache data)
             return null;
         }
 
@@ -323,7 +323,7 @@ final class NatsStore implements KeyValueStore
 
         try {
             $payload = unserialize($envelope['payload'], ['allowed_classes' => false]);
-        } catch (\Throwable) {
+        } catch (\Throwable) { // @phpstan-ignore catch.neverThrown (unserialize() can throw on malformed or hostile cache data)
             return null;
         }
 
