@@ -496,27 +496,13 @@ final class ModuleBootstrapper
 
     private function loadModuleRoutes(ModuleRegistryInterface $registry): void
     {
-        if ($this->app->areModuleRoutesLoaded()) {
+        $loader = new RouteFileLoader($this->app);
+
+        if ($loader->shouldUseCache()) {
             return;
         }
 
-        $routeCache = BootstrapConfig::defaults($this->app)['routeCache'];
-
-        if (is_file($routeCache)) {
-            return;
-        }
-
-        foreach ($registry->all() as $module) {
-            foreach (['http', 'api'] as $channel) {
-                $routeFile = $module->routeFile($channel);
-
-                if (is_string($routeFile) && is_file($routeFile)) {
-                    require $routeFile;
-                }
-            }
-        }
-
-        $this->app->setModuleRoutesLoaded(true);
+        $loader->loadModuleRoutes($registry);
     }
 
     /**

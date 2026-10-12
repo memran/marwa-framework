@@ -82,8 +82,9 @@ final class ModuleBootstrapperTest extends TestCase
         self::assertSame('Hello from module', trim($view->render('@blog/hello.twig')));
     }
 
-    public function testModuleRoutesAreSkippedWhenCompiledRouteCacheExists(): void
+    public function testModuleRoutesAreSkippedWhenCompiledRouteCacheExistsInProduction(): void
     {
+        file_put_contents($this->basePath . '/.env', "APP_ENV=production\nTIMEZONE=UTC\n");
         mkdir($this->basePath . '/storage/cache', 0777, true);
         file_put_contents($this->basePath . '/storage/cache/routes.php', '<?php return static function (): void {};');
 
@@ -91,6 +92,17 @@ final class ModuleBootstrapperTest extends TestCase
         $app->make(AppBootstrapper::class)->bootstrap();
 
         self::assertArrayNotHasKey('marwa_module_routes', $GLOBALS);
+    }
+
+    public function testModuleRoutesIgnoreCompiledRouteCacheOutsideProduction(): void
+    {
+        mkdir($this->basePath . '/storage/cache', 0777, true);
+        file_put_contents($this->basePath . '/storage/cache/routes.php', '<?php return static function (): void {};');
+
+        $app = new Application($this->basePath);
+        $app->make(AppBootstrapper::class)->bootstrap();
+
+        self::assertSame(['blog-http'], $GLOBALS['marwa_module_routes']);
     }
 
     public function testModuleBootstrapperSkipsViewsAndRoutesInCliMode(): void

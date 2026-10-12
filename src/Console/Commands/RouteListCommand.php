@@ -7,6 +7,7 @@ namespace Marwa\Framework\Console\Commands;
 use Marwa\Framework\Adapters\RouterAdapter;
 use Marwa\Framework\Bootstrappers\AppBootstrapper;
 use Marwa\Framework\Bootstrappers\ModuleBootstrapper;
+use Marwa\Framework\Bootstrappers\RouteFileLoader;
 use Marwa\Framework\Config\BootstrapConfig;
 use Marwa\Framework\Console\AbstractCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -33,12 +34,13 @@ final class RouteListCommand extends AbstractCommand
         $routes = $router->routes();
 
         if ($routes === []) {
-            $routeCache = BootstrapConfig::defaults($this->app())['routeCache'];
+            $loader = new RouteFileLoader($this->app());
 
-            if (is_file($routeCache)) {
-                $router->loadCompiledRoutesFrom($routeCache);
+            if ($loader->shouldUseCache()) {
+                $router->loadCompiledRoutesFrom(BootstrapConfig::defaults($this->app())['routeCache']);
             } else {
-                $this->loadRoutesFromSource();
+                $loader->loadAppRoutes();
+                $loader->loadModuleRoutes($this->app()->make(ModuleBootstrapper::class)->registry());
             }
 
             $routes = $router->routes();
@@ -67,37 +69,6 @@ final class RouteListCommand extends AbstractCommand
         }
 
         return Command::SUCCESS;
-    }
-
-    private function loadRoutesFromSource(): void
-    {
-        $web = $this->app()->basePath('routes/web.php');
-        $api = $this->app()->basePath('routes/api.php');
-
-        if (is_file($web)) {
-            require $web;
-        }
-
-        if (is_file($api)) {
-            require $api;
-        }
-
-        $moduleBootstrapper = $this->app()->make(ModuleBootstrapper::class);
-        $registry = $moduleBootstrapper->registry();
-
-        if ($registry === null) {
-            return;
-        }
-
-        foreach ($registry->all() as $module) {
-            foreach (['http', 'api'] as $channel) {
-                $routeFile = $module->routeFile($channel);
-
-                if (is_string($routeFile) && is_file($routeFile)) {
-                    require $routeFile;
-                }
-            }
-        }
     }
 
     private function formatHandler(?string $controller, ?string $action): string
