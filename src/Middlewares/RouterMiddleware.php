@@ -36,6 +36,12 @@ final class RouterMiddleware implements MiddlewareInterface
         }
     }
 
+    /**
+     * Every branch must state the status explicitly: `Response::json()` and
+     * `Response::html()` both default to 200, so a body reading "404 Not
+     * Found" was served under a success status -- and a status is what a
+     * client, a crawler or a monitor actually reads.
+     */
     private function render404(ServerRequestInterface $request): ResponseInterface
     {
         $accept = $request->getHeaderLine('Accept');
@@ -48,7 +54,7 @@ final class RouterMiddleware implements MiddlewareInterface
                 'error' => 'Not Found',
                 'method' => $method,
                 'message' => sprintf('The requested path "%s" was not found on this server.', $path),
-            ]);
+            ], 404);
         }
 
         $template = Config::get('app.error404.template');
@@ -61,7 +67,7 @@ final class RouterMiddleware implements MiddlewareInterface
             ])->withStatus(404);
         }
 
-        return Response::html($this->renderHtml($path, $method));
+        return Response::html($this->renderHtml($path, $method), 404);
     }
 
     private function renderHtml(string $path, string $method): string
