@@ -8,6 +8,9 @@ use Marwa\Framework\Application;
 use Marwa\Framework\Config\ScheduleConfig;
 use Marwa\Framework\Contracts\QueueInterface;
 use Marwa\Framework\Contracts\ScheduleStoreResolverInterface;
+use Marwa\Framework\Queue\NonRetryableJobException;
+use Marwa\Framework\Queue\QueuedJob;
+use Marwa\Framework\Scheduling\Stores\DatabaseScheduleStore;
 use Marwa\Framework\Scheduling\Stores\ScheduleStoreInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -55,7 +58,11 @@ final class Scheduler
             $resolved = $console->find($command);
             $input = new ArrayInput(['command' => $command, ...$arguments]);
 
-            return $resolved->run($input, new BufferedOutput());
+            $exit = $resolved->run($input, new BufferedOutput());
+            if ($exit !== 0) {
+                throw new \RuntimeException(sprintf('Scheduled command [%s] exited with code %d.', $command, $exit));
+            }
+            return $exit;
         }));
     }
 
@@ -105,13 +112,14 @@ final class Scheduler
     }
 
     /**
-     * @return array{ran:list<string>,skipped:list<string>,failed:list<string>}
+     * @return array{ran:list<string>,queued:list<string>,skipped:list<string>,failed:list<string>}
      */
     public function runDue(?\DateTimeImmutable $time = null): array
     {
         $currentTime = $time ?? new \DateTimeImmutable();
         $summary = [
             'ran' => [],
+            'queued' => [],
             'skipped' => [],
             'failed' => [],
         ];
@@ -132,18 +140,37 @@ final class Scheduler
     }
 
     /**
-     * @param array{ran:list<string>,skipped:list<string>,failed:list<string>} $summary
-     * @return array{ran:list<string>,skipped:list<string>,failed:list<string>}
+     * @param array{ran:list<string>,queued:list<string>,skipped:list<string>,failed:list<string>} $summary
+     * @return array{ran:list<string>,queued:list<string>,skipped:list<string>,failed:list<string>}
      */
     private function runTasks(\DateTimeImmutable $currentTime, array $summary): array
     {
-        $store = $this->store();
+        $store = null;
 
         foreach ($this->due($currentTime) as $task) {
+            if ($task->runsInBackground()) {
+                try {
+                    $queued = $this->dispatch($task->name(), $currentTime->getTimestamp());
+                    $summary[$queued === null ? 'skipped' : 'queued'][] = $task->name();
+                } catch (\Throwable $error) {
+                    $summary['failed'][] = $task->name();
+                    $this->logger->error('Scheduled task dispatch failed.', ['task' => $task->name(), 'exception' => $error->getMessage()]);
+                }
+                continue;
+            }
             $lock = null;
+            try {
+                $store ??= $this->store();
+                if ($task->shouldPreventOverlaps()) {
+                    $lock = $store->acquireLock($task, $currentTime, max(60, $task->intervalSeconds() * 2));
+                }
+            } catch (\Throwable $error) {
+                $summary['failed'][] = $task->name();
+                $this->logger->error('Scheduler storage unavailable; task was not executed.', ['task' => $task->name(), 'exception' => $error->getMessage()]);
+                continue;
+            }
 
             if ($task->shouldPreventOverlaps()) {
-                $lock = $store->acquireLock($task, $currentTime, max(60, $task->intervalSeconds() * 2));
 
                 if ($lock === null) {
                     $summary['skipped'][] = $task->name();
@@ -170,6 +197,79 @@ final class Scheduler
         }
 
         return $summary;
+    }
+
+    /** Queue a registered task; the reservation covers both waiting and execution. */
+    public function dispatch(string $name, ?int $occurrence = null): ?QueuedJob
+    {
+        if (!$this->configuration()['enabled']) {
+            throw new \RuntimeException('The scheduler is disabled.');
+        }
+        $task = $this->findTask($name);
+        $store = $this->store();
+        if (!$store instanceof DatabaseScheduleStore) {
+            throw new \RuntimeException('Background task dispatch requires the database scheduler store.');
+        }
+        $settings = $this->app->make(\Marwa\Framework\Supports\Config::class);
+        $lease = max(60, (int) $settings->get('schedule.backgroundLeaseSeconds', 900));
+        $timeout = (int) $settings->get('queue.jobTimeout', 0);
+        if ($timeout <= 0 || $timeout >= $lease) {
+            throw new \RuntimeException('Background tasks require a positive queue job timeout shorter than their lease.');
+        }
+        $time = new \DateTimeImmutable();
+        $token = $store->acquireLock($task, $time, $lease, $occurrence);
+        if (!is_string($token)) {
+            return null;
+        }
+        try {
+            $job = $this->queue->push(ScheduledTaskJob::class, ['task' => $name, 'token' => $token]);
+            $store->record($task, $time, 'queued');
+            return $job;
+        } catch (\Throwable $error) {
+            try {
+                $store->record($task, new \DateTimeImmutable(), 'failed', 'Task could not be queued.');
+            } finally {
+                $store->releaseLock($task, $token, true);
+            }
+            throw $error;
+        }
+    }
+
+    public function runReserved(string $name, string $token): void
+    {
+        $task = $this->findTask($name);
+        $store = $this->store();
+        if (!$store instanceof DatabaseScheduleStore) {
+            throw new NonRetryableJobException('Background tasks require the database scheduler store.');
+        }
+        $time = new \DateTimeImmutable();
+        if (!$this->configuration()['enabled'] || !$store->adoptLock($task, $token, $time)) {
+            if ($store->adoptLock($task, $token, $time, true)) {
+                $store->record($task, $time, 'failed', 'Task reservation expired or scheduler disabled.');
+            }
+            $store->releaseLock($task, $token);
+            throw new NonRetryableJobException('Task reservation expired or scheduler disabled; task was not executed.');
+        }
+        try {
+            $store->record($task, $time, 'running');
+            $task->run($this->app, $time);
+            $store->record($task, new \DateTimeImmutable(), 'success');
+        } catch (\Throwable $error) {
+            $store->record($task, new \DateTimeImmutable(), 'failed', $error->getMessage());
+            throw new NonRetryableJobException($error->getMessage(), 0, $error);
+        } finally {
+            $store->releaseLock($task, $token);
+        }
+    }
+
+    private function findTask(string $name): Task
+    {
+        foreach ($this->tasks as $task) {
+            if ($task->name() === $name) {
+                return $task;
+            }
+        }
+        throw new NonRetryableJobException('Scheduled task is no longer registered.');
     }
 
     /**

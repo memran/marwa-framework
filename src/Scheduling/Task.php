@@ -20,6 +20,7 @@ final class Task
 
     private int $intervalSeconds = 60;
     private bool $withoutOverlapping = false;
+    private bool $background = false;
     private ?string $description = null;
     private ?\DateTimeImmutable $firstScheduledAt = null;
     private \DateTimeImmutable $createdAt;
@@ -99,6 +100,17 @@ final class Task
         $this->withoutOverlapping = true;
 
         return $this;
+    }
+
+    public function inBackground(): self
+    {
+        $this->background = true;
+        return $this;
+    }
+
+    public function runsInBackground(): bool
+    {
+        return $this->background;
     }
 
     public function isDue(Application $app, \DateTimeImmutable $time): bool

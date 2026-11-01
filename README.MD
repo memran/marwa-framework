@@ -106,3 +106,37 @@ composer lint
 ```
 
 Run `composer lint` after manual PHP edits before opening a PR. PHP CS Fixer output is the source of truth for import order, whitespace, braces, and blank lines.
+
+## Database queue reservations
+
+Database jobs are claimed with a conditional update and a random reservation token.
+`queue.reservationSeconds` defaults to 300; expired reservations can be reclaimed.
+Acknowledgements are fenced by token so an old worker cannot complete a reclaimed job.
+`queue.tries` (or worker `--tries`) also caps crash recovery attempts. Malformed payloads
+are failed and skipped. Delivery remains at least once: handlers must be idempotent.
+
+`queue:work --job-timeout=60 --memory-limit=128 --max-jobs=1000 --max-time=3600`
+adds a PCNTL deadline and recycles at a memory limit between jobs. The job deadline
+must be shorter than the reservation lease. `queue.jobTimeout` defaults to zero for
+compatibility; positive deadlines require PCNTL and a process supervisor. The signal
+handler throws an exception; code that suppresses signals or exceptions still requires
+external process limits and bounded I/O. `--timeout` remains an alias for the worker
+lifetime `--max-time`, not a per-job deadline.
+
+## Owned background scheduler execution
+
+Database scheduling now requires a companion `<schedule_table>_locks` table with
+primary-key `name`, string(32) `token`, nullable integer `last_dispatched_at` and
+`expires_at` datetime. The schedule-table generator creates both tables for new
+installs; existing installations need an additive migration and a coordinated
+scheduler/worker restart. Reservations use conditional claims, token-fenced state
+updates and release, and keep the last automatic occurrence after completion.
+
+Mark registered tasks `inBackground()` to reserve and enqueue a native
+`ScheduledTaskJob`, or use `Scheduler::dispatch($registeredName)` for a manual run.
+It requires the database scheduler store and positive `queue.jobTimeout` shorter
+than `schedule.backgroundLeaseSeconds` (default 900). Expired/disabled/missing tasks
+fail without executing the callback. Business exceptions are non-retryable wrapper
+failures; ordinary queue jobs retain their normal retries. Handlers must still be
+idempotent for process-crash redelivery. Scheduler summaries include a `queued` list,
+and CLI output distinguishes queued tasks and returns failure for dispatch errors.

@@ -159,6 +159,28 @@ final class QueueWorkCommandTest extends TestCase
         self::assertSame(0, $app->queue()->size());
     }
 
+    public function testWorkerRecyclesBeforeClaimingAtMemoryLimit(): void
+    {
+        $queue = new RecordingQueue([$this->job('job-1', RecordingQueueJob::class, attempts: 1)]);
+        $tester = $this->runWorker($queue, ['--memory-limit' => 1, '--once' => true]);
+        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        self::assertSame([], $queue->poppedQueues);
+    }
+
+    public function testDeadlineReleasesJobAndRecyclesWorker(): void
+    {
+        if (!function_exists('pcntl_alarm')) {
+            self::markTestSkipped('PCNTL is required for job deadlines.');
+        }
+        $queue = new RecordingQueue([$this->job('slow', SlowDeadlineJob::class, attempts: 1)]);
+        $tester = $this->runWorker($queue, ['--job-timeout' => 1, '--tries' => 3, '--once' => true]);
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertSame([], $queue->completed);
+        self::assertCount(1, $queue->released);
+        self::assertStringContainsString('execution deadline', $tester->getDisplay());
+        self::assertSame(0, pcntl_alarm(0));
+    }
+
     /**
      * @param array<string, mixed> $options
      */
@@ -370,5 +392,16 @@ final class RecordingMailable extends Mailable
         self::$built++;
 
         return $mailer;
+    }
+}
+
+final class SlowDeadlineJob
+{
+    /** @param array<string,mixed> $payload */
+    public function __construct(private array $payload) {}
+
+    public function handle(Application $app): void
+    {
+        sleep((int) ($this->payload['seconds'] ?? 3));
     }
 }

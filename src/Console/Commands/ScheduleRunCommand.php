@@ -40,6 +40,7 @@ final class ScheduleRunCommand extends AbstractCommand
 
         $startedAt = time();
         $hadDueTask = false;
+        $hadFailures = false;
 
         do {
             $summary = $scheduler->runDue(new \DateTimeImmutable());
@@ -49,12 +50,18 @@ final class ScheduleRunCommand extends AbstractCommand
                 $output->writeln(sprintf('<info>Ran [%s]</info>', $task));
             }
 
+            foreach ($summary['queued'] as $task) {
+                $hadDueTask = true;
+                $output->writeln(sprintf('<info>Queued [%s]</info>', $task));
+            }
+
             foreach ($summary['skipped'] as $task) {
                 $hadDueTask = true;
                 $output->writeln(sprintf('<comment>Skipped [%s] because it is already running.</comment>', $task));
             }
 
             foreach ($summary['failed'] as $task) {
+                $hadFailures = true;
                 $hadDueTask = true;
                 $output->writeln(sprintf('<error>Task [%s] failed.</error>', $task));
             }
@@ -74,7 +81,7 @@ final class ScheduleRunCommand extends AbstractCommand
             $output->writeln('<comment>No scheduled tasks were due.</comment>');
         }
 
-        return Command::SUCCESS;
+        return $hadFailures ? Command::FAILURE : Command::SUCCESS;
     }
 
     private function resolveIntegerOption(mixed $value, int $default): int

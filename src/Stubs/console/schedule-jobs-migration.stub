@@ -21,10 +21,17 @@ return new class extends AbstractMigration {
             $table->dateTime('last_skipped_at')->nullable();
             $table->timestamps();
         });
+        Schema::create('{{ table }}_locks', static function ($table): void {
+            $table->string('name', 191)->primary();
+            $table->string('token', 32);
+            $table->integer('last_dispatched_at')->nullable();
+            $table->dateTime('expires_at');
+        });
     }
 
     public function down(): void
     {
+        Schema::drop('{{ table }}_locks');
         Schema::drop('{{ table }}');
     }
 };

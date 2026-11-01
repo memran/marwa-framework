@@ -7,6 +7,7 @@ namespace Marwa\Framework\Queue;
 use DateTimeImmutable;
 use Marwa\DB\Connection\ConnectionManager;
 use Marwa\DB\Facades\DB;
+use Marwa\DB\Query\Builder;
 use Marwa\Framework\Application;
 use Marwa\Framework\Config\QueueConfig;
 use Marwa\Framework\Contracts\QueueInterface;
@@ -105,55 +106,77 @@ final class DatabaseQueue implements QueueInterface
 
         $queueName = $queue !== null && $queue !== '' ? $queue : $config['default'];
         $timestamp = ($now ?? new DateTimeImmutable())->getTimestamp();
-        $workerId = uniqid('worker:', true);
-        $connection = $config['database']['connection'];
-        $table = $config['database']['table'];
-
-        return $this->manager->transaction(function () use ($connection, $table, $queueName, $timestamp, $workerId): ?QueuedJob {
-            $row = DB::table($table, $connection)
-                ->where('queue', '=', $queueName)
-                ->where('available_at', '<=', $timestamp)
-                ->whereNull('reserved_at')
-                ->whereNull('completed_at')
-                ->whereNull('failed_at')
-                ->orderBy('created_at', 'asc')
-                ->first();
-
+        $lease = max(1, (int) $this->config->get('queue.reservationSeconds', 300));
+        $maxAttempts = max(1, $this->maxAttempts ?? $config['tries'] ?? (int) ($config['retryAfter'] / 30));
+        // Compare-and-set in autocommit avoids a stale read snapshot and holds no lock during execution.
+        for ($collision = 0; $collision < 20; $collision++) {
+            $eligible = $this->eligible($queueName, $timestamp, $lease);
+            $row = (clone $eligible)->select('id', 'attempts')->orderBy('created_at')->orderBy('id')->first();
             if ($row === null) {
                 return null;
             }
-
-            $attempts = (int) ($row['attempts'] ?? 0) + 1;
-            $updated = DB::table($table, $connection)
-                ->where('id', '=', $row['id'])
-                ->update([
-                    'attempts' => $attempts,
-                    'reserved_at' => $timestamp,
-                    'reserved_by' => $workerId,
-                    'updated_at' => $timestamp,
-                ]);
-
-            if ($updated !== 1) {
-                return null;
+            $claim = $this->eligible($queueName, $timestamp, $lease)
+                ->where('id', '=', $row['id'])->where('attempts', '=', $row['attempts']);
+            if ((int) $row['attempts'] >= $maxAttempts) {
+                $claim->update(['failed_at' => $timestamp, 'reserved_at' => null, 'reserved_by' => null, 'updated_at' => $timestamp]);
+                continue;
             }
-
-            $job = QueuedJob::fromArray([
-                'id' => $row['id'],
-                'name' => $row['name'],
-                'queue' => $row['queue'],
-                'payload' => json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR),
-                'attempts' => $attempts,
-                'availableAt' => (int) $row['available_at'],
-                'createdAt' => (int) $row['created_at'],
+            $token = bin2hex(random_bytes(16));
+            $attempts = (int) $row['attempts'] + 1;
+            if ($claim->update(['attempts' => $attempts, 'reserved_at' => $timestamp,
+                'reserved_by' => $token, 'updated_at' => $timestamp]) !== 1) {
+                continue;
+            }
+            $row = $this->ownedById((string) $row['id'], $token)->first();
+            if ($row === null) {
+                continue;
+            }
+            try {
+                $payload = json_decode($row['payload'], true, 512, JSON_THROW_ON_ERROR);
+                if (!is_array($payload)) {
+                    throw new \UnexpectedValueException('Job payload must be an object or array.');
+                }
+            } catch (\Throwable $error) {
+                $this->ownedById((string) $row['id'], $token)->update([
+                    'failed_at' => $timestamp, 'reserved_at' => null, 'reserved_by' => null, 'updated_at' => $timestamp,
+                ]);
+                $this->logger->error('Invalid queued payload', ['id' => $row['id'], 'error' => $error->getMessage()]);
+                continue;
+            }
+            return QueuedJob::fromArray([
+                'id' => $row['id'], 'name' => $row['name'], 'queue' => $row['queue'],
+                'payload' => $payload, 'attempts' => $attempts, 'reservationToken' => $token,
+                'availableAt' => (int) $row['available_at'], 'createdAt' => (int) $row['created_at'],
             ]);
+        }
+        return null;
+    }
 
-            $this->logger->debug('Job popped', [
-                'id' => $job->id(),
-                'name' => $job->name(),
-            ]);
+    private ?int $maxAttempts = null;
 
-            return $job;
-        }, $connection);
+    public function setMaxAttempts(int $attempts): void
+    {
+        $this->maxAttempts = max(1, $attempts);
+    }
+
+    private function eligible(string $queue, int $timestamp, int $lease): Builder
+    {
+        $config = $this->configuration();
+        return (new Builder($this->manager, $config['database']['connection']))->table($config['database']['table'])
+            ->where('queue', '=', $queue)->where('available_at', '<=', $timestamp)
+            ->whereNull('completed_at')->whereNull('failed_at')
+            ->where(function (Builder $query) use ($timestamp, $lease): void {
+                $query->whereNull('reserved_at')->orWhere('reserved_at', '<=', $timestamp - $lease);
+            });
+    }
+
+    private function ownedById(string $id, ?string $token): Builder
+    {
+        $config = $this->configuration();
+        $query = (new Builder($this->manager, $config['database']['connection']))->table($config['database']['table'])
+            ->where('id', '=', $id)->whereNull('completed_at')->whereNull('failed_at');
+        return $token === null ? $query->whereNull('reserved_by')->whereNull('reserved_at')
+            : $query->where('reserved_by', '=', $token);
     }
 
     public function release(QueuedJob $job, int $delaySeconds = 0): QueuedJob
@@ -163,8 +186,7 @@ final class DatabaseQueue implements QueueInterface
         $connection = $config['database']['connection'];
         $table = $config['database']['table'];
 
-        DB::table($table, $connection)
-            ->where('id', '=', $job->id())
+        $this->ownedById($job->id(), $job->reservationToken())
             ->update([
                 'available_at' => $timestamp + max(0, $delaySeconds),
                 'reserved_at' => null,
@@ -187,10 +209,11 @@ final class DatabaseQueue implements QueueInterface
         $connection = $config['database']['connection'];
         $table = $config['database']['table'];
 
-        DB::table($table, $connection)
-            ->where('id', '=', $job->id())
+        $this->ownedById($job->id(), $job->reservationToken())
             ->update([
                 'completed_at' => $timestamp,
+                'reserved_at' => null,
+                'reserved_by' => null,
                 'updated_at' => $timestamp,
             ]);
 
@@ -204,10 +227,11 @@ final class DatabaseQueue implements QueueInterface
         $connection = $config['database']['connection'];
         $table = $config['database']['table'];
 
-        DB::table($table, $connection)
-            ->where('id', '=', $job->id())
+        $this->ownedById($job->id(), $job->reservationToken())
             ->update([
                 'failed_at' => $timestamp,
+                'reserved_at' => null,
+                'reserved_by' => null,
                 'updated_at' => $timestamp,
             ]);
 

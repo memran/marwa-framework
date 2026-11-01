@@ -17,6 +17,7 @@ use Psr\Log\NullLogger;
 final class SchedulerSupportTest extends TestCase
 {
     private string $basePath;
+    private bool $handlersBooted = false;
 
     protected function setUp(): void
     {
@@ -28,6 +29,10 @@ final class SchedulerSupportTest extends TestCase
 
     protected function tearDown(): void
     {
+        if ($this->handlersBooted) {
+            restore_error_handler();
+            restore_exception_handler();
+        }
         $this->removeDirectory($this->basePath);
 
         unset(
@@ -156,6 +161,59 @@ final class SchedulerSupportTest extends TestCase
         self::assertSame($createdAt, $task->createdAt());
         self::assertFalse($task->isDue($app, new \DateTimeImmutable('@1700000039')));
         self::assertTrue($task->isDue($app, new \DateTimeImmutable('@1700000040')));
+    }
+
+    public function testNonzeroCommandExitIsRecordedAsFailure(): void
+    {
+        $app = new Application($this->basePath);
+        $command = new \Symfony\Component\Console\Command\Command('test:failed-command');
+        $command->setCode(static fn (): int => 2);
+        $this->handlersBooted = true;
+        $app->console()->application()->add($command);
+        $store = $this->createMock(ScheduleStoreInterface::class);
+        $store->expects(self::once())->method('record')->with(
+            self::isInstanceOf(Task::class),
+            self::isInstanceOf(\DateTimeImmutable::class),
+            'failed',
+            self::stringContains('exited with code 2')
+        );
+        $resolver = $this->createMock(ScheduleStoreResolverInterface::class);
+        $resolver->method('resolve')->willReturn($store);
+        $scheduler = new Scheduler($app, new NullLogger(), $this->createMock(QueueInterface::class), $resolver);
+        $scheduler->command('test:failed-command', [], 'failed-command')->everySecond();
+        self::assertSame(['failed-command'], $scheduler->runDue()['failed']);
+    }
+
+    public function testBackgroundDispatchDoesNotFallBackToInlineExecution(): void
+    {
+        $app = new Application($this->basePath);
+        $queue = $this->createMock(QueueInterface::class);
+        $queue->expects(self::never())->method('push');
+        $resolver = $this->createMock(ScheduleStoreResolverInterface::class);
+        $resolver->method('resolve')->willThrowException(new \RuntimeException('Storage unavailable'));
+        $scheduler = new Scheduler($app, new NullLogger(), $queue, $resolver);
+        $ran = 0;
+        $scheduler->call(static function () use (&$ran): void {
+            $ran++;
+        }, 'background')->everySecond()->inBackground();
+        $summary = $scheduler->runDue();
+        self::assertSame(['background'], $summary['failed']);
+        self::assertSame(0, $ran);
+    }
+
+    public function testSchedulerCommandReportsDispatchFailureWithNonzeroExit(): void
+    {
+        $app = new Application($this->basePath);
+        $resolver = $this->createMock(ScheduleStoreResolverInterface::class);
+        $resolver->method('resolve')->willThrowException(new \RuntimeException('Store unavailable'));
+        $scheduler = new Scheduler($app, new NullLogger(), $this->createMock(QueueInterface::class), $resolver);
+        $scheduler->call(static fn (): null => null, 'background')->everySecond()->inBackground();
+        $app->container()->addShared(Scheduler::class, $scheduler, true);
+        $command = (new \Marwa\Framework\Console\Commands\ScheduleRunCommand())->setMarwaApplication($app);
+        $tester = new \Symfony\Component\Console\Tester\CommandTester($command);
+        $tester->execute(['--once' => true]);
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('failed', $tester->getDisplay());
     }
 
     private function removeDirectory(string $path): void

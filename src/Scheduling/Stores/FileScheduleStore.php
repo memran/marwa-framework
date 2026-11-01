@@ -107,6 +107,21 @@ final class FileScheduleStore implements ScheduleStoreInterface
         }
     }
 
+    /** @return array<string,mixed>|null */
+    public function readState(string $name): ?array
+    {
+        $path = $this->stateDirectory() . DIRECTORY_SEPARATOR . $this->normalizeName($name) . '.json';
+        if (!is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            throw new \RuntimeException('Unable to read scheduler state.');
+        }
+        $state = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        return is_array($state) && ($state['name'] ?? null) === $name ? $state : null;
+    }
+
     private function lockDirectory(): string
     {
         return rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'locks';

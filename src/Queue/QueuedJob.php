@@ -16,7 +16,8 @@ final class QueuedJob
         private array $payload,
         private int $attempts,
         private int $availableAt,
-        private int $createdAt
+        private int $createdAt,
+        private ?string $reservationToken = null
     ) {}
 
     public function id(): string
@@ -57,6 +58,11 @@ final class QueuedJob
         return $this->createdAt;
     }
 
+    public function reservationToken(): ?string
+    {
+        return $this->reservationToken;
+    }
+
     public function withAttempts(int $attempts): self
     {
         return new self(
@@ -66,7 +72,8 @@ final class QueuedJob
             $this->payload,
             $attempts,
             $this->availableAt,
-            $this->createdAt
+            $this->createdAt,
+            $this->reservationToken
         );
     }
 
@@ -79,7 +86,8 @@ final class QueuedJob
             $this->payload,
             $this->attempts,
             $availableAt,
-            $this->createdAt
+            $this->createdAt,
+            $this->reservationToken
         );
     }
 
@@ -91,12 +99,13 @@ final class QueuedJob
      *     payload:array<string, mixed>,
      *     attempts:int,
      *     availableAt:int,
-     *     createdAt:int
+     *     createdAt:int,
+     *     reservationToken?:string
      * }
      */
     public function toArray(): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'queue' => $this->queue,
@@ -105,6 +114,10 @@ final class QueuedJob
             'availableAt' => $this->availableAt,
             'createdAt' => $this->createdAt,
         ];
+        if ($this->reservationToken !== null) {
+            $data['reservationToken'] = $this->reservationToken;
+        }
+        return $data;
     }
 
     /**
@@ -115,7 +128,8 @@ final class QueuedJob
      *     payload?:array<string, mixed>,
      *     attempts?:int,
      *     availableAt?:int,
-     *     createdAt?:int
+     *     createdAt?:int,
+     *     reservationToken?:string
      * } $data
      */
     public static function fromArray(array $data): self
@@ -158,7 +172,8 @@ final class QueuedJob
             $payload,
             $attempts,
             $availableAt,
-            $createdAt
+            $createdAt,
+            $data['reservationToken'] ?? null
         );
     }
 }
