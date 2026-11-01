@@ -280,7 +280,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
             'memcached' => $this->buildMemcachedStore($config['memcached']),
             'memory', 'array' => new MemoryStore($this->resolveMemoryLimit($config['memory']['limit'])),
             'nats' => $this->buildNatsStore($config['nats']),
-            'redis', 'valkey' => $this->buildRedisStore($config['driver'], $config['redis']),
+            'redis', 'valkey' => $this->buildRedisStore($config['driver'], $config['redis'], $config['namespace']),
             'sqlite' => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
             default => throw new \InvalidArgumentException(sprintf(
                 'Unsupported cache driver [%s]. Supported drivers: apc, apcu, array, file, memcached, memory, nats, redis, sqlite, valkey.',
@@ -288,7 +288,12 @@ final class ScrapbookCacheAdapter implements CacheInterface
             )),
         };
 
-        if ($config['namespace'] !== '') {
+        // Scrapbook implements a Redis collection as a separate database
+        // number, so a namespace like "netpulse.dashboard" throws "Redis
+        // database names must be numeric". The Redis stores carry the
+        // namespace as a key prefix instead, applied when the client is built.
+        $redis = in_array($config['driver'], ['redis', 'valkey'], true);
+        if (!$redis && $config['namespace'] !== '') {
             $store = $store->getCollection($config['namespace']);
         }
 
@@ -373,7 +378,7 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     timeout: float
      * } $config
      */
-    private function buildRedisStore(string $driver, array $config): KeyValueStore
+    private function buildRedisStore(string $driver, array $config, string $namespace = ''): KeyValueStore
     {
         if (!extension_loaded('redis')) {
             throw new \RuntimeException(sprintf(
@@ -416,6 +421,12 @@ final class ScrapbookCacheAdapter implements CacheInterface
                 $config['host'],
                 $config['port']
             ));
+        }
+
+        // The namespace is a key prefix here, not a Scrapbook collection:
+        // a Redis collection selects a whole database by number.
+        if ($namespace !== '') {
+            $client->setOption(\Redis::OPT_PREFIX, $namespace . ':');
         }
 
         return new RedisStore($client);
