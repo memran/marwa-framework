@@ -190,6 +190,7 @@ final class ConfigContractsTest extends TestCase
             array_map(fn ($p) => str_replace('/', DIRECTORY_SEPARATOR, $p), ModuleConfig::defaults($app)['paths'])
         );
         self::assertFalse(ModuleConfig::defaults($app)['forceRefresh']);
+        self::assertSame([], ModuleConfig::defaults($app)['only']);
         self::assertSame(['commands'], ModuleConfig::defaults($app)['commandPaths']);
         self::assertSame(['Console/Commands', 'src/Console/Commands'], ModuleConfig::defaults($app)['commandConventions']);
     }

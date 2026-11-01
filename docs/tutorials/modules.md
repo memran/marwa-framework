@@ -71,6 +71,7 @@ Modules are disabled by default. Enable them in `config/module.php`:
 
 return [
     'enabled' => true,
+    'only' => [],
     'paths' => [
         base_path('modules'),
     ],
@@ -96,6 +97,7 @@ return [
 Important keys:
 
 - `enabled`: turns module integration on or off
+- `only`: optional allowlist of module slugs to boot; empty loads every discovered module (see [Loading Only Selected Modules](#loading-only-selected-modules))
 - `paths`: module root directories to scan
 - `cache`: manifest cache file path used by `module:cache`
 - `bootstrapCache`: compiled bootstrap cache path (set to `null` to disable); see [Caching](#caching)
@@ -104,6 +106,30 @@ Important keys:
 - `commandConventions`: module-relative fallback command directories
 - `migrationsPath`: manifest `paths` keys checked for migrations if the manifest does not list migration files directly
 - `seedersPath`: manifest `paths` keys treated as seeder directories
+
+## Loading Only Selected Modules
+
+By default every discovered module is booted: providers register and boot,
+listeners and configs load, and routes/views are registered. On installations
+with many modules that is unnecessary work, so list the modules you need in
+`only`:
+
+```php
+return [
+    'enabled' => true,
+    'only' => ['blog', 'shop'],
+    // ...
+];
+```
+
+The allowlist is transitive. If `shop` declares `'requires' => ['catalog']` (or
+`dependencies`), `catalog` is booted too even when it is not listed. Unknown
+slugs and unresolvable dependencies fail the bootstrap with a clear error.
+
+Leaving `only` empty keeps the default behavior of booting every module. The
+compiled bootstrap cache still stores every discovered module, so changing
+`only` does not require a cache rebuild; only the selected providers register
+and boot.
 
 ## Module Manifest
 

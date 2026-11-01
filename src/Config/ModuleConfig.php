@@ -13,6 +13,7 @@ final class ModuleConfig
     /**
      * @return array{
      *     enabled: bool,
+     *     only: list<string>,
      *     paths: list<string>,
      *     cache: string,
      *     bootstrapCache: string,
@@ -27,6 +28,7 @@ final class ModuleConfig
     {
         return [
             'enabled' => false,
+            'only' => [],
             'paths' => [
                 $app->basePath('modules'),
             ],

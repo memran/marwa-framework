@@ -23,6 +23,7 @@ use Marwa\Module\ModuleBuilder;
 use Marwa\Module\ModuleRegistry;
 use Marwa\Module\ModuleRepository;
 use Marwa\Module\ModulesServiceProvider;
+use Marwa\Support\Str;
 
 final class ModuleBootstrapper
 {
@@ -31,6 +32,7 @@ final class ModuleBootstrapper
     /**
      * @var array{
      *     enabled: bool,
+     *     only: list<string>,
      *     paths: list<string>,
      *     cache: string,
      *     bootstrapCache: string,
@@ -91,18 +93,35 @@ final class ModuleBootstrapper
 
         $cache = $this->createBootstrapCache($moduleConfig);
         $compiled = $cache->load();
+        $discovered = null;
 
         if ($compiled !== null) {
-            $this->registerCompiledModules($compiled['modules'], $compiled['providers'], $moduleConfig);
-            $this->compiledViewNamespaces = $compiled['view_namespaces'];
-        } else {
-            $provider = new ModulesServiceProvider(
-                $moduleConfig['paths'],
-                $moduleConfig['cache'],
-                $moduleConfig['forceRefresh']
-            );
+            $discovered = $this->hydrateModules($compiled['modules']);
+        }
 
-            $provider->register($this->app);
+        if ($moduleConfig['only'] === []) {
+            if ($compiled !== null) {
+                $this->registerCompiledModules($compiled['modules'], $compiled['providers'], $moduleConfig);
+                $this->compiledViewNamespaces = $compiled['view_namespaces'];
+            } else {
+                $provider = new ModulesServiceProvider(
+                    $moduleConfig['paths'],
+                    $moduleConfig['cache'],
+                    $moduleConfig['forceRefresh']
+                );
+
+                $provider->register($this->app);
+            }
+        } else {
+            if ($discovered === null || $discovered === []) {
+                $compiled = null;
+                $repository = new ModuleRepository($moduleConfig['paths'], $moduleConfig['cache']);
+                $discovered = $repository->all($moduleConfig['forceRefresh']);
+            }
+
+            $selected = $this->selectModules($discovered, $moduleConfig['only']);
+            $this->registerSelectedModules($selected, $moduleConfig);
+            $this->compiledViewNamespaces = null;
         }
 
         $this->registry = $this->resolveRegistry();
@@ -120,8 +139,12 @@ final class ModuleBootstrapper
 
         $this->app->dispatch(new ModulesBootstrapped(modules: array_keys($this->registry->all())));
 
-        if ($compiled === null && $cache->enabled() && $this->registry->all() !== []) {
-            $cache->save($cache->compile($this->registry->all()));
+        if ($compiled === null && $cache->enabled()) {
+            $modulesToCache = $discovered ?? $this->registry->all();
+
+            if ($modulesToCache !== []) {
+                $cache->save($cache->compile($modulesToCache));
+            }
         }
 
         $this->booted = true;
@@ -209,6 +232,7 @@ final class ModuleBootstrapper
     /**
      * @param array{
      *     enabled: bool,
+     *     only: list<string>,
      *     paths: list<string>,
      *     cache: string,
      *     bootstrapCache: string,
@@ -237,6 +261,7 @@ final class ModuleBootstrapper
      * @param list<string> $providers
      * @param array{
      *     enabled: bool,
+     *     only: list<string>,
      *     paths: list<string>,
      *     cache: string,
      *     bootstrapCache: string,
@@ -255,6 +280,59 @@ final class ModuleBootstrapper
             throw new \RuntimeException('Compiled module cache did not contain any usable modules.');
         }
 
+        $this->bindModuleServices($modules, $moduleConfig);
+
+        foreach ($providers as $provider) {
+            $this->assertValidProvider($provider);
+            $this->app->addServiceProvider($provider);
+        }
+    }
+
+    /**
+     * Register a filtered module set, including only the providers of the
+     * selected modules and their resolved dependencies.
+     *
+     * @param array<string, Module> $modules
+     * @param array{
+     *     enabled: bool,
+     *     only: list<string>,
+     *     paths: list<string>,
+     *     cache: string,
+     *     bootstrapCache: string,
+     *     forceRefresh: bool,
+     *     commandPaths: list<string>,
+     *     commandConventions: list<string>,
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
+     * } $moduleConfig
+     */
+    private function registerSelectedModules(array $modules, array $moduleConfig): void
+    {
+        $this->bindModuleServices($modules, $moduleConfig);
+
+        foreach (ModuleBootstrapCache::providers($modules) as $provider) {
+            $this->assertValidProvider($provider);
+            $this->app->addServiceProvider($provider);
+        }
+    }
+
+    /**
+     * @param array<string, Module> $modules
+     * @param array{
+     *     enabled: bool,
+     *     only: list<string>,
+     *     paths: list<string>,
+     *     cache: string,
+     *     bootstrapCache: string,
+     *     forceRefresh: bool,
+     *     commandPaths: list<string>,
+     *     commandConventions: list<string>,
+     *     migrationsPath: list<string>,
+     *     seedersPath: list<string>
+     * } $moduleConfig
+     */
+    private function bindModuleServices(array $modules, array $moduleConfig): void
+    {
         $repository = new CompiledModuleRepository($modules);
         $registry = new ModuleRegistry($repository, false);
         $builder = new ModuleBuilder($registry);
@@ -264,11 +342,73 @@ final class ModuleBootstrapper
         $this->app->add(ModuleRepository::class, new ModuleRepository($moduleConfig['paths'], $moduleConfig['cache']));
         $this->app->add(ModuleRegistry::class, $registry);
         $this->app->add(ModuleBuilder::class, $builder);
+    }
 
-        foreach ($providers as $provider) {
-            $this->assertValidProvider($provider);
-            $this->app->addServiceProvider($provider);
+    /**
+     * Resolve the configured allowlist and its transitive dependencies.
+     *
+     * @param array<string, Module> $modules
+     * @param list<string> $only
+     * @return array<string, Module>
+     */
+    private function selectModules(array $modules, array $only): array
+    {
+        $lookup = [];
+
+        foreach ($modules as $module) {
+            $lookup[Str::lower($module->slug())] = $module;
         }
+
+        $selected = [];
+        $queue = [];
+
+        foreach ($only as $slug) {
+            $normalized = Str::lower($slug);
+
+            if (!isset($lookup[$normalized])) {
+                throw new ModuleConfigurationException(sprintf(
+                    'Module [%s] configured in [module.only] was not found.',
+                    $slug
+                ));
+            }
+
+            $queue[] = $normalized;
+        }
+
+        while ($queue !== []) {
+            $slug = array_pop($queue);
+            $module = $lookup[$slug] ?? null;
+
+            if ($module === null || isset($selected[$slug])) {
+                continue;
+            }
+
+            $selected[$slug] = true;
+
+            foreach ($this->manifestReader->getRequiredModules($module) as $required) {
+                if (!isset($lookup[$required])) {
+                    throw new ModuleDependencyException(sprintf(
+                        'Module [%s] requires missing module(s): %s.',
+                        $module->slug(),
+                        $required
+                    ));
+                }
+
+                if (!isset($selected[$required])) {
+                    $queue[] = $required;
+                }
+            }
+        }
+
+        $ordered = [];
+
+        foreach ($modules as $key => $module) {
+            if (isset($selected[Str::lower($module->slug())])) {
+                $ordered[$key] = $module;
+            }
+        }
+
+        return $ordered;
     }
 
     /**
@@ -508,6 +648,7 @@ final class ModuleBootstrapper
     /**
      * @return array{
      *     enabled: bool,
+     *     only: list<string>,
      *     paths: list<string>,
      *     cache: string,
      *     bootstrapCache: string,
@@ -528,6 +669,7 @@ final class ModuleBootstrapper
 
         /** @var array{
          *     enabled: bool,
+         *     only: mixed,
          *     paths: list<string>,
          *     cache: string,
          *     bootstrapCache: string,
@@ -539,6 +681,16 @@ final class ModuleBootstrapper
          * } $moduleConfig
          */
         $moduleConfig = array_replace_recursive(ModuleConfig::defaults($this->app), $this->config->getArray(ModuleConfig::KEY, []));
+        $only = $moduleConfig['only'] ?? [];
+
+        if (!is_array($only)) {
+            throw new ModuleConfigurationException('Module [module.only] must be a list of module slugs.');
+        }
+
+        $moduleConfig['only'] = array_values(array_unique(array_map(
+            static fn (string $slug): string => Str::lower($slug),
+            $this->normalizeStringList($only)
+        )));
         $moduleConfig['paths'] = $this->normalizeStringList($moduleConfig['paths']);
         $moduleConfig['commandPaths'] = $this->normalizeStringList($moduleConfig['commandPaths']);
         $moduleConfig['commandConventions'] = $this->normalizeStringList($moduleConfig['commandConventions']);
