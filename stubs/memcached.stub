@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * Minimal ext-memcached surface for static analysis when the extension is absent.
+ */
+class Memcached
+{
+    public function __construct(?string $persistentId = null) {}
+
+    public function addServer(string $host, int $port, int $weight = 0): bool {}
+
+    /**
+     * @return array<int, array{host: string, port: int, weight: int}>
+     */
+    public function getServerList(): array {}
+}

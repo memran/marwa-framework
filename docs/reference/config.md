@@ -63,22 +63,43 @@ return [
 
 ## cache.php
 
-Cache configuration.
+Cache configuration. The application uses a single store; switch backends by
+changing `driver`. Unknown drivers are rejected instead of silently falling
+back to the file store.
 
 ```php
 return [
-    'default' => env('CACHE_DRIVER', 'file'),
-
-    'stores' => [
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('cache/framework'),
+    'enabled' => true,
+    'driver' => 'file', // file, memory, sqlite, apcu, nats, redis, valkey, memcached
+    'namespace' => 'default',
+    'buffered' => true,
+    'transactional' => false,
+    'stampede' => [
+        'enabled' => false,
+        'sla' => 1000,
+    ],
+    'file' => [
+        'path' => storage_path('cache/framework'),
+    ],
+    'sqlite' => [
+        'path' => storage_path('cache/framework.sqlite'),
+        'table' => 'framework_cache',
+    ],
+    'memory' => [
+        'limit' => null,
+    ],
+    'redis' => [
+        'host' => '127.0.0.1',
+        'port' => 6379,
+        'database' => 0,
+        'password' => null,
+        'timeout' => 1.0,
+    ],
+    'memcached' => [
+        'servers' => [
+            ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 1],
         ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'cache',
-        ],
+        'persistent_id' => null,
     ],
 ];
 ```
@@ -87,10 +108,27 @@ return [
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `default` | `string` | `'file'` | Default cache driver |
-| `stores.*.driver` | `string` | - | Cache driver |
-| `stores.*.path` | `string` | - | File cache path |
-| `stores.*.connection` | `string` | - | Redis connection |
+| `enabled` | `bool` | `true` | Enable the cache layer; when disabled an in-memory store is used |
+| `driver` | `string` | `'file'` | `file`, `memory`, `sqlite`, `apcu`, `nats`, `redis`, `valkey`, or `memcached` |
+| `namespace` | `string` | `'default'` | Key prefix applied to every entry |
+| `buffered` | `bool` | `true` | Buffer writes and flush them together |
+| `transactional` | `bool` | `false` | Enable `begin`/`commit`/`rollback` support |
+| `stampede.enabled` | `bool` | `false` | Add stampede protection |
+| `stampede.sla` | `int` | `1000` | Stampede protection window in milliseconds |
+| `file.path` | `string` | `storage/cache/framework` | File cache directory |
+| `sqlite.path` | `string` | `storage/cache/framework.sqlite` | SQLite cache database |
+| `sqlite.table` | `string` | `'framework_cache'` | SQLite cache table |
+| `memory.limit` | `int\|string\|null` | `null` | Memory store limit in bytes or shorthand (`128M`); defaults to 10% of `memory_limit` |
+| `redis.host` | `string` | `'127.0.0.1'` | Redis or Valkey host |
+| `redis.port` | `int` | `6379` | Redis or Valkey port |
+| `redis.database` | `int` | `0` | Redis logical database |
+| `redis.password` | `string\|null` | `null` | Redis `AUTH` password |
+| `redis.timeout` | `float` | `1.0` | Connection timeout in seconds |
+| `memcached.servers` | `list<array>` | `[['host' => '127.0.0.1', 'port' => 11211, 'weight' => 1]]` | Memcached servers |
+| `memcached.persistent_id` | `string\|null` | `null` | Persistent connection ID |
+
+> `redis` and `valkey` require the `ext-redis` (phpredis) extension. `memcached`
+> requires `ext-memcached`. `nats` requires `basis-company/nats`.
 
 ---
 

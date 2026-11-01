@@ -21,6 +21,17 @@ final class CacheConfig
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null},
+     *     redis: array{
+     *         host: string,
+     *         port: int,
+     *         database: int,
+     *         password: string|null,
+     *         timeout: float
+     *     },
+     *     memcached: array{
+     *         servers: list<array{host: string, port: int, weight: int}>,
+     *         persistent_id: string|null
+     *     },
      *     nats: array{
      *         bucket: string,
      *         host: string,
@@ -43,7 +54,7 @@ final class CacheConfig
     {
         return [
             'enabled' => true,
-            'driver' => 'file',
+            'driver' => (string) env('CACHE_DRIVER', 'file'),
             'namespace' => 'default',
             'buffered' => true,
             'transactional' => false,
@@ -60,6 +71,19 @@ final class CacheConfig
             ],
             'memory' => [
                 'limit' => null,
+            ],
+            'redis' => [
+                'host' => '127.0.0.1',
+                'port' => 6379,
+                'database' => 0,
+                'password' => null,
+                'timeout' => 1.0,
+            ],
+            'memcached' => [
+                'servers' => [
+                    ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 1],
+                ],
+                'persistent_id' => null,
             ],
             'nats' => [
                 'bucket' => 'marwa_cache',
@@ -92,6 +116,17 @@ final class CacheConfig
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null},
+     *     redis: array{
+     *         host: string,
+     *         port: int,
+     *         database: int,
+     *         password: string|null,
+     *         timeout: float
+     *     },
+     *     memcached: array{
+     *         servers: list<array{host: string, port: int, weight: int}>,
+     *         persistent_id: string|null
+     *     },
      *     nats: array{
      *         bucket: string,
      *         host: string,
@@ -125,6 +160,12 @@ final class CacheConfig
         $memory = is_array($overrides['memory'] ?? null)
             ? array_replace($defaults['memory'], $overrides['memory'])
             : $defaults['memory'];
+        $redis = is_array($overrides['redis'] ?? null)
+            ? array_replace($defaults['redis'], $overrides['redis'])
+            : $defaults['redis'];
+        $memcached = is_array($overrides['memcached'] ?? null)
+            ? array_replace($defaults['memcached'], $overrides['memcached'])
+            : $defaults['memcached'];
         $nats = is_array($overrides['nats'] ?? null)
             ? array_replace($defaults['nats'], $overrides['nats'])
             : $defaults['nats'];
@@ -159,8 +200,53 @@ final class CacheConfig
             'memory' => [
                 'limit' => $memory['limit'] ?? $defaults['memory']['limit'],
             ],
+            'redis' => [
+                'host' => self::nonEmptyString($redis['host'] ?? null, $defaults['redis']['host']),
+                'port' => max(1, (int) ($redis['port'] ?? $defaults['redis']['port'])),
+                'database' => max(0, (int) ($redis['database'] ?? $defaults['redis']['database'])),
+                'password' => self::nullableString($redis['password'] ?? null),
+                'timeout' => max(0.001, (float) ($redis['timeout'] ?? $defaults['redis']['timeout'])),
+            ],
+            'memcached' => [
+                'servers' => self::resolveMemcachedServers($memcached['servers'] ?? null, $defaults['memcached']['servers']),
+                'persistent_id' => self::nullableString($memcached['persistent_id'] ?? null),
+            ],
             'nats' => self::resolveNatsConfig($nats, $defaults['nats']),
         ];
+    }
+
+    /**
+     * @param mixed $servers
+     * @param list<array{host: string, port: int, weight: int}> $defaults
+     * @return list<array{host: string, port: int, weight: int}>
+     */
+    private static function resolveMemcachedServers(mixed $servers, array $defaults): array
+    {
+        if (!is_array($servers)) {
+            return $defaults;
+        }
+
+        $resolved = [];
+
+        foreach ($servers as $server) {
+            if (!is_array($server)) {
+                continue;
+            }
+
+            $host = self::nonEmptyString($server['host'] ?? null, '');
+
+            if ($host === '') {
+                continue;
+            }
+
+            $resolved[] = [
+                'host' => $host,
+                'port' => max(1, (int) ($server['port'] ?? 11211)),
+                'weight' => max(0, (int) ($server['weight'] ?? 1)),
+            ];
+        }
+
+        return $resolved === [] ? $defaults : $resolved;
     }
 
     /**

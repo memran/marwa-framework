@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * Minimal phpredis surface for static analysis when ext-redis is absent.
+ */
+class Redis
+{
+    public const OPT_SERIALIZER = 1;
+    public const SERIALIZER_NONE = 0;
+    public const SERIALIZER_PHP = 1;
+
+    public function connect(
+        string $host,
+        int $port = 6379,
+        float $timeout = 0.0,
+        ?string $persistentId = null,
+        int $retryInterval = 0,
+        float $readTimeout = 0.0,
+        ?array $context = null
+    ): bool {}
+
+    public function auth(string $password): bool {}
+
+    public function select(int $database): bool {}
+
+    public function setOption(int $option, mixed $value): bool {}
+
+    public function getOption(int $option): mixed {}
+
+    public function close(): bool {}
+}

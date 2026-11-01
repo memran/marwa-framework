@@ -93,7 +93,9 @@
     "memran/marwa-entity": "Optional entity builder and validation layer for domain models.",
     "memran/marwa-module": "Optional module management for modular application structure.",
     "memran/marwa-support": "Optional support helpers and utility primitives for consuming apps.",
-    "basis-company/nats": "Optional NATS JetStream Key-Value client for the nats cache driver."
+    "basis-company/nats": "Optional NATS JetStream Key-Value client for the nats cache driver.",
+    "ext-memcached": "Required for the memcached cache driver.",
+    "ext-redis": "Required for the redis and valkey cache drivers (phpredis)."
   },
   "minimum-stability": "dev",
   "prefer-stable": true,

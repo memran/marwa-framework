@@ -9,7 +9,9 @@ use Marwa\Framework\Config\CacheConfig;
 use Marwa\Framework\Contracts\CacheInterface;
 use Marwa\Framework\Supports\Config;
 use MatthiasMullie\Scrapbook\Adapters\Apc;
+use MatthiasMullie\Scrapbook\Adapters\Memcached as MemcachedStore;
 use MatthiasMullie\Scrapbook\Adapters\MemoryStore;
+use MatthiasMullie\Scrapbook\Adapters\Redis as RedisStore;
 use MatthiasMullie\Scrapbook\Adapters\SQLite;
 use MatthiasMullie\Scrapbook\Buffered\BufferedStore;
 use MatthiasMullie\Scrapbook\Buffered\TransactionalStore;
@@ -30,6 +32,17 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null},
+     *     redis: array{
+     *         host: string,
+     *         port: int,
+     *         database: int,
+     *         password: string|null,
+     *         timeout: float
+     *     },
+     *     memcached: array{
+     *         servers: list<array{host: string, port: int, weight: int}>,
+     *         persistent_id: string|null
+     *     },
      *     nats: array{
      *         bucket: string,
      *         host: string,
@@ -177,6 +190,17 @@ final class ScrapbookCacheAdapter implements CacheInterface
      *     file: array{path: string},
      *     sqlite: array{path: string, table: string},
      *     memory: array{limit: int|string|null},
+     *     redis: array{
+     *         host: string,
+     *         port: int,
+     *         database: int,
+     *         password: string|null,
+     *         timeout: float
+     *     },
+     *     memcached: array{
+     *         servers: list<array{host: string, port: int, weight: int}>,
+     *         persistent_id: string|null
+     *     },
      *     nats: array{
      *         bucket: string,
      *         host: string,
@@ -253,10 +277,15 @@ final class ScrapbookCacheAdapter implements CacheInterface
         $store = match ($config['driver']) {
             'apcu', 'apc' => $this->buildApcStore(),
             'file' => $this->buildFileStore($config['file']['path']),
+            'memcached' => $this->buildMemcachedStore($config['memcached']),
             'memory', 'array' => new MemoryStore($this->resolveMemoryLimit($config['memory']['limit'])),
             'nats' => $this->buildNatsStore($config['nats']),
+            'redis', 'valkey' => $this->buildRedisStore($config['driver'], $config['redis']),
             'sqlite' => $this->buildSqliteStore($config['sqlite']['path'], $config['sqlite']['table']),
-            default => $this->buildFileStore($config['file']['path']),
+            default => throw new \InvalidArgumentException(sprintf(
+                'Unsupported cache driver [%s]. Supported drivers: apc, apcu, array, file, memcached, memory, nats, redis, sqlite, valkey.',
+                $config['driver']
+            )),
         };
 
         if ($config['namespace'] !== '') {
@@ -332,6 +361,85 @@ final class ScrapbookCacheAdapter implements CacheInterface
         $pdo = new \PDO('sqlite:' . $path);
 
         return new SQLite($pdo, $table);
+    }
+
+    /**
+     * @param string $driver
+     * @param array{
+     *     host: string,
+     *     port: int,
+     *     database: int,
+     *     password: string|null,
+     *     timeout: float
+     * } $config
+     */
+    private function buildRedisStore(string $driver, array $config): KeyValueStore
+    {
+        if (!extension_loaded('redis')) {
+            throw new \RuntimeException(sprintf(
+                'The [%s] cache driver requires the phpredis extension (ext-redis).',
+                $driver
+            ));
+        }
+
+        $client = new \Redis();
+        $connected = false;
+
+        try {
+            $connected = $client->connect($config['host'], $config['port'], $config['timeout']);
+
+            if ($connected) {
+                if ($config['password'] !== null) {
+                    $client->auth($config['password']);
+                }
+
+                if ($config['database'] > 0) {
+                    $client->select($config['database']);
+                }
+            }
+        } catch (\Throwable $exception) {
+            throw new \RuntimeException(
+                sprintf(
+                    'Unable to connect to the Redis server at [%s:%d]: %s',
+                    $config['host'],
+                    $config['port'],
+                    $exception->getMessage()
+                ),
+                0,
+                $exception
+            );
+        }
+
+        if (!$connected) {
+            throw new \RuntimeException(sprintf(
+                'Unable to connect to the Redis server at [%s:%d].',
+                $config['host'],
+                $config['port']
+            ));
+        }
+
+        return new RedisStore($client);
+    }
+
+    /**
+     * @param array{
+     *     servers: list<array{host: string, port: int, weight: int}>,
+     *     persistent_id: string|null
+     * } $config
+     */
+    private function buildMemcachedStore(array $config): KeyValueStore
+    {
+        if (!extension_loaded('memcached')) {
+            throw new \RuntimeException('The [memcached] cache driver requires the memcached extension (ext-memcached).');
+        }
+
+        $client = new \Memcached($config['persistent_id']);
+
+        foreach ($config['servers'] as $server) {
+            $client->addServer($server['host'], $server['port'], $server['weight']);
+        }
+
+        return new MemcachedStore($client);
     }
 
     /**

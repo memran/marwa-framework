@@ -132,18 +132,29 @@ return [
 
 ```php
 return [
-    'default' => env('CACHE_DRIVER', 'file'),
-    'stores' => [
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('cache'),
-        ],
-        'array' => [
-            'driver' => 'array',
+    'driver' => env('CACHE_DRIVER', 'file'),
+    'file' => [
+        'path' => storage_path('cache/framework'),
+    ],
+    'redis' => [
+        'host' => env('REDIS_HOST', '127.0.0.1'),
+        'port' => (int) env('REDIS_PORT', 6379),
+        'database' => 0,
+        'password' => env('REDIS_PASSWORD'),
+        'timeout' => 1.0,
+    ],
+    'memcached' => [
+        'servers' => [
+            ['host' => env('MEMCACHED_HOST', '127.0.0.1'), 'port' => 11211, 'weight' => 1],
         ],
     ],
 ];
 ```
+
+Supported drivers: `file`, `memory`, `array`, `sqlite`, `apcu`, `nats`,
+`redis`, `valkey`, `memcached`. See
+[Cache Drivers](../tutorials/caching.md#cache-drivers) for extension
+requirements.
 
 ### Mail Config
 

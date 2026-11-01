@@ -7,6 +7,9 @@ parameters:
 		- tests
 	bootstrapFiles:
 		- src/Authorization/Authenticatable.php
+	scanFiles:
+		- stubs/redis.stub
+		- stubs/memcached.stub
 	ignoreErrors:
 		- identifier: trait.unused
 		  path: src/Authorization/Authenticatable.php

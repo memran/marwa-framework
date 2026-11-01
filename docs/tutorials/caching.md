@@ -14,23 +14,33 @@ Caching stores frequently accessed data in memory for fast retrieval:
 
 ### config/cache.php
 
+The application uses a single cache store. Choose the backend with `driver`:
+
 ```php
 return [
-    'default' => 'file',
-
-    'stores' => [
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('cache/framework'),
+    'enabled' => true,
+    'driver' => 'file', // file, memory, sqlite, apcu, nats, redis, valkey, memcached
+    'namespace' => 'default',
+    'file' => [
+        'path' => storage_path('cache/framework'),
+    ],
+    'redis' => [
+        'host' => '127.0.0.1',
+        'port' => 6379,
+        'database' => 0,
+        'password' => null,
+        'timeout' => 1.0,
+    ],
+    'memcached' => [
+        'servers' => [
+            ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 1],
         ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'cache',
-        ],
+        'persistent_id' => null,
     ],
 ];
 ```
+
+See [Cache Drivers](#cache-drivers) below for backend-specific setup.
 
 ## Basic Usage
 
@@ -75,12 +85,10 @@ Cache::forever('user_1', $user);
 // Simple get
 $user = Cache::get('user_1');
 
-// With default
-$user = Cache::get('user_1', function () {
-    return User::find(1);
-});
+// With a default value
+$user = Cache::get('user_1', null);
 
-// Check first, then get
+// Compute and store when missing
 $user = Cache::remember('user_1', 60, function () {
     return User::find(1);
 });
@@ -96,46 +104,19 @@ Cache::forget('user_1');
 Cache::flush();
 ```
 
-## Cache Tags
-
-### Basic Tags
-
-```php
-// Store with tag
-Cache::put('users', $users, 60);
-Cache::tag('users')->put('user_1', $user);
-
-// Get from tag
-Cache::tag('users')->get('user_1');
-
-// Clear tag
-Cache::tag('users')->flush();
-```
-
-### Use Cases
-
-```php
-// Tag by model type
-Cache::tag('users')->flush();
-Cache::tag('posts')->flush();
-Cache::tag('comments')->flush();
-```
-
 ## Cache Times
 
-### Time Constants
-
 ```php
-use Marwa\Framework\Supports\Cache;
+use DateInterval;
+use Marwa\Framework\Facades\Cache;
 
-// Minutes
-Cache::put('key', $value, 60); // 1 minute
-Cache::put('key', $value, 300); // 5 minutes
-
-// Using Cache helper
-Cache::put('key', $value, now()->addDay());
-Cache::put('key', $value, now()->addHours(2));
+Cache::put('key', $value, 60);                     // 60 seconds
+Cache::put('key', $value, 3600);                   // 1 hour
+Cache::put('key', $value, new DateInterval('P1D')); // 1 day
+Cache::forever('key', $value);                     // no expiry
 ```
+
+TTL accepts seconds as an integer, a `DateInterval`, or `null` for no expiry.
 
 ## Common Patterns
 
@@ -187,21 +168,28 @@ $stats = Cache::remember('stats:dashboard', 300, function () {
 });
 ```
 
-## Multiple Stores
+## Cache Collections
 
-### Using Specific Store
-
-```php
-$value = Cache::store('redis')->get('key');
-Cache::store('file')->put('key', 'value', 60);
-```
-
-### Switching Stores
+Only one store is active per application; switch stores by changing `driver`
+in `config/cache.php`. For logical isolation inside that store, use
+collections on the cache adapter:
 
 ```php
-// Default is 'file', switch to 'redis'
-Cache::store('redis')->put('key', $value);
+use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
+
+/** @var ScrapbookCacheAdapter $cache */
+$cache = app(ScrapbookCacheAdapter::class);
+
+$users = $cache->collection('users');
+$posts = $cache->collection('posts');
+
+$users->put('listing', ['alice'], 60);
+$posts->put('listing', ['post-1'], 60);
 ```
+
+Each collection gets its own namespace, so `flush()` on one does not clear the
+others. Alternatively, set `namespace` in the cache config to isolate whole
+applications sharing a Redis or Memcached server.
 
 ## Increment/Decrement
 
@@ -225,31 +213,6 @@ public function visit(): Response
     
     return response()->json(['visits' => $visits]);
 }
-```
-
-## Cache Middleware
-
-### Using Cache Middleware
-
-```php
-// Cache response for 60 seconds
-Router::get('/api/users', [UserController::class, 'index'])
-    ->middleware('cache:60');
-```
-
-## Cache Events
-
-### Listen to Events
-
-```php
-// In service provider
-use Marwa\Framework\Contracts\EventDispatcherInterface;
-
-$events = $container->get(EventDispatcherInterface::class);
-
-$events->listen(CacheHit::class, function (CacheHit $event) {
-    logger()->info('Cache hit', ['key' => $event->key]);
-});
 ```
 
 ## Performance Tips
@@ -276,65 +239,122 @@ Cache::put('trending', $trending, 60); // 1 minute
 Cache::put('config', $config, 3600); // 1 hour
 ```
 
-### 3. Clear Cache Strategic
+### 3. Invalidate on Write
 
 ```php
 // On model update
 public function update(Request $request): Response
 {
     $user->update($request->all());
-    
+
     // Clear related cache
     Cache::forget('user_' . $user->id);
     Cache::forget('users.all');
-    Cache::tag('users')->flush();
-    
+
     return response()->json(['data' => $user]);
 }
 ```
 
-### 4. Use Tags for Related Data
+### 4. Use Collections for Related Data
 
 ```php
-// User related cache
-Cache::tag('user_' . $user->id)->put('profile', $profile);
-Cache::tag('user_' . $user->id)->put('posts', $posts);
-Cache::tag('user_' . $user->id)->flush();
+use Marwa\Framework\Adapters\Cache\ScrapbookCacheAdapter;
 
-// Clear all user data
-Cache::tag('user_' . $user->id)->flush();
+/** @var ScrapbookCacheAdapter $cache */
+$cache = app(ScrapbookCacheAdapter::class);
+
+$userCache = $cache->collection('user_' . $user->id);
+$userCache->put('profile', $profile, 300);
+$userCache->put('posts', $posts, 300);
+
+// Clear only this user's entries
+$userCache->flush();
 ```
 
 ## Cache Drivers
 
+Set `driver` in `config/cache.php` to one of: `file`, `memory`, `array`,
+`sqlite`, `apcu`, `nats`, `redis`, `valkey`, or `memcached`. An unknown driver
+throws an `InvalidArgumentException` instead of silently falling back to the
+file store.
+
 ### File Cache
 
+The default driver; stores entries as signed files under `storage/cache`.
+
 ```php
-// config/cache.php
 return [
-    'stores' => [
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('cache/framework'),
-        ],
+    'driver' => 'file',
+    'file' => [
+        'path' => storage_path('cache/framework'),
     ],
 ];
 ```
 
-### Redis Cache
+### Redis / Valkey
+
+Requires the `ext-redis` (phpredis) extension. Valkey speaks the same protocol,
+so `valkey` is an alias of the `redis` driver and shares the `redis` config
+block.
 
 ```php
-// config/cache.php
 return [
-    'stores' => [
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'cache',
-            'lock_connection' => 'default',
-        ],
+    'driver' => 'redis', // or 'valkey'
+    'redis' => [
+        'host' => '127.0.0.1',
+        'port' => 6379,
+        'database' => 0,
+        'password' => env('REDIS_PASSWORD'),
+        'timeout' => 1.0,
     ],
 ];
 ```
+
+Connection and `AUTH`/`SELECT` failures throw a `RuntimeException` with the
+host and port in the message.
+
+### Memcached
+
+Requires the `ext-memcached` extension. Add every server in the pool:
+
+```php
+return [
+    'driver' => 'memcached',
+    'memcached' => [
+        'servers' => [
+            ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 1],
+            ['host' => 'cache-2.internal', 'port' => 11211, 'weight' => 2],
+        ],
+        'persistent_id' => null,
+    ],
+];
+```
+
+Set `persistent_id` to reuse connections across requests.
+
+### In-Memory, SQLite, APCu, and NATS
+
+```php
+return [
+    'driver' => 'memory', // process-local; cleared at the end of the request
+];
+```
+
+```php
+return [
+    'driver' => 'sqlite',
+    'sqlite' => [
+        'path' => storage_path('cache/framework.sqlite'),
+        'table' => 'framework_cache',
+    ],
+];
+```
+
+- `apcu` uses the APCu extension and falls back to a memory store when the
+  extension is unavailable.
+- `nats` requires `basis-company/nats` and stores values in a JetStream
+  key-value bucket; see the `nats` config block in
+  [Configuration Reference](../reference/config.md#cachephp).
 
 ## Troubleshooting
 
@@ -354,7 +374,7 @@ var_dump(Cache::get('test_key'));
 
 1. Increase TTL
 2. Check cache keys are consistent
-3. Use cache tags for related data
+3. Use cache collections for related data
 
 ### Old Data Returned
 
@@ -371,7 +391,6 @@ php marwa cache:clear
 | Command | Description |
 |---------|-------------|
 | `cache:clear` | Clear all cache |
-| `cache:forget key` | Delete specific key |
 
 ## Related
 
